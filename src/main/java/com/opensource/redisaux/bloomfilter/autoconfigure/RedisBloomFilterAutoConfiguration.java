@@ -32,7 +32,7 @@ public class RedisBloomFilterAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RedisBloomFilter.class)
-    public RedisBloomFilter bloomFilterService() {
+    public RedisBloomFilter redisBloomFilter() {
 
         Properties properties = System.getProperties();
         String property = properties.getProperty("sun.arch.data.model");
@@ -42,7 +42,9 @@ public class RedisBloomFilterAutoConfiguration {
         }
         Map<Class, RedisBloomFilterItem> map = new HashMap<>(FunnelEnum.values().length);
         for (FunnelEnum funnelEnum : FunnelEnum.values()) {
-            map.put(funnelEnum.getCode(), RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisBitArrayFactory()));
+            RedisBloomFilterItem item = RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisBitArrayFactory());
+            checkTask().addListener(item);
+            map.put(funnelEnum.getCode(),item);
         }
         return new RedisBloomFilter(map);
     }
@@ -82,6 +84,7 @@ public class RedisBloomFilterAutoConfiguration {
     public CheckTask checkTask(){
         return new CheckTask();
     }
+
 
 
 }

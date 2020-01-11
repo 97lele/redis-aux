@@ -8,5 +8,5 @@ import java.util.concurrent.CountDownLatch;
  * 对应的Redis和本地缓存都要清理
  */
 public interface KeyExpireListener {
-     void removeKey(String key, CountDownLatch countDownLatch);
+     void removeKey(String ke);
 }

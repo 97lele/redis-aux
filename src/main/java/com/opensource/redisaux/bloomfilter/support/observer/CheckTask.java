@@ -1,29 +1,31 @@
 package com.opensource.redisaux.bloomfilter.support.observer;
 
-import com.opensource.redisaux.bloomfilter.core.FunnelEnum;
 import com.opensource.redisaux.bloomfilter.core.WatiForDeleteKey;
 import org.springframework.beans.factory.InitializingBean;
-
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.PriorityQueue;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
     private List<KeyExpireListener> listeners = new ArrayList<>();
-    private PriorityQueue<WatiForDeleteKey> priorityQueue;
+    private PriorityBlockingQueue<WatiForDeleteKey> priorityQueue;
     private volatile Boolean run = true;
-
+    private ThreadPoolExecutor executors;
 
     public CheckTask() {
-        this.priorityQueue = new PriorityQueue<>();
+        super("checkTask");
+        this.priorityQueue = new PriorityBlockingQueue<>();
+        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(64), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Override
     public void run() {
         while (run) {
+            //当队列为空时，每5秒检测一次
             if (priorityQueue.isEmpty()) {
                 try {
                     TimeUnit.SECONDS.sleep(5L);
@@ -31,20 +33,31 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
                     e.printStackTrace();
                 }
             } else {
+                //查看存活时间最小的那个节点
                 WatiForDeleteKey peek = priorityQueue.peek();
-                long dispearTime = peek.getExistTime() + peek.getStartTime();
-                if (dispearTime < System.currentTimeMillis()+10) {
+                long dispearTime = 0;
+                long now = 0;
+                //针对键的存活时间较为密切的情况，一直弹出直到存活时间大于当前时间
+                while (peek != null && (dispearTime = (peek.getStartTime() + peek.getExistTime())) <= (now = System.currentTimeMillis())) {
                     WatiForDeleteKey poll = priorityQueue.poll();
                     notifyListener(poll.getKey());
+                    peek = priorityQueue.peek();
+                }
+                //等待下一次过期的时间
+                try {
+                    if (dispearTime > now) {
+                        TimeUnit.MILLISECONDS.sleep(dispearTime - now);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
 
             }
-
         }
     }
 
-    public synchronized void addExpireKey(WatiForDeleteKey watiForDeleteKey){
-        priorityQueue.add(watiForDeleteKey);
+    public synchronized void addExpireKey(WatiForDeleteKey watiForDeleteKey) {
+        priorityQueue.offer(watiForDeleteKey);
     }
 
     @Override
@@ -59,19 +72,18 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
 
     @Override
     public void notifyListener(String key) {
-        CountDownLatch countDownLatch = new CountDownLatch(FunnelEnum.values().length);
-        listeners.forEach(e -> e.removeKey(key, countDownLatch));
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+//通过线程池提交删除任务
+        for (KeyExpireListener listener : listeners) {
+            executors.submit(() -> listener.removeKey(key));
         }
+
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         this.start();
     }
+
     @PreDestroy
     public void stopRun() {
         this.run = Boolean.FALSE;

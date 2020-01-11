@@ -18,7 +18,7 @@ import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
  * @author: lele
  * @date: 2019/12/20 上午11:35
  */
-public class RedisBloomFilterItem<T>  implements KeyExpireListener {
+public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
 
     private final Map<String, RedisBitArray> bitArrayMap;
@@ -44,7 +44,7 @@ public class RedisBloomFilterItem<T>  implements KeyExpireListener {
     private RedisBloomFilterItem(
             Funnel<? super T> funnel,
             Strategy strategy,
-           RedisBitArrayOperator redisBitArrayOperator
+            RedisBitArrayOperator redisBitArrayOperator
     ) {
         this.strategy = strategy;
         this.funnel = funnel;
@@ -82,9 +82,9 @@ public class RedisBloomFilterItem<T>  implements KeyExpireListener {
         }
     }
 
-    public void expire(String key, long timeout, TimeUnit timeUnit){
-        if(Objects.nonNull(bitArrayMap.get(key))){
-            if(timeout!=-1L){
+    public void expire(String key, long timeout, TimeUnit timeUnit) {
+        if (Objects.nonNull(bitArrayMap.get(key))) {
+            if (timeout != -1L) {
                 redisBitArrayOperator.expire(key, timeout, timeUnit);
             }
         }
@@ -128,67 +128,65 @@ public class RedisBloomFilterItem<T>  implements KeyExpireListener {
         }
     }
 
-    public void put(String key, T member, long expectedInsertions, double fpp,long timeout,TimeUnit timeUnit) {
+    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         //获取keyname
-        List<String> keyList=keyMap.get(key);
-        if(Objects.isNull(keyList)){
-            keyList=Collections.singletonList(key);
+        List<String> keyList = keyMap.get(key);
+        if (Objects.isNull(keyList)) {
+            keyList = Collections.singletonList(key);
             keyMap.put(key, keyList);
         }
-        Integer numHashFunctions=numHashFunctionsMap.get(key);
-        RedisBitArray bits =bitArrayMap.get(key);
-        if(Objects.isNull(bits)){
-            bits=redisBitArrayOperator.createBitArray(key);
-            bitArrayMap.put(key, bits);
-            //设置过期时间
-            redisBitArrayOperator.expire(key,timeout,timeUnit);
-            //获取容量
-            long numBits = optimalNumOfBits(expectedInsertions, fpp);
-            bits.setBitSize(numBits);
-            //获取hash函数数量
-            numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
-            numHashFunctionsMap.put(key, numHashFunctions);
-        }
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp);
+        RedisBitArray bits = bitArrayMap.get(key);
+        Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.put(member, funnel, numHashFunctions, bits);
+        if(noAdd&&timeout!=-1){
+            //设置过期时间
+            redisBitArrayOperator.expire(key, timeout, timeUnit);
+        }
     }
 
-    public void putAll(String key, long expectedInsertions, double fpp, List<T> members,long timeout,TimeUnit timeUnit) {
+    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
-        List<String> keyList=keyMap.get(key);
-        if(Objects.isNull(keyList)){
-            keyList=Collections.singletonList(key);
+        List<String> keyList = keyMap.get(key);
+        if (Objects.isNull(keyList)) {
+            keyList = Collections.singletonList(key);
             keyMap.put(key, keyList);
         }
-        Integer numHashFunctions=numHashFunctionsMap.get(key);
-        RedisBitArray bits =bitArrayMap.get(key);
-        if(Objects.isNull(bits)){
-            bits=redisBitArrayOperator.createBitArray(key);
-            bitArrayMap.put(key, bits);
-            //设置过期时间
-            redisBitArrayOperator.expire(key,timeout,timeUnit);
-
-            //获取容量
-            long numBits = optimalNumOfBits(expectedInsertions, fpp);
-            bits.setBitSize(numBits);
-            //获取hash函数数量
-            numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
-            numHashFunctionsMap.put(key, numHashFunctions);
-        }
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp);
+        RedisBitArray bits = bitArrayMap.get(key);
+        Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.putAll(funnel, numHashFunctions, bits, members);
+        if (noAdd&&timeout!=-1) {
+            //设置过期时间
+            redisBitArrayOperator.expire(key, timeout, timeUnit);
+        }
+    }
 
+    private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp){
+        Boolean noAdd;
+        if ((noAdd = Objects.isNull(bits))) {
+            long numBits = optimalNumOfBits(expectedInsertions, fpp);
+
+            bits = redisBitArrayOperator.createBitArray(key);
+            //获取容量
+            bits.setBitSize(numBits);
+            bitArrayMap.put(key, bits);
+            //获取hash函数数量
+            numHashFunctionsMap.put(key, optimalNumOfHashFunctions(expectedInsertions, numBits));
+        }
+        return noAdd;
     }
 
 
     @Override
-    public void removeKey(String key, CountDownLatch countDownLatch) {
+    public void removeKey(String key) {
         remove(key);
-        countDownLatch.countDown();
     }
 }

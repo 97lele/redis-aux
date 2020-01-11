@@ -38,9 +38,14 @@ public class WatiForDeleteKey implements Comparable {
             long other = ot.existTime - (now - ot.startTime);
 
             long self = existTime - (now - startTime);
-            //小顶堆，在上面是最小的，所以存活时间最少的优先级越大
-            return self < other ? 1 : self == other ? 0 : 1;
+            //小顶堆，在上面是最小的，存活时间最少在上面
+            return self<other?-1:(self==other)?0:1;
         }
         throw new RedisAuxException("WaitForDeleteKey无法比对");
+    }
+
+    @Override
+    public String toString() {
+        return key+":"+((startTime+existTime)-System.currentTimeMillis());
     }
 }
