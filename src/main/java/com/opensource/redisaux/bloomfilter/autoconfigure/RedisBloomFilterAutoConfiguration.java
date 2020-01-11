@@ -2,6 +2,9 @@ package com.opensource.redisaux.bloomfilter.autoconfigure;
 
 import com.opensource.redisaux.bloomfilter.core.*;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
+import com.opensource.redisaux.bloomfilter.support.builder.RedisBitArrayOperator;
+import com.opensource.redisaux.bloomfilter.support.builder.RedisBitArrayOperatorBuilder;
+import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -23,9 +26,8 @@ import java.util.Properties;
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisBloomFilterAutoConfiguration {
 
-    @Resource(name= BloomFilterConsts.INNERTEMPLATE)
+    @Resource(name = BloomFilterConsts.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
-
 
 
     @Bean
@@ -40,13 +42,13 @@ public class RedisBloomFilterAutoConfiguration {
         }
         Map<Class, RedisBloomFilterItem> map = new HashMap<>(FunnelEnum.values().length);
         for (FunnelEnum funnelEnum : FunnelEnum.values()) {
-            map.put(funnelEnum.getCode(), RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy,redisBitArrayFactory()));
+            map.put(funnelEnum.getCode(), RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisBitArrayFactory()));
         }
         return new RedisBloomFilter(map);
     }
 
-    @Bean(name="resetBitScript")
-    public DefaultRedisScript resetBitScript(){
+    @Bean(name = "resetBitScript")
+    public DefaultRedisScript resetBitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
         script.setLocation(new ClassPathResource("ResetBitScript.lua"));
         return script;
@@ -68,16 +70,18 @@ public class RedisBloomFilterAutoConfiguration {
     }
 
     @Bean
-    public RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayFactory(){
-        RedisBitArrayOperatorBuilder builder=new RedisBitArrayOperatorBuilder();
+    public RedisBitArrayOperator redisBitArrayFactory() {
+        RedisBitArrayOperatorBuilder builder = new RedisBitArrayOperatorBuilder();
         builder.setGetBitScript(getBitScript())
                 .setSetBitScript(setBitScript())
                 .setResetBitScript(resetBitScript())
                 .setRedisTemplate(redisTemplate);
-        return builder.build();
+        return builder.build(checkTask());
     }
-
-
+    @Bean
+    public CheckTask checkTask(){
+        return new CheckTask();
+    }
 
 
 }

@@ -14,7 +14,7 @@ import java.util.List;
  * @date: 2019/12/20 上午11:39
  * 操作redis的bitset,lua脚本
  */
- class RedisBitArray implements BitArray {
+public class RedisBitArray implements BitArray {
 
 
     private RedisTemplate redisTemplate;
@@ -30,9 +30,9 @@ import java.util.List;
 
     public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript) {
         this.redisTemplate = redisTemplate;
-        this.key=key;
-        this.setBitScript=setBitScript;
-        this.getBitScript=getBitScript;
+        this.key = key;
+        this.setBitScript = setBitScript;
+        this.getBitScript = getBitScript;
 
     }
 
@@ -104,6 +104,7 @@ import java.util.List;
 
     /**
      * 通过lua脚本设置值
+     *
      * @param index
      * @return
      */
@@ -113,22 +114,24 @@ import java.util.List;
             value[i * 2] = index[i];
             value[i * 2 + 1] = BloomFilterConsts.TRUE;
         }
-        redisTemplate.execute(setBitScript, Arrays.asList(key,index.length+""), value);
+        redisTemplate.execute(setBitScript, Arrays.asList(key, index.length + ""), value);
     }
 
     /**
      * 通过lua脚本返回对应位数的值
+     *
      * @param index
      * @return
      */
     private List<Long> getBitScriptExecute(long[] index) {
         Object[] value = Arrays.stream(index).boxed().toArray(Long[]::new);
-        List res = (List) redisTemplate.execute(getBitScript, Arrays.asList(key,index.length+""), value);
+        List res = (List) redisTemplate.execute(getBitScript, Arrays.asList(key, index.length + ""), value);
         return res;
     }
 
     /**
      * 把list转成long[]
+     *
      * @param index
      * @return
      */
@@ -141,7 +144,7 @@ import java.util.List;
         long[] res = new long[length];
         for (int i = 0; i < index.size(); i++) {
             long[] temp = (long[]) index.get(i);
-            System.arraycopy(temp, 0, res, temp.length*i, temp.length);
+            System.arraycopy(temp, 0, res, temp.length * i, temp.length);
         }
         return res;
     }

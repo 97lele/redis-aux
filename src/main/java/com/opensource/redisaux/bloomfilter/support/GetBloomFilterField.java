@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author: lele
@@ -46,10 +47,12 @@ public class GetBloomFilterField {
                 if (RedisBloomFilterRegistar.bloomFilterFieldMap != null) {
                     Map<String, BloomFilterProperty> map = RedisBloomFilterRegistar.bloomFilterFieldMap.get(annotation.prefix());
                     BloomFilterProperty field = map.get(CommonUtil.getKeyName(annotation.prefix(), fieldName));
-                    return new BloomFilterInfo(annotation.prefix().trim().equals("")?aClass.getCanonicalName():annotation.prefix(),
+                    return new BloomFilterInfo(annotation.prefix().trim().equals("") ? aClass.getCanonicalName() : annotation.prefix(),
                             field.key().trim().equals("") ? fieldName : field.key(),
                             field.exceptionInsert(),
-                            field.fpp());
+                            field.fpp(),
+                            field.timeout(),
+                            field.timeUnit());
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -64,12 +67,17 @@ public class GetBloomFilterField {
         private String keyName;
         private Long exceptionInsert;
         private Double fpp;
+        private Long timeout;
+        private TimeUnit timeUnit;
 
-        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, Double fpp) {
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, Double fpp, Long timeout, TimeUnit timeUnit) {
             this.keyPrefix = keyPrefix;
             this.keyName = keyName;
             this.exceptionInsert = exceptionInsert;
             this.fpp = fpp;
+            this.timeout = timeout;
+            this.timeUnit = timeUnit;
+
         }
 
         public String getKeyPrefix() {
@@ -86,6 +94,14 @@ public class GetBloomFilterField {
 
         public Double getFpp() {
             return fpp;
+        }
+
+        public Long getTimeout() {
+            return timeout;
+        }
+
+        public TimeUnit getTimeUnit() {
+            return timeUnit;
         }
     }
 
