@@ -36,12 +36,9 @@ public class RedisBloomFilter {
      * @param <T>
      */
     public <T, R> void add(SFunction<T> sFunction, R member) {
-        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
-        if (bloomFilterInfo == null) {
-            throw new RedisAuxException("请检查注解配置是否正确!");
-        } else {
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
             add(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), member, bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp());
-        }
+
 
     }
 
@@ -63,20 +60,18 @@ public class RedisBloomFilter {
     }
 
     public <T, R> void addAll(SFunction<T> sFunction, List<R> members) {
-        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
-        if (bloomFilterInfo == null) {
-            throw new RedisAuxException("请检查注解配置是否正确!");
-        } else {
-            addAll(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(),members);
-        }
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
+            addAll(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(), members);
+
 
     }
-    public <R> void addAll(String keyPrefix, String key,  List<R> members){
-        this.addAll(keyPrefix,key,1000L,0.03,members);
+
+    public <R> void addAll(String keyPrefix, String key, List<R> members) {
+        this.addAll(keyPrefix, key, 1000L, 0.03, members);
     }
 
-    public <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, List<R> members){
-        this.addAll(keyPrefix,key,exceptedInsertions,0.03,members);
+    public <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, List<R> members) {
+        this.addAll(keyPrefix, key, exceptedInsertions, 0.03, members);
     }
 
     public <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, List<R> members) {
@@ -94,11 +89,19 @@ public class RedisBloomFilter {
     }
 
     public <T> void remove(SFunction<T> sFunction) {
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
+        remove(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName());
+
+    }
+
+    public <T> void reset(SFunction<T> sFunction) {
         GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
-        if (bloomFilterInfo == null) {
-            throw new RedisAuxException("请检查注解配置是否正确!");
-        } else {
-            remove(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName());
+        String keyName = CommonUtil.getKeyName(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName());
+        reset(keyName);
+    }
+    public  void reset(String key){
+        for (RedisBloomFilterItem filter : bloomFilterMap.values()) {
+            filter.reset(key);
         }
     }
 
@@ -115,19 +118,13 @@ public class RedisBloomFilter {
     }
 
     public <T, R> boolean mightContain(SFunction<T> sFunction, R member) {
-        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
-        if (bloomFilterInfo == null) {
-            throw new RedisAuxException("请检查注解配置是否正确!");
-        }
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
         return mightContain(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), member);
 
     }
 
     public <T, R> List<Boolean> mightContains(SFunction<T> sFunction, List<R> members) {
-        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
-        if (bloomFilterInfo == null) {
-            throw new RedisAuxException("请检查注解配置是否正确!");
-        }
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
         return mightContains(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), members);
 
     }
@@ -155,6 +152,7 @@ public class RedisBloomFilter {
 
     /**
      * 这里因为不同类对应不同的item存放，所以
+     *
      * @param keys
      * @param keyPrefix
      */
@@ -176,6 +174,14 @@ public class RedisBloomFilter {
             resList.add(res);
         }
         return resList;
+    }
+
+    private GetBloomFilterField.BloomFilterInfo check(SFunction sFunction) {
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
+        if (bloomFilterInfo == null) {
+            throw new RedisAuxException("请检查注解配置是否正确!");
+        }
+        return bloomFilterInfo;
     }
 
 }

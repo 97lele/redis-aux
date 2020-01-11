@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
@@ -44,6 +45,13 @@ public class RedisBloomFilterAutoConfiguration {
         return new RedisBloomFilter(map);
     }
 
+    @Bean(name="resetBitScript")
+    public DefaultRedisScript resetBitScript(){
+        DefaultRedisScript script = new DefaultRedisScript();
+        script.setLocation(new ClassPathResource("ResetBitScript.lua"));
+        return script;
+    }
+
     @Bean(name = "setBitScript")
     public DefaultRedisScript setBitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
@@ -60,8 +68,8 @@ public class RedisBloomFilterAutoConfiguration {
     }
 
     @Bean
-    public RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory(){
-        RedisBitArrayFactoryBuilder builder=new RedisBitArrayFactoryBuilder();
+    public RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayFactory(){
+        RedisBitArrayOperatorBuilder builder=new RedisBitArrayOperatorBuilder();
         builder.setGetBitScript(getBitScript()).setSetBitScript(setBitScript()).setRedisTemplate(redisTemplate);
         return builder.build();
     }

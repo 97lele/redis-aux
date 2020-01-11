@@ -2,8 +2,6 @@ package com.opensource.redisaux.bloomfilter.core;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,33 +18,36 @@ public class RedisBloomFilterItem<T> {
 
     private final Map<String, BitArray<T>> map;
 
+    private final Map<String,List<String>> keyMap;
+
     private final Map<String, Integer> numHashFunctionsMap;
 
     private final Funnel<? super T> funnel;
 
     private final Strategy strategy;
 
-   private RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory;
+   private RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayOperator;
 
 
 
     public static <T> RedisBloomFilterItem<T> create(Funnel<? super T> funnel, Strategy strategy
-                                       , RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory          ) {
+                                       , RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayOperator) {
         strategy = Optional.ofNullable(strategy).orElse(RedisBloomFilterStrategies.MURMUR128_MITZ_64.getStrategy());
-        return new RedisBloomFilterItem<>(funnel, strategy, redisBitArrayFactory);
+        return new RedisBloomFilterItem<>(funnel, strategy, redisBitArrayOperator);
     }
 
 
     private RedisBloomFilterItem(
             Funnel<? super T> funnel,
             Strategy strategy,
-            RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory
+            RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayOperator
     ) {
         this.strategy = strategy;
         this.funnel = funnel;
         this.map = new ConcurrentHashMap<>();
         this.numHashFunctionsMap = new ConcurrentHashMap<>();
-        this.redisBitArrayFactory=redisBitArrayFactory;
+        this.redisBitArrayOperator = redisBitArrayOperator;
+        this.keyMap=new ConcurrentHashMap<>();
     }
 
     public boolean mightContain(String key, T member) {
@@ -70,6 +71,13 @@ public class RedisBloomFilterItem<T> {
         return strategy.mightContains(funnel, numHashFunctions, bits, members);
     }
 
+    public void reset(String key){
+        BitArray<T> tBitArray = map.get(key);
+        if(Objects.nonNull(tBitArray)){
+            redisBitArrayOperator.reset(keyMap.get(key),tBitArray.bitSize());
+        }
+    }
+
     /**
      * 这里判断不为空才删除的原因是，有可能里面的键不在里面
      * @param iterable
@@ -84,12 +92,13 @@ public class RedisBloomFilterItem<T> {
                 Integer integer = numHashFunctionsMap.get(s);
                 integer = null;
                 numHashFunctionsMap.remove(s);
+                keyMap.remove(s);
                 delete = true;
             }
 
         }
         if (delete) {
-           redisBitArrayFactory.delete(iterable);
+           redisBitArrayOperator.delete(iterable);
         }
     }
 
@@ -101,7 +110,8 @@ public class RedisBloomFilterItem<T> {
             Integer integer = numHashFunctionsMap.get(key);
             integer = null;
             numHashFunctionsMap.remove(key);
-           redisBitArrayFactory.delete(key);
+            keyMap.remove(key);
+            redisBitArrayOperator.delete(key);
         }
     }
 
@@ -116,9 +126,10 @@ public class RedisBloomFilterItem<T> {
         //获取hash函数数量
         int numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
         numHashFunctionsMap.putIfAbsent(key, numHashFunctions);
-        RedisBitArray bits = redisBitArrayFactory.of(key);
+        RedisBitArray bits = redisBitArrayOperator.createBitArray(key);
         bits.setBitSize(numBits);
         map.putIfAbsent(key, bits);
+        keyMap.putIfAbsent(key,Collections.singletonList(key));
         strategy.put(member, funnel, numHashFunctions, bits);
     }
 
@@ -133,9 +144,10 @@ public class RedisBloomFilterItem<T> {
         //获取hash函数数量
         int numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
         numHashFunctionsMap.putIfAbsent(key, numHashFunctions);
-        RedisBitArray bits = redisBitArrayFactory.of(key);
+        RedisBitArray bits = redisBitArrayOperator.createBitArray(key);
         bits.setBitSize(numBits);
         map.putIfAbsent(key, bits);
+        keyMap.putIfAbsent(key,Collections.singletonList(key));
         strategy.putAll(funnel, numHashFunctions, bits, keys);
     }
 
