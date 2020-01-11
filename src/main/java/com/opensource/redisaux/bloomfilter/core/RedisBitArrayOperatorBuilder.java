@@ -68,7 +68,7 @@ public class RedisBitArrayOperatorBuilder {
         }
 
         public void reset(List<String> key, Long bitSize) {
-            redisTemplate.execute(resetBitScript, key, bitSize, 0);
+            redisTemplate.execute(resetBitScript, key, bitSize);
         }
 
         public void delete(Collection<String> keys) {

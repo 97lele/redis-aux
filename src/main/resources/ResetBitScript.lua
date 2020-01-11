@@ -1,6 +1,6 @@
 
 local key = KEYS[1]
-local start, last = tonumber(ARGV[1]), tonumber(ARGV[2])
+local start, last = 0, tonumber(ARGV[1])
 
 local b = '\0'
 -- 把多余的头和尾用setbit处理
@@ -28,6 +28,6 @@ end
 local rs, re = start / 8, (last + 1) / 8
 local rl = re - rs
 if rl > 0 then
+    --string.rep拼接功能
     redis.call('SETRANGE', key, rs, string.rep(b, rl))
 end
-

@@ -70,7 +70,10 @@ public class RedisBloomFilterAutoConfiguration {
     @Bean
     public RedisBitArrayOperatorBuilder.RedisBitArrayOperator redisBitArrayFactory(){
         RedisBitArrayOperatorBuilder builder=new RedisBitArrayOperatorBuilder();
-        builder.setGetBitScript(getBitScript()).setSetBitScript(setBitScript()).setRedisTemplate(redisTemplate);
+        builder.setGetBitScript(getBitScript())
+                .setSetBitScript(setBitScript())
+                .setResetBitScript(resetBitScript())
+                .setRedisTemplate(redisTemplate);
         return builder.build();
     }
 
