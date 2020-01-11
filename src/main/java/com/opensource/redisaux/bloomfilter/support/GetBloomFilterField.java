@@ -21,7 +21,7 @@ public class GetBloomFilterField {
 
     private static Map<Class, SerializedLambda> map = new ConcurrentHashMap<>();
 
-    public static <T> Object[] resolveFieldName(SFunction<T> sFunction) {
+    public static <T> BloomFilterInfo resolveFieldName(SFunction<T> sFunction) {
         SerializedLambda lambda = map.get(sFunction.getClass());
         if (lambda == null) {
             try {
@@ -46,7 +46,10 @@ public class GetBloomFilterField {
                 if (RedisBloomFilterRegistar.bloomFilterFieldMap != null) {
                     Map<String, BloomFilterProperty> map = RedisBloomFilterRegistar.bloomFilterFieldMap.get(annotation.prefix());
                     BloomFilterProperty field = map.get(CommonUtil.getKeyName(annotation.prefix(), fieldName));
-                    return new Object[]{annotation.prefix(), field.key().trim().equals("") ? fieldName : field.key(), field.exceptionInsert(), field.fpp()};
+                    return new BloomFilterInfo(annotation.prefix().trim().equals("")?aClass.getCanonicalName():annotation.prefix(),
+                            field.key().trim().equals("") ? fieldName : field.key(),
+                            field.exceptionInsert(),
+                            field.fpp());
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -55,6 +58,37 @@ public class GetBloomFilterField {
         return null;
 
     }
+
+    public static class BloomFilterInfo {
+        private String keyPrefix;
+        private String keyName;
+        private Long exceptionInsert;
+        private Double fpp;
+
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, Double fpp) {
+            this.keyPrefix = keyPrefix;
+            this.keyName = keyName;
+            this.exceptionInsert = exceptionInsert;
+            this.fpp = fpp;
+        }
+
+        public String getKeyPrefix() {
+            return keyPrefix;
+        }
+
+        public String getKeyName() {
+            return keyName;
+        }
+
+        public Long getExceptionInsert() {
+            return exceptionInsert;
+        }
+
+        public Double getFpp() {
+            return fpp;
+        }
+    }
+
 
     private static String getFieldName(SerializedLambda lambda) {
         String getMethodName = lambda.getImplMethodName();

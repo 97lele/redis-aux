@@ -14,7 +14,7 @@ import java.util.List;
  * @date: 2019/12/20 上午11:39
  * 操作redis的bitset,lua脚本
  */
- class RedisTemplateBitArray implements BitArray {
+ class RedisBitArray implements BitArray {
 
 
     private RedisTemplate redisTemplate;
@@ -28,7 +28,7 @@ import java.util.List;
     private DefaultRedisScript getBitScript;
 
 
-    public RedisTemplateBitArray(RedisTemplate redisTemplate, String key,DefaultRedisScript setBitScript,DefaultRedisScript getBitScript) {
+    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript) {
         this.redisTemplate = redisTemplate;
         this.key=key;
         this.setBitScript=setBitScript;

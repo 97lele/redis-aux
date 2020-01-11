@@ -26,34 +26,27 @@ public class RedisBloomFilterItem<T> {
 
     private final Strategy strategy;
 
-    private final RedisTemplate redisTemplate;
+   private RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory;
 
-    private final DefaultRedisScript setBitScript;
 
-    private final DefaultRedisScript getBitScript;
 
-    public static <T> RedisBloomFilterItem<T> create(Funnel<? super T> funnel, Strategy strategy, RedisTemplate redisTemplate
-                                       , DefaultRedisScript setBitScript, DefaultRedisScript getBitScript          ) {
+    public static <T> RedisBloomFilterItem<T> create(Funnel<? super T> funnel, Strategy strategy
+                                       , RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory          ) {
         strategy = Optional.ofNullable(strategy).orElse(RedisBloomFilterStrategies.MURMUR128_MITZ_64.getStrategy());
-        return new RedisBloomFilterItem<>(funnel, strategy, redisTemplate,setBitScript,getBitScript);
+        return new RedisBloomFilterItem<>(funnel, strategy, redisBitArrayFactory);
     }
 
 
     private RedisBloomFilterItem(
             Funnel<? super T> funnel,
             Strategy strategy,
-            RedisTemplate redisTemplate,
-            DefaultRedisScript setBitScript,
-            DefaultRedisScript getBitScript
-
+            RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory
     ) {
         this.strategy = strategy;
         this.funnel = funnel;
         this.map = new ConcurrentHashMap<>();
         this.numHashFunctionsMap = new ConcurrentHashMap<>();
-        this.redisTemplate = redisTemplate;
-        this.setBitScript = setBitScript;
-        this.getBitScript = getBitScript;
+        this.redisBitArrayFactory=redisBitArrayFactory;
     }
 
     public boolean mightContain(String key, T member) {
@@ -77,6 +70,10 @@ public class RedisBloomFilterItem<T> {
         return strategy.mightContains(funnel, numHashFunctions, bits, members);
     }
 
+    /**
+     * 这里判断不为空才删除的原因是，有可能里面的键不在里面
+     * @param iterable
+     */
     public void removeAll(Collection<String> iterable) {
         boolean delete = false;
         for (String s : iterable) {
@@ -92,7 +89,7 @@ public class RedisBloomFilterItem<T> {
 
         }
         if (delete) {
-            redisTemplate.delete(iterable);
+           redisBitArrayFactory.delete(iterable);
         }
     }
 
@@ -104,7 +101,7 @@ public class RedisBloomFilterItem<T> {
             Integer integer = numHashFunctionsMap.get(key);
             integer = null;
             numHashFunctionsMap.remove(key);
-            redisTemplate.delete(key);
+           redisBitArrayFactory.delete(key);
         }
     }
 
@@ -119,7 +116,7 @@ public class RedisBloomFilterItem<T> {
         //获取hash函数数量
         int numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
         numHashFunctionsMap.putIfAbsent(key, numHashFunctions);
-        RedisTemplateBitArray bits = new RedisTemplateBitArray(redisTemplate, key,setBitScript,getBitScript);
+        RedisBitArray bits = redisBitArrayFactory.of(key);
         bits.setBitSize(numBits);
         map.putIfAbsent(key, bits);
         strategy.put(member, funnel, numHashFunctions, bits);
@@ -136,7 +133,7 @@ public class RedisBloomFilterItem<T> {
         //获取hash函数数量
         int numHashFunctions = optimalNumOfHashFunctions(expectedInsertions, numBits);
         numHashFunctionsMap.putIfAbsent(key, numHashFunctions);
-        RedisTemplateBitArray bits = new RedisTemplateBitArray(redisTemplate, key,setBitScript,getBitScript);
+        RedisBitArray bits = redisBitArrayFactory.of(key);
         bits.setBitSize(numBits);
         map.putIfAbsent(key, bits);
         strategy.putAll(funnel, numHashFunctions, bits, keys);

@@ -1,9 +1,6 @@
 package com.opensource.redisaux.bloomfilter.autoconfigure;
 
-import com.opensource.redisaux.bloomfilter.core.FunnelEnum;
-import com.opensource.redisaux.bloomfilter.core.RedisBloomFilterItem;
-import com.opensource.redisaux.bloomfilter.core.RedisBloomFilterStrategies;
-import com.opensource.redisaux.bloomfilter.core.Strategy;
+import com.opensource.redisaux.bloomfilter.core.*;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -42,7 +39,7 @@ public class RedisBloomFilterAutoConfiguration {
         }
         Map<Class, RedisBloomFilterItem> map = new HashMap<>(FunnelEnum.values().length);
         for (FunnelEnum funnelEnum : FunnelEnum.values()) {
-            map.put(funnelEnum.getCode(), RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisTemplate, setBitScript(), getBitScript()));
+            map.put(funnelEnum.getCode(), RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy,redisBitArrayFactory()));
         }
         return new RedisBloomFilter(map);
     }
@@ -60,6 +57,13 @@ public class RedisBloomFilterAutoConfiguration {
         script.setScriptText("local array={} for i=1,tonumber(KEYS[2])  do array[i]=redis.call('getbit',KEYS[1],ARGV[i]) end return array");
         script.setResultType(List.class);
         return script;
+    }
+
+    @Bean
+    public RedisBitArrayFactoryBuilder.RedisBitArrayFactory redisBitArrayFactory(){
+        RedisBitArrayFactoryBuilder builder=new RedisBitArrayFactoryBuilder();
+        builder.setGetBitScript(getBitScript()).setSetBitScript(setBitScript()).setRedisTemplate(redisTemplate);
+        return builder.build();
     }
 
 

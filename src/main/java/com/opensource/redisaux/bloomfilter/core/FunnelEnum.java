@@ -13,7 +13,7 @@ public enum FunnelEnum {
     STRINGFUNNEL(Funnels.stringFunnel(Charsets.UTF_8),String.class),
     INTFUNNEL(Funnels.integerFunnel(),Integer.class),
     LONGFUNNEL(Funnels.longFunnel(),Long.class),
-    BYTEFUNNEL(Funnels.byteArrayFunnel(),Byte.class)
+    BYTEFUNNEL(Funnels.byteArrayFunnel(),Byte.class),
     ;
 
     private Funnel funnel;
@@ -31,14 +31,6 @@ public enum FunnelEnum {
         return code;
     }
 
-    public static Class getClassByFunnel(Funnel funnel){
-        for (FunnelEnum funnelEnum : values()) {
-            if(funnelEnum.funnel.equals(funnel)){
-                return funnelEnum.code;
-            }
-        }
-        return null;
-    }
 
 
 }
