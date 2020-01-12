@@ -19,7 +19,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
     public CheckTask() {
         super("checkTask");
         this.priorityQueue = new PriorityBlockingQueue<>();
-        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(64), new ThreadPoolExecutor.CallerRunsPolicy());
+        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1024), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Override

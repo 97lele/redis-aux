@@ -19,6 +19,7 @@ public class RedisBitArrayOperatorBuilder {
     private DefaultRedisScript resetBitScript;
 
 
+
     public DefaultRedisScript getSetBitScript() {
         return setBitScript;
     }
@@ -31,12 +32,16 @@ public class RedisBitArrayOperatorBuilder {
         return redisTemplate;
     }
 
-    public DefaultRedisScript getResetBitScript() {
-        return resetBitScript;
-    }
+    public DefaultRedisScript getResetBitScript(){return resetBitScript;}
+
 
     public RedisBitArrayOperatorBuilder setSetBitScript(DefaultRedisScript setBitScript) {
         this.setBitScript = setBitScript;
+        return this;
+    }
+
+    public RedisBitArrayOperatorBuilder setResetBitScript(DefaultRedisScript resetBitScript){
+        this.resetBitScript=resetBitScript;
         return this;
     }
 
@@ -50,20 +55,12 @@ public class RedisBitArrayOperatorBuilder {
         return this;
     }
 
-    public RedisBitArrayOperatorBuilder setResetBitScript(DefaultRedisScript resetBitScript) {
-        this.resetBitScript = resetBitScript;
-        return this;
-    }
-
 
     public RedisBitArrayOperator build(  CheckTask checkTask
     ) {
         return new RedisBitArrayOperator(this,checkTask);
     }
 
-    /**
-     * 负责创建RedisBitArray对象
-     */
 
 
 

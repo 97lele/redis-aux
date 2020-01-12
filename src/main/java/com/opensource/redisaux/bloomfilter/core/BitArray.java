@@ -24,4 +24,6 @@ public interface BitArray<T> {
     List<Boolean> getBatch(List<long[]> indexs);
 
     long bitSize();
+
+    void reset();
 }

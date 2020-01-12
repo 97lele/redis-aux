@@ -3,13 +3,13 @@ package com.opensource.redisaux.bloomfilter.support.builder;
 import com.opensource.redisaux.bloomfilter.core.RedisBitArray;
 import com.opensource.redisaux.bloomfilter.core.WatiForDeleteKey;
 import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
-import com.opensource.redisaux.bloomfilter.support.observer.KeyExpireListener;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.PriorityQueue;
 import java.util.concurrent.TimeUnit;
 
 public  class RedisBitArrayOperator {
@@ -28,22 +28,15 @@ public  class RedisBitArrayOperator {
             this.redisTemplate = builder.getRedisTemplate();
             this.getBitScript = builder.getGetBitScript();
             this.setBitScript = builder.getSetBitScript();
-            this.resetBitScript = builder.getResetBitScript();
             this.checkTask=checkTask;
+            this.resetBitScript=builder.getResetBitScript();
             //定时清理不用的链接
         }
-
-
-
-
-        public RedisBitArray createBitArray(String key) {
-            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript);
+        public RedisBitArray createBitArray(String key,double growRate) {
+            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,growRate);
         }
 
-        public void reset(List<String> key, Long bitSize) {
-            redisTemplate.execute(resetBitScript, key, bitSize);
-        }
-
+//过期之后删除
         public void expire(String key, long timeout, TimeUnit timeUnit){
             checkTask.addExpireKey(new WatiForDeleteKey(key,timeUnit.toMillis(timeout),System.currentTimeMillis()));
             redisTemplate.expire(key,timeout,timeUnit);
@@ -52,9 +45,6 @@ public  class RedisBitArrayOperator {
             redisTemplate.delete(keys);
         }
 
-        public void delete(String key) {
-            redisTemplate.delete(key);
-        }
 
 
 }

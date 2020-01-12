@@ -39,15 +39,15 @@ public class RedisBloomFilter {
      */
     public <T, R> void add(SFunction<T> sFunction, R member) {
         GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
-        add(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), member, bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(), bloomFilterInfo.getTimeout(), bloomFilterInfo.getTimeUnit());
+        add(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), member, bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(), bloomFilterInfo.getTimeout(), bloomFilterInfo.getTimeUnit(),bloomFilterInfo.getGrowRate());
     }
 
     public <R> void add(AddCondition addCondition, R member) {
         InnerInfo condition = addCondition.build();
-        add(condition.getKeyPrefix(), condition.getKeyName(), member, condition.getExceptionInsert(), condition.getFpp(), condition.getTimeout(), condition.getTimeUnit());
+        add(condition.getKeyPrefix(), condition.getKeyName(), member, condition.getExceptionInsert(), condition.getFpp(), condition.getTimeout(), condition.getTimeUnit(),condition.getGrowRate());
     }
 
-    private <R> void add(String keyPrefix, String key, R member, Long exceptedInsertions, Double fpp, long timeout, TimeUnit timeUnit) {
+    private <R> void add(String keyPrefix, String key, R member, long exceptedInsertions, double fpp, long timeout, TimeUnit timeUnit,double growRate) {
         Class clzz = member.getClass();
         Object res = member;
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
@@ -56,12 +56,12 @@ public class RedisBloomFilter {
             res = JSON.toJSONBytes(member, SerializerFeature.NotWriteDefaultValue);
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit);
+        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit,growRate);
     }
 
     public <T, R> void addAll(SFunction<T> sFunction, List<R> members) {
         GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
-        addAll(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(), members, bloomFilterInfo.getTimeout(), bloomFilterInfo.getTimeUnit());
+        addAll(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName(), bloomFilterInfo.getExceptionInsert(), bloomFilterInfo.getFpp(), members, bloomFilterInfo.getTimeout(), bloomFilterInfo.getTimeUnit(),bloomFilterInfo.getGrowRate());
     }
 
     public <R> void addAll(AddCondition addCondition, List<R> members) {
@@ -73,11 +73,12 @@ public class RedisBloomFilter {
                 innerInfo.getFpp(),
                 members,
                 innerInfo.getTimeout(),
-                innerInfo.getTimeUnit()
+                innerInfo.getTimeUnit(),
+                innerInfo.getGrowRate()
         );
     }
 
-    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, List<R> members, long timeout, TimeUnit timeUnit) {
+    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, List<R> members, long timeout, TimeUnit timeUnit,double growRate) {
         if (members.isEmpty()) {
             throw new RedisAuxException("参数有误!");
         }
@@ -88,7 +89,7 @@ public class RedisBloomFilter {
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit);
+        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit,growRate);
     }
 
     public <R> boolean mightContain(BaseCondition queryCondition, R member) {

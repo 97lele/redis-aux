@@ -52,7 +52,8 @@ public class GetBloomFilterField {
                             field.exceptionInsert(),
                             field.fpp(),
                             field.timeout(),
-                            field.timeUnit());
+                            field.timeUnit(),
+                            field.growRate());
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -65,18 +66,20 @@ public class GetBloomFilterField {
     public static class BloomFilterInfo {
         private String keyPrefix;
         private String keyName;
-        private Long exceptionInsert;
-        private Double fpp;
-        private Long timeout;
+        private long exceptionInsert;
+        private double fpp;
+        private long timeout;
         private TimeUnit timeUnit;
+        private double growRate;
 
-        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, Double fpp, Long timeout, TimeUnit timeUnit) {
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit,double growRate) {
             this.keyPrefix = keyPrefix;
             this.keyName = keyName;
             this.exceptionInsert = exceptionInsert;
             this.fpp = fpp;
             this.timeout = timeout;
             this.timeUnit = timeUnit;
+            this.growRate=growRate;
 
         }
 
@@ -88,21 +91,23 @@ public class GetBloomFilterField {
             return keyName;
         }
 
-        public Long getExceptionInsert() {
+        public long getExceptionInsert() {
             return exceptionInsert;
         }
 
-        public Double getFpp() {
+        public double getFpp() {
             return fpp;
         }
 
-        public Long getTimeout() {
+        public long getTimeout() {
             return timeout;
         }
 
         public TimeUnit getTimeUnit() {
             return timeUnit;
         }
+
+        public double getGrowRate(){return growRate;}
     }
 
 

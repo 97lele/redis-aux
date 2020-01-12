@@ -3,12 +3,13 @@ package com.opensource.redisaux.bloomfilter.support.builder;
 import java.util.concurrent.TimeUnit;
 
 public class InnerInfo {
-    private Double fpp;
-    private Long exceptionInsert;
+    private double fpp;
+    private long exceptionInsert;
     private String keyPrefix;
     private String keyName;
-    private Long timeout;
+    private long timeout;
     private TimeUnit timeUnit;
+    private double growRate;
 
     public InnerInfo(AddCondition addCondition) {
         this.fpp = addCondition.fpp;
@@ -17,6 +18,7 @@ public class InnerInfo {
         this.keyName = addCondition.keyName;
         this.timeout = addCondition.timeout;
         this.timeUnit = addCondition.timeUnit;
+        this.growRate=addCondition.growRate;
     }
     public InnerInfo(ExpireCondition expireCondition){
         this.keyPrefix = expireCondition.keyPrefix;
@@ -29,11 +31,13 @@ public class InnerInfo {
         this.keyName = condition.keyName;
     }
 
-    public Double getFpp() {
+    public double getFpp() {
         return fpp;
     }
 
-    public Long getExceptionInsert() {
+    public double getGrowRate(){return growRate;}
+
+    public long getExceptionInsert() {
         return exceptionInsert;
     }
 
@@ -45,7 +49,7 @@ public class InnerInfo {
         return keyName;
     }
 
-    public Long getTimeout() {
+    public long getTimeout() {
         return timeout;
     }
 

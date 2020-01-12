@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.opensource.redisaux.CommonUtil.optimalNumOfBits;
 import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
@@ -22,8 +24,6 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
 
     private final Map<String, RedisBitArray> bitArrayMap;
-
-    private final Map<String, List<String>> keyMap;
 
     private final Map<String, Integer> numHashFunctionsMap;
 
@@ -51,7 +51,6 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         this.bitArrayMap = new ConcurrentHashMap<>();
         this.numHashFunctionsMap = new ConcurrentHashMap<>();
         this.redisBitArrayOperator = redisBitArrayOperator;
-        this.keyMap = new ConcurrentHashMap<>();
     }
 
     public boolean mightContain(String key, T member) {
@@ -76,9 +75,9 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
     }
 
     public void reset(String key) {
-        BitArray<T> tBitArray = bitArrayMap.get(key);
+        RedisBitArray tBitArray = bitArrayMap.get(key);
         if (Objects.nonNull(tBitArray)) {
-            redisBitArrayOperator.reset(keyMap.get(key), tBitArray.bitSize());
+           tBitArray.reset();
         }
     }
 
@@ -97,49 +96,43 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
      */
     public void removeAll(Collection<String> iterable) {
         boolean delete = false;
+        List<List<String>> list=new ArrayList<>();
         for (String s : iterable) {
-            BitArray<T> tBitArray = bitArrayMap.get(s);
+            RedisBitArray tBitArray = bitArrayMap.get(s);
             if (tBitArray != null) {
-                tBitArray = null;
+                list.add(tBitArray.getKeyList());
                 bitArrayMap.remove(s);
-                Integer integer = numHashFunctionsMap.get(s);
-                integer = null;
                 numHashFunctionsMap.remove(s);
-                keyMap.remove(s);
                 delete = true;
             }
 
         }
         if (delete) {
-            redisBitArrayOperator.delete(iterable);
+            List<String> deleteKeys = list.stream().flatMap(Collection::stream).collect(Collectors.toList());
+            redisBitArrayOperator.delete(deleteKeys);
         }
     }
 
     public void remove(String key) {
-        BitArray<T> tBitArray = bitArrayMap.get(key);
+        RedisBitArray tBitArray = bitArrayMap.get(key);
         if (tBitArray != null) {
-            tBitArray = null;
             bitArrayMap.remove(key);
             Integer integer = numHashFunctionsMap.get(key);
             integer = null;
             numHashFunctionsMap.remove(key);
-            keyMap.remove(key);
-            redisBitArrayOperator.delete(key);
+            redisBitArrayOperator.delete(tBitArray.getKeyList());
+            tBitArray = null;
+
         }
     }
 
-    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit) {
+    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit,double growRate) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         //获取keyname
-        List<String> keyList = keyMap.get(key);
-        if (Objects.isNull(keyList)) {
-            keyList = Collections.singletonList(key);
-            keyMap.put(key, keyList);
-        }
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp);
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,growRate);
         RedisBitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.put(member, funnel, numHashFunctions, bits);
@@ -149,17 +142,15 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit) {
+    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit,double growRate) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
-        List<String> keyList = keyMap.get(key);
-        if (Objects.isNull(keyList)) {
-            keyList = Collections.singletonList(key);
-            keyMap.put(key, keyList);
-        }
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp);
+        Preconditions.checkArgument(members.size()<expectedInsertions,"once add size shoud smaller than expectInsertions");
+
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,growRate);
+
         RedisBitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.putAll(funnel, numHashFunctions, bits, members);
@@ -169,12 +160,11 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp){
+    private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp,double growRate){
         Boolean noAdd;
         if ((noAdd = Objects.isNull(bits))) {
             long numBits = optimalNumOfBits(expectedInsertions, fpp);
-
-            bits = redisBitArrayOperator.createBitArray(key);
+            bits = redisBitArrayOperator.createBitArray(key,growRate);
             //获取容量
             bits.setBitSize(numBits);
             bitArrayMap.put(key, bits);

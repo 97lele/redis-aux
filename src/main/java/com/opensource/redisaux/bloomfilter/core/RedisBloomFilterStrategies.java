@@ -16,6 +16,8 @@ public enum RedisBloomFilterStrategies {
 
 
     MURMUR128_MITZ_64(new Strategy() {
+
+
         @Override
         public <T> boolean put(T object, Funnel<? super T> funnel, int numHashFunctions, BitArray bitArray) {
             long bitSize = bitArray.bitSize();
