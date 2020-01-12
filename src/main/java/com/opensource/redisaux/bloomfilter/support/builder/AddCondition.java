@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  * @author lulu
  * @Date 2020/1/11 20:48
  */
-public class AddCondition {
+public final class AddCondition {
     protected Double fpp;
     protected Long exceptionInsert;
     protected String keyPrefix;
@@ -17,6 +17,8 @@ public class AddCondition {
     protected TimeUnit timeUnit;
     protected Boolean enableGrow;
     protected Double growRate;
+    protected BaseCondition baseCondition;
+    protected ExpireCondition expireCondition;
 
 
     public AddCondition fpp(Double fpp){
@@ -65,6 +67,19 @@ public class AddCondition {
         this.enableGrow=Objects.isNull(enableGrow)?false:enableGrow;
         return new InnerInfo(this);
 
+    }
+    public BaseCondition asBaseCondition(){
+        if(this.baseCondition==null){
+            this.baseCondition=BaseCondition.of().keyName(keyName).keyPrefix(keyPrefix);
+        }
+        return this.baseCondition;
+    }
+
+    public ExpireCondition asExpireCondition(){
+        if(this.expireCondition==null){
+            this.expireCondition=ExpireCondition.of().keyName(keyName).keyPrefix(keyPrefix).timeout(timeout).timeUnit(timeUnit);
+        }
+        return this.expireCondition;
     }
 
     public static AddCondition of(){

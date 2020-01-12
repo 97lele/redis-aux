@@ -9,11 +9,12 @@ import java.util.concurrent.TimeUnit;
  * @author lulu
  * @Date 2020/1/11 21:26
  */
-public class ExpireCondition {
+public final class ExpireCondition {
     protected String keyPrefix;
     protected String keyName;
     protected Long timeout;
     protected TimeUnit timeUnit;
+    protected BaseCondition baseCondition;
     public ExpireCondition keyPrefix(String keyPrefix){
         this.keyPrefix=keyPrefix;
         return this;
@@ -40,5 +41,12 @@ public class ExpireCondition {
     }
     public static ExpireCondition of(){
         return new ExpireCondition();
+    }
+
+    public BaseCondition asBaseCondition(){
+        if(this.baseCondition==null){
+            this.baseCondition=BaseCondition.of().keyName(keyName).keyPrefix(keyPrefix);
+        }
+        return this.baseCondition;
     }
 }

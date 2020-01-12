@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * @author lulu
  * @Date 2020/1/11 21:28
  */
-public class BaseCondition {
+public final class BaseCondition {
     protected String keyPrefix;
     protected String keyName;
     public BaseCondition keyPrefix(String keyPrefix){
