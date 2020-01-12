@@ -3,9 +3,6 @@ package com.opensource.redisaux.bloomfilter.support.builder;
 import com.opensource.redisaux.bloomfilter.core.RedisBitArray;
 import com.opensource.redisaux.bloomfilter.core.WatiForDeleteKey;
 import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
@@ -32,8 +29,8 @@ public  class RedisBitArrayOperator {
             this.resetBitScript=builder.getResetBitScript();
             //定时清理不用的链接
         }
-        public RedisBitArray createBitArray(String key,double growRate) {
-            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,growRate);
+        public RedisBitArray createBitArray(String key,boolean enableGrow,double growRate) {
+            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,enableGrow,growRate);
         }
 
 //过期之后删除

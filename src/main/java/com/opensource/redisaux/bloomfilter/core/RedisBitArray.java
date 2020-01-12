@@ -36,18 +36,20 @@ public class RedisBitArray implements BitArray {
 
     private DefaultRedisScript resetBitScript;
 
+    private boolean enableGrow;
 
     private double growRate;
 
-    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript,DefaultRedisScript resetBitScript, double growRate) {
+    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, boolean enableGrow, double growRate) {
         this.redisTemplate = redisTemplate;
         this.key = key;
         this.setBitScript = setBitScript;
         this.getBitScript = getBitScript;
         this.keyList = new LinkedList<>();
         this.keyList.add(key);
-        this.resetBitScript=resetBitScript;
+        this.resetBitScript = resetBitScript;
         this.growRate = growRate;
+        this.enableGrow = enableGrow;
     }
 
 
@@ -61,8 +63,10 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public boolean set(long[] index) {
-        String key = ensureCapacity();
-        setBitScriptExecute(index, key);
+        ensureCapacity();
+        for (String s : keyList) {
+            setBitScriptExecute(index, s);
+        }
         return Boolean.TRUE;
     }
 
@@ -76,20 +80,23 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean setBatch(List index) {
         long[] res = getArrayFromList(index);
-        String key = ensureCapacity();
-        setBitScriptExecute(res, key);
+        ensureCapacity();
+        for (String s : keyList) {
+            setBitScriptExecute(res, s);
+        }
         return Boolean.TRUE;
     }
 
     @Override
     public boolean get(long[] index) {
+        boolean exists=true;
         for (String s : keyList) {
             List<Long> bits = getBitScriptExecute(index, s);
-            if (!bits.contains(BloomFilterConsts.FALSE)) {
-                return true;
+            if (bits.contains(BloomFilterConsts.FALSE)) {
+                exists=false;
             }
         }
-        return false;
+        return exists;
     }
 
     @Override
@@ -121,11 +128,11 @@ public class RedisBitArray implements BitArray {
         }
         List<Boolean> res = new ArrayList<>(index.size());
         for (int i = 0; i < index.size(); i++) {
-            Boolean exists = false;
+            boolean exists = true;
             for (int k = 0; k < keyList.size(); k++) {
                 int idx = i + k * index.size();
-                if ((exists = lists.get(idx))) {
-                    break;
+                if (!lists.get(idx)) {
+                    exists=false;
                 }
             }
             res.add(exists);
@@ -141,25 +148,26 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public void reset() {
-        keyList.forEach(e->{
+        keyList.forEach(e -> {
             redisTemplate.execute(resetBitScript, Arrays.asList(e), bitSize);
         });
     }
 
 
-    private String ensureCapacity() {
-        Long count = (Long) redisTemplate.execute(new RedisCallback() {
-            @Override
-            public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                return redisConnection.bitCount(keyList.getLast().getBytes());
+    private void ensureCapacity() {
+        String ensuerKey = keyList.getLast();
+        if (enableGrow) {
+            Long count = (Long) redisTemplate.execute(new RedisCallback() {
+                @Override
+                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
+                    return redisConnection.bitCount(keyList.getLast().getBytes());
+                }
+            });
+            if (bitSize * growRate < count) {
+                ensuerKey = this.key + "-" + keyList.size();
+                this.keyList.addLast(ensuerKey);
             }
-        });
-        String ensuerKey=keyList.getLast() ;
-        if (bitSize * growRate < count) {
-           ensuerKey = this.key+"-"+keyList.size();
-            this.keyList.addLast(ensuerKey);
         }
-        return ensuerKey;
     }
 
     /**

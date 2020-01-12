@@ -9,6 +9,7 @@ public class InnerInfo {
     private String keyName;
     private long timeout;
     private TimeUnit timeUnit;
+    private boolean enableGrow;
     private double growRate;
 
     public InnerInfo(AddCondition addCondition) {
@@ -19,6 +20,7 @@ public class InnerInfo {
         this.timeout = addCondition.timeout;
         this.timeUnit = addCondition.timeUnit;
         this.growRate=addCondition.growRate;
+        this.enableGrow=addCondition.enableGrow;
     }
     public InnerInfo(ExpireCondition expireCondition){
         this.keyPrefix = expireCondition.keyPrefix;
@@ -56,4 +58,6 @@ public class InnerInfo {
     public TimeUnit getTimeUnit() {
         return timeUnit;
     }
+
+    public boolean isEnableGrow(){return enableGrow;}
 }

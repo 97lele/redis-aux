@@ -126,13 +126,13 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit,double growRate) {
+    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit,boolean enableGrow,double growRate) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         //获取keyname
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,growRate);
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,enableGrow,growRate);
         RedisBitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.put(member, funnel, numHashFunctions, bits);
@@ -142,14 +142,14 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit,double growRate) {
+    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit,boolean enableGrow,double growRate) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         Preconditions.checkArgument(members.size()<expectedInsertions,"once add size shoud smaller than expectInsertions");
 
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,growRate);
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,enableGrow,growRate);
 
         RedisBitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
@@ -160,11 +160,11 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp,double growRate){
+    private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp,boolean enableGrow,double growRate){
         Boolean noAdd;
         if ((noAdd = Objects.isNull(bits))) {
             long numBits = optimalNumOfBits(expectedInsertions, fpp);
-            bits = redisBitArrayOperator.createBitArray(key,growRate);
+            bits = redisBitArrayOperator.createBitArray(key,enableGrow,growRate);
             //获取容量
             bits.setBitSize(numBits);
             bitArrayMap.put(key, bits);

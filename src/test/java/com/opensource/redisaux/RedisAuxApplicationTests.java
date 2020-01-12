@@ -40,19 +40,25 @@ class RedisAuxApplicationTests {
         System.out.println(bloomFilter.mightContain(BaseCondition.of().keyName("test1"),1));
         bloomFilter.reset(BaseCondition.of().keyName("test"));
     }
-
     @Test
     public void
 
     testGrow(){
 //        bloomFilter.addAll(AddCondition.of().keyName("testGrow").exceptionInsert(5L),Arrays.asList(1,2,3,4));
-        bloomFilter.addAll(AddCondition.of().keyName("testGrow").exceptionInsert(5L),Arrays.asList(1,2,3,4));
-        bloomFilter.addAll(AddCondition.of().keyName("testGrow"),Arrays.asList(88,21,11));
-        bloomFilter.add(AddCondition.of().keyName("testGrow"),18);
+        String key="testGrow";
+        String key2="testGrow2";
+        bloomFilter.addAll(AddCondition.of().keyName(key2).exceptionInsert(5L).enableGrow(false),Arrays.asList(1,2,3,4));
+        bloomFilter.addAll(AddCondition.of().keyName(key2),Arrays.asList(5,6,7,8));
+        bloomFilter.addAll(AddCondition.of().keyName(key2),Arrays.asList(9,10,11,12));
+        bloomFilter.addAll(AddCondition.of().keyName(key2),Arrays.asList(13,14,15,16));
+        System.out.println(bloomFilter.mightContains(BaseCondition.of().keyName(key2),Arrays.asList(13,200)));
+        bloomFilter.addAll(AddCondition.of().keyName(key).exceptionInsert(5L).enableGrow(true),Arrays.asList(1,2,3,4));
+        bloomFilter.addAll(AddCondition.of().keyName(key),Arrays.asList(5,6,7,8));
+        bloomFilter.addAll(AddCondition.of().keyName(key),Arrays.asList(9,10,11,12));
+        bloomFilter.addAll(AddCondition.of().keyName(key),Arrays.asList(13,14,15,16));
+        System.out.println(bloomFilter.mightContains(BaseCondition.of().keyName(key),Arrays.asList(13,200)));
 
-        List<Boolean> testGrow = bloomFilter.mightContains(BaseCondition.of().keyName("testGrow"), Arrays.asList(2, 4, 9,8,88,220));
-        System.out.println(testGrow);
-        bloomFilter.reset(BaseCondition.of().keyName("testGrow"));
+
     }
 
     public static void main(String[] args) {

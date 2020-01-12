@@ -14,5 +14,6 @@ public @interface BloomFilterProperty {
     String key() default "";
     long timeout() default -1L;
     TimeUnit timeUnit() default TimeUnit.SECONDS;
-    double growRate() default 0.6;
+    boolean enableGrow() default false;
+    double growRate() default 0.7;
 }

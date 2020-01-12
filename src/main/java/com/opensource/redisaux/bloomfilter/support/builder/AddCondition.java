@@ -15,6 +15,7 @@ public class AddCondition {
     protected String keyName;
     protected Long timeout;
     protected TimeUnit timeUnit;
+    protected Boolean enableGrow;
     protected Double growRate;
 
 
@@ -42,10 +43,15 @@ public class AddCondition {
         this.timeUnit=timeUnit;
         return this;
     }
+    public AddCondition enableGrow(Boolean enableGrow){
+        this.enableGrow=enableGrow;
+        return this;
+    }
     public AddCondition growRate(Double growRate){
         this.growRate=growRate;
         return this;
     }
+
     public InnerInfo build(){
         if(Objects.isNull(keyName)){
             throw new RedisAuxException("key is null!");
@@ -54,7 +60,9 @@ public class AddCondition {
         this.exceptionInsert=Objects.isNull(exceptionInsert)?1000L:exceptionInsert;
         this.timeUnit=Objects.isNull(timeUnit)?TimeUnit.SECONDS:timeUnit;
         this.timeout=Objects.isNull(timeout)?-1L:timeout;
-        this.growRate=Objects.isNull(growRate)?0.6:growRate;
+        this.growRate=Objects.isNull(growRate)?0.7:growRate;
+        //默认不开启自增
+        this.enableGrow=Objects.isNull(enableGrow)?false:enableGrow;
         return new InnerInfo(this);
 
     }
