@@ -70,6 +70,12 @@ public class RedisBloomFilterAutoConfiguration {
         script.setResultType(List.class);
         return script;
     }
+    @Bean
+    public DefaultRedisScript afterGrowScript(){
+        DefaultRedisScript script=new DefaultRedisScript();
+        script.setScriptText("local ttl=redis.call('ttl',KEYS[1]) redis.call('expire',KEYS[2],ttl)");
+        return script;
+    }
 
     @Bean
     public RedisBitArrayOperator redisBitArrayFactory() {
@@ -77,6 +83,7 @@ public class RedisBloomFilterAutoConfiguration {
         builder.setGetBitScript(getBitScript())
                 .setSetBitScript(setBitScript())
                 .setResetBitScript(resetBitScript())
+                .setAfterGrowScript(afterGrowScript())
                 .setRedisTemplate(redisTemplate);
         return builder.build(checkTask());
     }

@@ -18,7 +18,10 @@ public class RedisBitArrayOperatorBuilder {
 
     private DefaultRedisScript resetBitScript;
 
+    private DefaultRedisScript afterGrowScript;
 
+
+    public DefaultRedisScript getAfterGrowScript(){return afterGrowScript;}
 
     public DefaultRedisScript getSetBitScript() {
         return setBitScript;
@@ -44,7 +47,10 @@ public class RedisBitArrayOperatorBuilder {
         this.resetBitScript=resetBitScript;
         return this;
     }
-
+    public RedisBitArrayOperatorBuilder setAfterGrowScript(DefaultRedisScript afterGrowScript){
+        this.afterGrowScript=afterGrowScript;
+        return this;
+    }
     public RedisBitArrayOperatorBuilder setGetBitScript(DefaultRedisScript getBitScript) {
         this.getBitScript = getBitScript;
         return this;

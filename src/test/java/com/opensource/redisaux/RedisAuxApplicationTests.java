@@ -73,7 +73,7 @@ class RedisAuxApplicationTests {
         String key = "testGrow";
         String key2 = "testGrow2";
         AddCondition addCondition2 = AddCondition.of().keyName(key2).exceptionInsert(5L);
-        AddCondition addCondition=AddCondition.of().keyName(key).exceptionInsert(5L).enableGrow(true);
+        AddCondition addCondition=AddCondition.of().keyName(key).exceptionInsert(5L).enableGrow(true).timeout(30L);
         bloomFilter.addAll(addCondition2, Arrays.asList(1, 2, 3, 4));
         bloomFilter.addAll(addCondition2, Arrays.asList(5, 6, 7, 8));
         bloomFilter.addAll(addCondition2, Arrays.asList(9, 10, 11, 12));

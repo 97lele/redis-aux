@@ -36,11 +36,13 @@ public class RedisBitArray implements BitArray {
 
     private DefaultRedisScript resetBitScript;
 
+    private DefaultRedisScript afterGrowScript;
+
     private boolean enableGrow;
 
     private double growRate;
 
-    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, boolean enableGrow, double growRate) {
+    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript,DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
         this.redisTemplate = redisTemplate;
         this.key = key;
         this.setBitScript = setBitScript;
@@ -48,6 +50,7 @@ public class RedisBitArray implements BitArray {
         this.keyList = new LinkedList<>();
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
+        this.afterGrowScript=afterGrowScript;
         this.growRate = growRate;
         this.enableGrow = enableGrow;
     }
@@ -63,10 +66,11 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public boolean set(long[] index) {
-        ensureCapacity();
+        boolean grow = ensureCapacity();
         for (String s : keyList) {
             setBitScriptExecute(index, s);
         }
+        afterGrow(grow);
         return Boolean.TRUE;
     }
 
@@ -80,20 +84,21 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean setBatch(List index) {
         long[] res = getArrayFromList(index);
-        ensureCapacity();
+        boolean grow = ensureCapacity();
         for (String s : keyList) {
             setBitScriptExecute(res, s);
         }
+        afterGrow(grow);
         return Boolean.TRUE;
     }
 
     @Override
     public boolean get(long[] index) {
-        boolean exists=true;
+        boolean exists = true;
         for (String s : keyList) {
             List<Long> bits = getBitScriptExecute(index, s);
             if (bits.contains(BloomFilterConsts.FALSE)) {
-                exists=false;
+                exists = false;
             }
         }
         return exists;
@@ -132,7 +137,7 @@ public class RedisBitArray implements BitArray {
             for (int k = 0; k < keyList.size(); k++) {
                 int idx = i + k * index.size();
                 if (!lists.get(idx)) {
-                    exists=false;
+                    exists = false;
                 }
             }
             res.add(exists);
@@ -154,8 +159,8 @@ public class RedisBitArray implements BitArray {
     }
 
 
-    private void ensureCapacity() {
-        String ensuerKey = keyList.getLast();
+    private boolean ensureCapacity() {
+        boolean grow = false;
         if (enableGrow) {
             Long count = (Long) redisTemplate.execute(new RedisCallback() {
                 @Override
@@ -164,9 +169,16 @@ public class RedisBitArray implements BitArray {
                 }
             });
             if (bitSize * growRate < count) {
-                ensuerKey = this.key + "-" + keyList.size();
-                this.keyList.addLast(ensuerKey);
+                grow = true;
+                this.keyList.addLast(this.key + "-" + keyList.size());
             }
+        }
+        return grow;
+    }
+
+    private void afterGrow(boolean grow) {
+        if(grow){
+            redisTemplate.execute(afterGrowScript,Arrays.asList(key,keyList.getLast()));
         }
     }
 

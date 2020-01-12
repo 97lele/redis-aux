@@ -20,6 +20,8 @@ public  class RedisBitArrayOperator {
 
         private final CheckTask checkTask;
 
+        private final DefaultRedisScript afterGrowScript;
+
 
         RedisBitArrayOperator(RedisBitArrayOperatorBuilder builder, CheckTask checkTask) {
             this.redisTemplate = builder.getRedisTemplate();
@@ -27,10 +29,11 @@ public  class RedisBitArrayOperator {
             this.setBitScript = builder.getSetBitScript();
             this.checkTask=checkTask;
             this.resetBitScript=builder.getResetBitScript();
+            this.afterGrowScript=builder.getAfterGrowScript();
             //定时清理不用的链接
         }
         public RedisBitArray createBitArray(String key,boolean enableGrow,double growRate) {
-            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,enableGrow,growRate);
+            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,afterGrowScript,enableGrow,growRate);
         }
 
 //过期之后删除
