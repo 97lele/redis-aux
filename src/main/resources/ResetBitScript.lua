@@ -31,3 +31,9 @@ if rl > 0 then
     --string.rep拼接功能
     redis.call('SETRANGE', key, rs, string.rep(b, rl))
 end
+
+-- 删除其他的键
+local others = redis.call('keys',string.format("%s-*",key))
+for i=1,table.getn(others)
+    do redis.call('del',others[i])
+end

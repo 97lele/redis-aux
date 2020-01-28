@@ -1,4 +1,4 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.support.expire;
 
 import com.opensource.redisaux.RedisAuxException;
 
