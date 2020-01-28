@@ -12,7 +12,11 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
+/**
+ * @author: lele
+ * @date: 2020/01/28 下午17:29
+ * 自定义的redisTemplate
+ */
 @Configuration
 public class InnerRedisTemplateConfig {
     @Bean(name = BloomFilterConsts.INNERTEMPLATE)

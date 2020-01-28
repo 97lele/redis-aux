@@ -1,7 +1,6 @@
 package com.opensource.redisaux.bloomfilter.core.bitarray;
 
 import com.opensource.redisaux.RedisAuxException;
-import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -23,6 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * @author: lele
+ * @date: 2020/01/28 下午17:29
+ * 布隆过滤器核心配置类
+ */
 @Configuration
 @ConditionalOnClass(RedisBloomFilter.class)
 @AutoConfigureAfter(RedisAutoConfiguration.class)

@@ -16,7 +16,11 @@ import org.springframework.util.ReflectionUtils;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+/**
+ * @author: lele
+ * @date: 2020/01/28 下午17:29
+ * 布隆过滤器注册类，主要是lambda和扫描自定义包
+ */
 public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
     public static Map<String, Map<String, BloomFilterProperty>> bloomFilterFieldMap;
     public static boolean transaction;

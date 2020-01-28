@@ -8,7 +8,11 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-
+/**
+ * @author: lele
+ * @date: 2020/01/28 下午17:29
+ *新建数组操作类及过期、删除功能
+ */
 public class RedisBitArrayOperator {
         private final DefaultRedisScript setBitScript;
 
