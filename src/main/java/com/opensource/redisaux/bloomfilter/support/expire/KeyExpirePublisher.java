@@ -1,6 +1,5 @@
-package com.opensource.redisaux.bloomfilter.support.observer;
+package com.opensource.redisaux.bloomfilter.support.expire;
 
-import java.util.prefs.NodeChangeListener;
 
 /**
  * @author lulu

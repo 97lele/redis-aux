@@ -1,7 +1,8 @@
-package com.opensource.redisaux.bloomfilter.support.builder;
+package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
 
+import javax.annotation.PreDestroy;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -31,7 +32,7 @@ public final class ExpireCondition {
         this.timeUnit=timeUnit;
         return this;
     }
-    public InnerInfo build(){
+     InnerInfo build(){
         if(Objects.isNull(keyName)){
             throw new RedisAuxException("key is null!");
         }
@@ -39,14 +40,19 @@ public final class ExpireCondition {
         this.timeout=Objects.isNull(timeout)?-1L:timeout;
         return new InnerInfo(this);
     }
-    public static ExpireCondition of(){
+    public static ExpireCondition create(){
         return new ExpireCondition();
     }
 
-    public BaseCondition asBaseCondition(){
+    public BaseCondition toBaseCondition(){
         if(this.baseCondition==null){
-            this.baseCondition=BaseCondition.of().keyName(keyName).keyPrefix(keyPrefix);
+            this.baseCondition=BaseCondition.create().keyName(keyName).keyPrefix(keyPrefix);
         }
         return this.baseCondition;
+    }
+
+    @PreDestroy
+    public void destory(){
+        this.baseCondition=null;
     }
 }

@@ -1,6 +1,7 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.core.strategy;
 
 import com.google.common.hash.Funnel;
+import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 
 import java.util.List;
 

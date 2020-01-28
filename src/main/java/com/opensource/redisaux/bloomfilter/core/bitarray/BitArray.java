@@ -1,4 +1,4 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.core.bitarray;
 
 import java.util.List;
 

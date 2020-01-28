@@ -1,6 +1,4 @@
-package com.opensource.redisaux.bloomfilter.support.observer;
-
-import java.util.concurrent.CountDownLatch;
+package com.opensource.redisaux.bloomfilter.support.expire;
 
 /**
  * @author lulu

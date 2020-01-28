@@ -1,9 +1,8 @@
-package com.opensource.redisaux.bloomfilter.support.builder;
+package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author lulu
@@ -20,13 +19,13 @@ public final class BaseCondition {
         this.keyName=keyName;
         return this;
     }
-    public InnerInfo build(){
+     InnerInfo build(){
         if(Objects.isNull(keyName)){
             throw new RedisAuxException("key is null!");
         }
         return new InnerInfo(this);
     }
-    public static BaseCondition of(){
+    public static BaseCondition create(){
         return new BaseCondition();
     }
 }

@@ -1,8 +1,9 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.core.strategy;
 
 import com.google.common.hash.Funnel;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Longs;
+import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -105,7 +106,6 @@ public enum RedisBloomFilterStrategies {
 
         @Override
         public <T> boolean putAll(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
-
             long bitSize = bits.bitSize();
             List<long[]> res = objects.stream().map(e -> {
                 long bytes = getHash(e, funnel);

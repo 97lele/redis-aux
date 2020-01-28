@@ -1,10 +1,8 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.core.bitarray;
 
-import com.opensource.redisaux.CommonUtil;
 import com.opensource.redisaux.RedisAuxException;
+import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -13,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author: lele
@@ -25,6 +25,9 @@ public class RedisBitArray implements BitArray {
     private RedisTemplate redisTemplate;
 
     private long bitSize;
+
+    //读可以共享，写不可以
+    private ReadWriteLock readWriteLock;
 
     private LinkedList<String> keyList;
 
@@ -42,7 +45,7 @@ public class RedisBitArray implements BitArray {
 
     private double growRate;
 
-    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript,DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
+    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
         this.redisTemplate = redisTemplate;
         this.key = key;
         this.setBitScript = setBitScript;
@@ -50,9 +53,10 @@ public class RedisBitArray implements BitArray {
         this.keyList = new LinkedList<>();
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
-        this.afterGrowScript=afterGrowScript;
+        this.afterGrowScript = afterGrowScript;
         this.growRate = growRate;
         this.enableGrow = enableGrow;
+        readWriteLock = new ReentrantReadWriteLock();
     }
 
 
@@ -66,11 +70,13 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public boolean set(long[] index) {
+        readWriteLock.writeLock().lock();
         boolean grow = ensureCapacity();
         for (String s : keyList) {
             setBitScriptExecute(index, s);
         }
         afterGrow(grow);
+        readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
 
@@ -83,17 +89,20 @@ public class RedisBitArray implements BitArray {
      */
     @Override
     public boolean setBatch(List index) {
+        readWriteLock.writeLock().lock();
         long[] res = getArrayFromList(index);
         boolean grow = ensureCapacity();
         for (String s : keyList) {
             setBitScriptExecute(res, s);
         }
         afterGrow(grow);
+        readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
 
     @Override
     public boolean get(long[] index) {
+        readWriteLock.readLock().lock();
         boolean exists = true;
         for (String s : keyList) {
             List<Long> bits = getBitScriptExecute(index, s);
@@ -101,12 +110,14 @@ public class RedisBitArray implements BitArray {
                 exists = false;
             }
         }
+        readWriteLock.readLock().unlock();
         return exists;
     }
 
     @Override
     public List<Boolean> getBatch(List index) {
         //index.size*keyList.size个数
+        readWriteLock.readLock().lock();
         List<Boolean> lists = new ArrayList<>(index.size() * keyList.size());
         for (String s : keyList) {
             long[] array = getArrayFromList(index);
@@ -142,6 +153,8 @@ public class RedisBitArray implements BitArray {
             }
             res.add(exists);
         }
+        readWriteLock.readLock().unlock();
+
         return res;
     }
 
@@ -151,23 +164,23 @@ public class RedisBitArray implements BitArray {
         return this.bitSize;
     }
 
+    /**
+     * 重置改为删除其他多余的，重置第一个
+     */
     @Override
     public void reset() {
-        keyList.forEach(e -> {
-            redisTemplate.execute(resetBitScript, Arrays.asList(e), bitSize);
-        });
+        readWriteLock.writeLock().lock();
+        keyList.clear();
+        keyList.add(key);
+        readWriteLock.writeLock().unlock();
+        redisTemplate.execute(resetBitScript, keyList, bitSize);
     }
 
 
     private boolean ensureCapacity() {
         boolean grow = false;
         if (enableGrow) {
-            Long count = (Long) redisTemplate.execute(new RedisCallback() {
-                @Override
-                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                    return redisConnection.bitCount(keyList.getLast().getBytes());
-                }
-            });
+            Long count = (Long) redisTemplate.execute((RedisCallback) redisConnection -> redisConnection.bitCount(keyList.getLast().getBytes()));
             if (bitSize * growRate < count) {
                 grow = true;
                 this.keyList.addLast(this.key + "-" + keyList.size());
@@ -177,8 +190,8 @@ public class RedisBitArray implements BitArray {
     }
 
     private void afterGrow(boolean grow) {
-        if(grow){
-            redisTemplate.execute(afterGrowScript,Arrays.asList(key,keyList.getLast()));
+        if (grow) {
+            redisTemplate.execute(afterGrowScript, Arrays.asList(key, keyList.getLast()));
         }
     }
 

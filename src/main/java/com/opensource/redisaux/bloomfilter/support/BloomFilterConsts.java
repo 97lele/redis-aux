@@ -19,6 +19,7 @@ public final class BloomFilterConsts {
     public static final long MAX_REDIS_BIT_SIZE = 4_294_967_296L;
     public static final String PATH = "com.opensource.redisaux.bloomfilter.autoconfigure";
     public static final String INNERTEMPLATE = "innerTemplate";
+    public static final long CHECK_TASK_PER_SECOND=5L;
 
 
 }

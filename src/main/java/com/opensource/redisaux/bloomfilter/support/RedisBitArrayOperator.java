@@ -1,15 +1,15 @@
-package com.opensource.redisaux.bloomfilter.support.builder;
+package com.opensource.redisaux.bloomfilter.support;
 
-import com.opensource.redisaux.bloomfilter.core.RedisBitArray;
-import com.opensource.redisaux.bloomfilter.core.WatiForDeleteKey;
-import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
+import com.opensource.redisaux.bloomfilter.core.bitarray.RedisBitArray;
+import com.opensource.redisaux.bloomfilter.support.expire.WatiForDeleteKey;
+import com.opensource.redisaux.bloomfilter.support.expire.CheckTask;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-public  class RedisBitArrayOperator {
+public class RedisBitArrayOperator {
         private final DefaultRedisScript setBitScript;
 
         private final DefaultRedisScript getBitScript;
@@ -22,17 +22,16 @@ public  class RedisBitArrayOperator {
 
         private final DefaultRedisScript afterGrowScript;
 
+    public RedisBitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask, DefaultRedisScript afterGrowScript) {
+        this.setBitScript = setBitScript;
+        this.getBitScript = getBitScript;
+        this.resetBitScript = resetBitScript;
+        this.redisTemplate = redisTemplate;
+        this.checkTask = checkTask;
+        this.afterGrowScript = afterGrowScript;
+    }
 
-        RedisBitArrayOperator(RedisBitArrayOperatorBuilder builder, CheckTask checkTask) {
-            this.redisTemplate = builder.getRedisTemplate();
-            this.getBitScript = builder.getGetBitScript();
-            this.setBitScript = builder.getSetBitScript();
-            this.checkTask=checkTask;
-            this.resetBitScript=builder.getResetBitScript();
-            this.afterGrowScript=builder.getAfterGrowScript();
-            //定时清理不用的链接
-        }
-        public RedisBitArray createBitArray(String key,boolean enableGrow,double growRate) {
+    public RedisBitArray createBitArray(String key, boolean enableGrow, double growRate) {
             return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript,resetBitScript,afterGrowScript,enableGrow,growRate);
         }
 

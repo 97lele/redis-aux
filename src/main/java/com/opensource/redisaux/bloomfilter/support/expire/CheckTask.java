@@ -1,6 +1,5 @@
-package com.opensource.redisaux.bloomfilter.support.observer;
+package com.opensource.redisaux.bloomfilter.support.expire;
 
-import com.opensource.redisaux.bloomfilter.core.WatiForDeleteKey;
 import org.springframework.beans.factory.InitializingBean;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
@@ -9,6 +8,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import static com.opensource.redisaux.bloomfilter.support.BloomFilterConsts.CHECK_TASK_PER_SECOND;
 
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
     private List<KeyExpireListener> listeners = new ArrayList<>();
@@ -28,7 +28,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
             //当队列为空时，每5秒检测一次
             if (priorityQueue.isEmpty()) {
                 try {
-                    TimeUnit.SECONDS.sleep(5L);
+                    TimeUnit.SECONDS.sleep(CHECK_TASK_PER_SECOND);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -56,7 +56,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
         }
     }
 
-    public synchronized void addExpireKey(WatiForDeleteKey watiForDeleteKey) {
+    public  void addExpireKey(WatiForDeleteKey watiForDeleteKey) {
         priorityQueue.offer(watiForDeleteKey);
     }
 

@@ -15,5 +15,6 @@ public @interface BloomFilterProperty {
     long timeout() default -1L;
     TimeUnit timeUnit() default TimeUnit.SECONDS;
     boolean enableGrow() default false;
+    //当redis布隆过滤器的bitcount大于预计插入数量所计算得出的bitcount的0.7倍时，新增一个
     double growRate() default 0.7;
 }

@@ -1,8 +1,8 @@
-package com.opensource.redisaux.bloomfilter.support.builder;
+package com.opensource.redisaux.bloomfilter.core.filter;
 
 import java.util.concurrent.TimeUnit;
 
-public class InnerInfo {
+ class InnerInfo {
     private double fpp;
     private long exceptionInsert;
     private String keyPrefix;

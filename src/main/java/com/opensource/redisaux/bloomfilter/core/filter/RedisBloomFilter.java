@@ -1,16 +1,11 @@
-package com.opensource.redisaux.bloomfilter.autoconfigure;
+package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.opensource.redisaux.CommonUtil;
 import com.opensource.redisaux.RedisAuxException;
-import com.opensource.redisaux.bloomfilter.core.RedisBloomFilterItem;
 import com.opensource.redisaux.bloomfilter.support.GetBloomFilterField;
 import com.opensource.redisaux.bloomfilter.support.SFunction;
-import com.opensource.redisaux.bloomfilter.support.builder.AddCondition;
-import com.opensource.redisaux.bloomfilter.support.builder.BaseCondition;
-import com.opensource.redisaux.bloomfilter.support.builder.ExpireCondition;
-import com.opensource.redisaux.bloomfilter.support.builder.InnerInfo;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;

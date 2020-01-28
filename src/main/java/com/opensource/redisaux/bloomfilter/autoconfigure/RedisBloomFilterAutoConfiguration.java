@@ -1,10 +1,13 @@
 package com.opensource.redisaux.bloomfilter.autoconfigure;
 
 import com.opensource.redisaux.bloomfilter.core.*;
+import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilter;
+import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilterItem;
+import com.opensource.redisaux.bloomfilter.core.strategy.RedisBloomFilterStrategies;
+import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
-import com.opensource.redisaux.bloomfilter.support.builder.RedisBitArrayOperator;
-import com.opensource.redisaux.bloomfilter.support.builder.RedisBitArrayOperatorBuilder;
-import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
+import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
+import com.opensource.redisaux.bloomfilter.support.expire.CheckTask;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -14,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
@@ -79,13 +81,15 @@ public class RedisBloomFilterAutoConfiguration {
 
     @Bean
     public RedisBitArrayOperator redisBitArrayFactory() {
-        RedisBitArrayOperatorBuilder builder = new RedisBitArrayOperatorBuilder();
-        builder.setGetBitScript(getBitScript())
-                .setSetBitScript(setBitScript())
-                .setResetBitScript(resetBitScript())
-                .setAfterGrowScript(afterGrowScript())
-                .setRedisTemplate(redisTemplate);
-        return builder.build(checkTask());
+
+        return new RedisBitArrayOperator(
+                setBitScript(),
+                getBitScript(),
+                resetBitScript(),
+                redisTemplate,
+                checkTask(),
+                afterGrowScript()
+        );
     }
     @Bean
     public CheckTask checkTask(){

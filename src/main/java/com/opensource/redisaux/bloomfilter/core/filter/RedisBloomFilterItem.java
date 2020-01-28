@@ -1,17 +1,18 @@
-package com.opensource.redisaux.bloomfilter.core;
+package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
-import com.opensource.redisaux.bloomfilter.support.builder.RedisBitArrayOperator;
-import com.opensource.redisaux.bloomfilter.support.observer.CheckTask;
-import com.opensource.redisaux.bloomfilter.support.observer.KeyExpireListener;
+import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
+import com.opensource.redisaux.bloomfilter.core.bitarray.RedisBitArray;
+import com.opensource.redisaux.bloomfilter.core.strategy.RedisBloomFilterStrategies;
+import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
+import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
+import com.opensource.redisaux.bloomfilter.support.expire.KeyExpireListener;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.opensource.redisaux.CommonUtil.optimalNumOfBits;
 import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
@@ -122,7 +123,6 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
             numHashFunctionsMap.remove(key);
             redisBitArrayOperator.delete(tBitArray.getKeyList());
             tBitArray = null;
-
         }
     }
 
@@ -147,7 +147,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
-        Preconditions.checkArgument(members.size()<expectedInsertions,"once add size shoud smaller than expectInsertions");
+        Preconditions.checkArgument(members.size()<expectedInsertions,"once add size (%s) shoud smaller than expectInsertions(%s) ",members.size(),expectedInsertions);
 
         Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,enableGrow,growRate);
 
