@@ -7,7 +7,7 @@ import com.opensource.redisaux.RedisAuxException;
 import com.opensource.redisaux.bloomfilter.support.GetBloomFilterField;
 import com.opensource.redisaux.bloomfilter.support.SFunction;
 import org.springframework.util.StringUtils;
-
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,6 +47,7 @@ public class RedisBloomFilter {
 
     public <R> void add(AddCondition addCondition, R member) {
         InnerInfo condition = addCondition.build();
+        addCondition.clear();
         add(condition.getKeyPrefix(),
                 condition.getKeyName(),
                 condition.getExceptionInsert(),
@@ -56,10 +57,10 @@ public class RedisBloomFilter {
                 condition.isEnableGrow(),
                 condition.getGrowRate(),
                 member
-                );
+        );
     }
 
-    private <R> void add(String keyPrefix, String key, long exceptedInsertions, double fpp, long timeout, TimeUnit timeUnit,boolean enableGrow,double growRate,R member) {
+    private <R> void add(String keyPrefix, String key, long exceptedInsertions, double fpp, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate, R member) {
         Class clzz = member.getClass();
         Object res = member;
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
@@ -68,7 +69,7 @@ public class RedisBloomFilter {
             res = JSON.toJSONBytes(member, SerializerFeature.NotWriteDefaultValue);
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit,enableGrow,growRate);
+        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit, enableGrow, growRate);
     }
 
     public <T, R> void addAll(SFunction<T> sFunction, List<R> members) {
@@ -86,6 +87,7 @@ public class RedisBloomFilter {
 
     public <R> void addAll(AddCondition addCondition, List<R> members) {
         InnerInfo innerInfo = addCondition.build();
+        addCondition.clear();
         this.addAll(
                 innerInfo.getKeyPrefix(),
                 innerInfo.getKeyName(),
@@ -96,10 +98,10 @@ public class RedisBloomFilter {
                 innerInfo.isEnableGrow(),
                 innerInfo.getGrowRate(),
                 members
-                );
+        );
     }
 
-    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp,  long timeout, TimeUnit timeUnit,boolean enableGrow,double growRate,List<R> members) {
+    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate, List<R> members) {
         if (members.isEmpty()) {
             throw new RedisAuxException("参数有误!");
         }
@@ -110,7 +112,7 @@ public class RedisBloomFilter {
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit,enableGrow,growRate);
+        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit, enableGrow, growRate);
     }
 
     public <R> boolean mightContain(BaseCondition queryCondition, R member) {
@@ -218,6 +220,7 @@ public class RedisBloomFilter {
 
     public void expire(ExpireCondition expireCondition) {
         InnerInfo condition = expireCondition.build();
+        expireCondition.clear();
         expire(condition.getKeyPrefix(), condition.getKeyName(), condition.getTimeout(), condition.getTimeUnit());
     }
 
@@ -252,6 +255,11 @@ public class RedisBloomFilter {
         return StringUtils.isEmpty(prefix) ? key : CommonUtil.getKeyName(prefix, key);
     }
 
+    @PreDestroy
+    protected void destory() {
+        this.bloomFilterMap.values().forEach(e -> e.clear());
+        this.bloomFilterMap.clear();
+    }
 
 
 }

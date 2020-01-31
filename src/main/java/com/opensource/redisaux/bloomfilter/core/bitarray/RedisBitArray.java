@@ -5,7 +5,6 @@ import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -243,5 +242,11 @@ public class RedisBitArray implements BitArray {
 
     public LinkedList<String> getKeyList() {
         return keyList;
+    }
+
+    public void clear(){
+        keyList.clear();
+        keyList=null;
+        readWriteLock=null;
     }
 }

@@ -1,8 +1,6 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
-
-import javax.annotation.PreDestroy;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -88,8 +86,7 @@ public final class AddCondition {
         return new AddCondition();
     }
 
-    @PreDestroy
-    public void destory(){
+    protected void clear(){
         this.expireCondition=null;
         this.baseCondition=null;
     }

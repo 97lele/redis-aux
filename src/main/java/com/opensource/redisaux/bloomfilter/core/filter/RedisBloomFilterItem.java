@@ -8,12 +8,10 @@ import com.opensource.redisaux.bloomfilter.core.strategy.RedisBloomFilterStrateg
 import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
 import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
 import com.opensource.redisaux.bloomfilter.support.expire.KeyExpireListener;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import static com.opensource.redisaux.CommonUtil.optimalNumOfBits;
 import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
 
@@ -178,5 +176,11 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
     @Override
     public void removeKey(String key) {
         remove(key);
+    }
+
+    protected void clear(){
+        this.numHashFunctionsMap.clear();
+        this.bitArrayMap.values().forEach(e->e.clear());
+        this.bitArrayMap.clear();
     }
 }
