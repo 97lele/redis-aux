@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date 2020/1/11 17:43
  */
 @SpringBootApplication
-@EnableRedisAux(bloomFilterPath = "com.opensource.redisaux.entity")
+@EnableRedisAux(bloomFilterPath = "com.opensource.redisaux.entity",enableLimit = true)
 public class RedisAuxApplication {
     public static void main(String[] args) {
         SpringApplication.run(RedisAuxApplication.class, args);

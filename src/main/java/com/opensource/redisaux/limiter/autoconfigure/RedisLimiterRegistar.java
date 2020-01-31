@@ -22,7 +22,7 @@ public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
         if(enableLimit){
             ClassPathBeanDefinitionScanner scanConfigure =
                     new ClassPathBeanDefinitionScanner(registry, true);
-            scanConfigure.scan("com.trendy.util.redis.aux.limiter.autoconfigure");
+            scanConfigure.scan("com.opensource.redisaux.limiter.autoconfigure");
         }
     }
 

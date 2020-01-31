@@ -7,6 +7,7 @@ import com.opensource.redisaux.bloomfilter.annonations.BloomFilterProperty;
  * @author lulu
  * @Date 2020/1/12 20:50
  */
+
 @BloomFilterPrefix
 public class TestEntity {
     @BloomFilterProperty(enableGrow = true,exceptionInsert = 5,timeout = 30)

@@ -1,7 +1,6 @@
 package com.opensource.redisaux.limiter.annonations;
 
-import com.opensource.redisaux.limiter.core.FailStrategy;
-import com.opensource.redisaux.limiter.core.RateLimiter;
+import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@LimiterType(mode = RateLimiter.FUNNEL_LIMITER)
+@LimiterType(mode = BaseRateLimiter.FUNNEL_LIMITER)
 public @interface FunnelLimiter {
 
     /**
@@ -39,7 +38,8 @@ public @interface FunnelLimiter {
      */
     double addWater();
 
-    Class failStrategy() default FailStrategy.DefaultStrategy.class;
+    String fallback() default "";
 
-    String msg() default "";
+    boolean passArgs() default false;
+
 }

@@ -17,10 +17,12 @@ import java.util.concurrent.TimeUnit;
  * @author: lele
  * @date: 2019/12/26 上午8:14
  * 解析lambda，获取字段名
+ * 1.8才支持
  */
+@SuppressWarnings("unchecked")
 public class GetBloomFilterField {
 
-    private static Map<Class, SerializedLambda> map = new ConcurrentHashMap<>();
+    private static Map<Class, SerializedLambda> map = new ConcurrentHashMap();
 
     public static <T> BloomFilterInfo resolveFieldName(SFunction<T> sFunction) {
         SerializedLambda lambda = map.get(sFunction.getClass());

@@ -2,9 +2,11 @@ package com.opensource.redisaux.limiter.autoconfigure;
 
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
 import com.opensource.redisaux.limiter.core.FunnelRateLimiter;
-import com.opensource.redisaux.limiter.core.RateLimiter;
+import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import com.opensource.redisaux.limiter.core.TokenRateLimiter;
 import com.opensource.redisaux.limiter.core.WindowRateLimiter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -17,7 +19,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +31,8 @@ import java.util.Map;
 @ConditionalOnBean(RedisTemplate.class)
 public class RedisLimiterAutoConfiguration {
 
-    @Resource(name= BloomFilterConsts.INNERTEMPLATE)
+    @Autowired
+    @Qualifier(BloomFilterConsts.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
 
 
@@ -81,18 +83,17 @@ public class RedisLimiterAutoConfiguration {
         script.setLocation(new ClassPathResource("FunnelRateLimit.lua"));
         return script;
     }
-
     /**
-     * 初始化限流器，供切面调用
+     * 切面
      * @return
      */
-    @Bean(name="rateLimiterMap")
-    public Map<Integer, RateLimiter> limiterMap() {
-        Map<Integer, RateLimiter> map = new HashMap<>();
-        map.put(RateLimiter.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
-        map.put(RateLimiter.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
-        map.put(RateLimiter.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
-        return map;
+    @Bean
+    public LimiterAspect limiterAspect(){
+        Map<Integer, BaseRateLimiter> map = new HashMap();
+        map.put(BaseRateLimiter.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
+        map.put(BaseRateLimiter.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
+        map.put(BaseRateLimiter.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
+        return new LimiterAspect(map);
     }
 
 

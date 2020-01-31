@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author: lele
  * @date: 2020/1/3 下午10:28
  */
-public class TokenRateLimiter implements RateLimiter {
+public class TokenRateLimiter extends BaseRateLimiter {
 
     private RedisTemplate redisTemplate;
 
@@ -26,7 +26,7 @@ public class TokenRateLimiter implements RateLimiter {
     }
 
     @Override
-    public Boolean canExecute(Annotation baseLimiter, String key) {
+    public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         TokenLimiter tokenLimiter = (TokenLimiter) baseLimiter;
         TimeUnit rateUnit = tokenLimiter.rateUnit();
         double capacity = tokenLimiter.capacity();
@@ -35,14 +35,15 @@ public class TokenRateLimiter implements RateLimiter {
         long l = rateUnit.toMillis(1);
         double millRate = rate / l;
         long last = System.currentTimeMillis();
-        List<String> keyList = RateLimiter.getKeyAndPutFailStrategyIfAbsent(key, tokenLimiter.failStrategy(),tokenLimiter.msg());
+        String methodName=tokenLimiter.fallback();
+        boolean passArgs=tokenLimiter.passArgs();
+        List<String> keyList = BaseRateLimiter.getKey(methodKey,methodName,passArgs);
         Object[] args = new Double[]{capacity, millRate, need, Double.valueOf(last)};
         Long waitMill = (Long) redisTemplate.execute(redisScript, keyList, args);
         if (waitMill.equals(-1L)) {
             return true;
         }
         if (tokenLimiter.isAbort()) {
-
             PendingNode pendingNode = new PendingNode(waitMill, args, keyList, last);
             while (!pendingNode.isDone()) {
                 try {
@@ -70,8 +71,6 @@ public class TokenRateLimiter implements RateLimiter {
                         pendingNode.setLastExecuteTime(now);
                         pendingNode.setArgs(tryExecuteArgs);
                     }
-
-
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

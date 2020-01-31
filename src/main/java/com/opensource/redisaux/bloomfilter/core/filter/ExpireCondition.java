@@ -1,7 +1,6 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,11 +30,11 @@ public final class ExpireCondition {
         return this;
     }
      InnerInfo build(){
-        if(Objects.isNull(keyName)){
+        if(keyName==null){
             throw new RedisAuxException("key is null!");
         }
-        this.timeUnit=Objects.isNull(timeUnit)?TimeUnit.SECONDS:timeUnit;
-        this.timeout=Objects.isNull(timeout)?-1L:timeout;
+        this.timeUnit=timeUnit==null?TimeUnit.SECONDS:timeUnit;
+        this.timeout=timeout==null?-1L:timeout;
         return new InnerInfo(this);
     }
     public static ExpireCondition create(){

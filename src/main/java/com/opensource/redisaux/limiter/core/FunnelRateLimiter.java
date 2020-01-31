@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author: lele
  * @date: 2020/1/4 上午8:12
  */
-public class FunnelRateLimiter implements RateLimiter {
+public class FunnelRateLimiter extends BaseRateLimiter {
     private RedisTemplate redisTemplate;
     private DefaultRedisScript redisScript;
 
@@ -24,7 +24,7 @@ public class FunnelRateLimiter implements RateLimiter {
     }
 
     @Override
-    public Boolean canExecute(Annotation baseLimiter, String key) {
+    public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         FunnelLimiter funnelLimiter = (FunnelLimiter) baseLimiter;
         TimeUnit timeUnit = funnelLimiter.timeUnit();
         double capacity = funnelLimiter.capacity();
@@ -32,7 +32,9 @@ public class FunnelRateLimiter implements RateLimiter {
         double rate = funnelLimiter.passRate();
         long l = timeUnit.toMillis(1);
         double millRate = rate / l;
-        List<String> keyList = RateLimiter.getKeyAndPutFailStrategyIfAbsent(key, funnelLimiter.failStrategy(),funnelLimiter.msg());
+        String methodName=funnelLimiter.fallback();
+        boolean passArgs=funnelLimiter.passArgs();
+        List<String> keyList = BaseRateLimiter.getKey(methodKey,methodName,passArgs);
         return (Boolean) redisTemplate.execute(redisScript, keyList, new Object[]{capacity, millRate, need, Double.valueOf(System.currentTimeMillis())});
     }
 

@@ -1,6 +1,7 @@
 package com.opensource.redisaux.bloomfilter.support.expire;
 
 import org.springframework.beans.factory.InitializingBean;
+
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,18 +9,19 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import static com.opensource.redisaux.bloomfilter.support.BloomFilterConsts.CHECK_TASK_PER_SECOND;
 
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
-    private List<KeyExpireListener> listeners = new ArrayList<>();
+    private List<KeyExpireListener> listeners = new ArrayList();
     private PriorityBlockingQueue<WatiForDeleteKey> priorityQueue;
     private volatile Boolean run = true;
     private ThreadPoolExecutor executors;
 
     public CheckTask() {
         super("checkTask");
-        this.priorityQueue = new PriorityBlockingQueue<>();
-        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue<>(1024), new ThreadPoolExecutor.CallerRunsPolicy());
+        this.priorityQueue = new PriorityBlockingQueue();
+        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue(1024), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Override
@@ -56,7 +58,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
         }
     }
 
-    public  void addExpireKey(WatiForDeleteKey watiForDeleteKey) {
+    public void addExpireKey(WatiForDeleteKey watiForDeleteKey) {
         priorityQueue.offer(watiForDeleteKey);
     }
 
@@ -71,10 +73,15 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
     }
 
     @Override
-    public void notifyListener(String key) {
+    public void notifyListener(final String key) {
 //通过线程池提交删除任务
-        for (KeyExpireListener listener : listeners) {
-            executors.submit(() -> listener.removeKey(key));
+        for (final KeyExpireListener listener : listeners) {
+            executors.submit(new Runnable() {
+                @Override
+                public void run() {
+                    listener.removeKey(key);
+                }
+            });
         }
 
     }

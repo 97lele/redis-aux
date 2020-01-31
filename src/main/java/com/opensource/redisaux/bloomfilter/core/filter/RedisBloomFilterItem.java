@@ -4,14 +4,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 import com.opensource.redisaux.bloomfilter.core.bitarray.RedisBitArray;
-import com.opensource.redisaux.bloomfilter.core.strategy.RedisBloomFilterStrategies;
 import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
 import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
 import com.opensource.redisaux.bloomfilter.support.expire.KeyExpireListener;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import static com.opensource.redisaux.CommonUtil.optimalNumOfBits;
 import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
 
@@ -35,8 +33,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
     public static <T> RedisBloomFilterItem<T> create(Funnel<? super T> funnel, Strategy strategy
             , RedisBitArrayOperator redisBitArrayOperator) {
-        strategy = Optional.ofNullable(strategy).orElse(RedisBloomFilterStrategies.MURMUR128_MITZ_64.getStrategy());
-        return new RedisBloomFilterItem<>(funnel, strategy, redisBitArrayOperator);
+        return new RedisBloomFilterItem(funnel, strategy, redisBitArrayOperator);
     }
 
 
@@ -47,8 +44,8 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
     ) {
         this.strategy = strategy;
         this.funnel = funnel;
-        this.bitArrayMap = new ConcurrentHashMap<>();
-        this.numHashFunctionsMap = new ConcurrentHashMap<>();
+        this.bitArrayMap = new ConcurrentHashMap();
+        this.numHashFunctionsMap = new ConcurrentHashMap();
         this.redisBitArrayOperator = redisBitArrayOperator;
     }
 
@@ -64,10 +61,12 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
     public List<Boolean> mightContains(String key, List<T> members) {
         Integer numHashFunctions = numHashFunctionsMap.get(key);
         BitArray<T> bits = bitArrayMap.get(key);
-
+        //如果这个bit不存在，则直接返回false
         if (bits == null) {
-            List<Boolean> list = new ArrayList<>(members.size());
-            members.forEach(e -> list.add(Boolean.FALSE));
+            List<Boolean> list = new LinkedList();
+            for (int i = 0; i < members.size(); i++) {
+                list.add(Boolean.FALSE);
+            }
             return list;
         }
         return strategy.mightContains(funnel, numHashFunctions, bits, members);
@@ -75,16 +74,14 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
     public void reset(String key) {
         RedisBitArray tBitArray = bitArrayMap.get(key);
-        if (Objects.nonNull(tBitArray)) {
+        if (tBitArray!=null) {
            tBitArray.reset();
         }
     }
 
     public void expire(String key, long timeout, TimeUnit timeUnit) {
-        if (Objects.nonNull(bitArrayMap.get(key))) {
-            if (timeout != -1L) {
+        if (bitArrayMap.get(key)!=null&&timeout!=-1L) {
                 redisBitArrayOperator.expire(key, timeout, timeUnit);
-            }
         }
     }
 
@@ -95,7 +92,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
      */
     public void removeAll(Collection<String> iterable) {
         boolean delete = false;
-        List<List<String>> list=new ArrayList<>();
+        List<List<String>> list=new ArrayList();
         for (String s : iterable) {
             RedisBitArray tBitArray = bitArrayMap.get(s);
             if (tBitArray != null) {
@@ -107,7 +104,12 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
         }
         if (delete) {
-            List<String> deleteKeys = list.stream().flatMap(Collection::stream).collect(Collectors.toList());
+            List<String> deleteKeys =new LinkedList<String>();
+            for (List<String> keyGroup : list) {
+                for (String key : keyGroup) {
+                    deleteKeys.add(key);
+                }
+            }
             redisBitArrayOperator.delete(deleteKeys);
         }
     }
@@ -116,11 +118,9 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         RedisBitArray tBitArray = bitArrayMap.get(key);
         if (tBitArray != null) {
             bitArrayMap.remove(key);
-            Integer integer = numHashFunctionsMap.get(key);
-            integer = null;
             numHashFunctionsMap.remove(key);
             redisBitArrayOperator.delete(tBitArray.getKeyList());
-            tBitArray = null;
+            tBitArray.clear();
         }
     }
 
@@ -159,8 +159,8 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
     }
 
     private Boolean genCache(RedisBitArray bits,String key,long expectedInsertions,double fpp,boolean enableGrow,double growRate){
-        Boolean noAdd;
-        if ((noAdd = Objects.isNull(bits))) {
+        Boolean noAdd = bits==null;
+        if ((noAdd)) {
             long numBits = optimalNumOfBits(expectedInsertions, fpp);
             bits = redisBitArrayOperator.createBitArray(key,enableGrow,growRate);
             //获取容量
@@ -180,7 +180,9 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
     protected void clear(){
         this.numHashFunctionsMap.clear();
-        this.bitArrayMap.values().forEach(e->e.clear());
+        for (RedisBitArray value : this.bitArrayMap.values()) {
+            value.clear();
+        }
         this.bitArrayMap.clear();
     }
 }

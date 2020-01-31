@@ -8,6 +8,8 @@ import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
 import com.opensource.redisaux.bloomfilter.support.BloomFilterConsts;
 import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
 import com.opensource.redisaux.bloomfilter.support.expire.CheckTask;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,7 +35,8 @@ import java.util.Properties;
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisBloomFilterAutoConfiguration {
 
-    @Resource(name = BloomFilterConsts.INNERTEMPLATE)
+    @Autowired
+    @Qualifier(BloomFilterConsts.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
 
 
@@ -47,7 +50,7 @@ public class RedisBloomFilterAutoConfiguration {
         if (strategy == null) {
             strategy = RedisBloomFilterStrategies.MURMUR128_MITZ_32.getStrategy();
         }
-        Map<Class, RedisBloomFilterItem> map = new HashMap<>(FunnelEnum.values().length);
+        Map<Class, RedisBloomFilterItem> map = new HashMap(FunnelEnum.values().length);
         for (FunnelEnum funnelEnum : FunnelEnum.values()) {
             RedisBloomFilterItem item = RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisBitArrayFactory());
             checkTask().addListener(item);
@@ -66,7 +69,7 @@ public class RedisBloomFilterAutoConfiguration {
     @Bean(name = "setBitScript")
     public DefaultRedisScript setBitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
-        script.setScriptText("for i=1,tonumber(KEYS[2]) do redis.call('setbit',KEYS[1],ARGV[i*2-1],ARGV[i*2]) end");
+        script.setScriptText("for i=1,tonumber(KEYS[2]) do redis.call('setbit',KEYS[1],tonumber(ARGV[i]),1) end");
         return script;
     }
 

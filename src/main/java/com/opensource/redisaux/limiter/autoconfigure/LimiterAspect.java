@@ -2,62 +2,52 @@ package com.opensource.redisaux.limiter.autoconfigure;
 
 import com.opensource.redisaux.CommonUtil;
 import com.opensource.redisaux.limiter.annonations.LimiterType;
-import com.opensource.redisaux.limiter.core.FailStrategy;
-import com.opensource.redisaux.limiter.core.RateLimiter;
+import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author: lele
+ * @date: 2020/1/2 下午5:12
+ */
 @Aspect
-@Component
-public class LimiterAspect {
+public class LimiterAspect  {
 
-    @Autowired
-    private ExpressionParser expressionParser;
 
-    @Autowired
-    DefaultParameterNameDiscoverer defaultParameterNameDiscoverer;
+    private final Map<Integer, BaseRateLimiter> rateLimiterMap;
 
-    @Resource(name = "rateLimiterMap")
-    private Map<String, RateLimiter> rateLimiterMap;
+    private final Map<String, Annotation> annotationMap;
 
-    private Map<String, Annotation> annotationMap = new ConcurrentHashMap<>();
 
-    @Pointcut("@annotation(com.opensource.redisaux.limiter.annonations.TokenLimiter)")
-    public void tokenPoint() {
+    public LimiterAspect(Map<Integer, BaseRateLimiter> rateLimiterMap
+    ) {
+        this.rateLimiterMap = rateLimiterMap;
+        this.annotationMap = new ConcurrentHashMap<>();
+    }
+
+
+    @Pointcut("@annotation(com.opensource.redisaux.limiter.annonations.TokenLimiter)||@annotation(com.opensource.redisaux.limiter.annonations.WindowLimiter)||@annotation(com.opensource.redisaux.limiter.annonations.FunnelLimiter)")
+    public void limitPoint() {
 
     }
 
-    @Pointcut("@annotation(com.opensource.redisaux.limiter.annonations.WindowLimiter)")
-    public void windowPoint() {
 
-    }
-
-    @Pointcut("@annotation(com.opensource.redisaux.limiter.annonations.FunnelLimiter)")
-    public void funnelPoint() {
-
-    }
-
-    @Around("funnelPoint()||windowPoint()||tokenPoint()")
+    @Around("limitPoint()")
     public Object doAroundAdvice(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
+        Class<?> beanClass = proceedingJoinPoint.getTarget().getClass();
         //获取所在类名
-        String targetName = proceedingJoinPoint.getTarget().getClass().getName();
+        String targetName = beanClass.getName();
         //获取执行的方法
         Method method = signature.getMethod();
         String methodKey = CommonUtil.getMethodKey(targetName, method);
@@ -76,33 +66,26 @@ public class LimiterAspect {
             }
         }
         baseLimiter = target.annotationType().getAnnotation(LimiterType.class);
-        RateLimiter rateLimiter = rateLimiterMap.get(baseLimiter.mode());
+        BaseRateLimiter rateLimiter = rateLimiterMap.get(baseLimiter.mode());
         if (rateLimiter.canExecute(target, methodKey)) {
             return proceedingJoinPoint.proceed();
         } else {
-            String msg = RateLimiter.failStrategyExpression.get(methodKey);
-            if (msg.contains("#")) {
-                String spEL = msg;
-                //调用SpelExpressionParser方法解析出注解的实际值
-                msg = generateKeyBySpEL(spEL, proceedingJoinPoint);
-            }
             //否则执行失败逻辑
-            FailStrategy failStrategy = RateLimiter.failStrategyMap.get(methodKey);
-            return failStrategy.handle(msg);
+            Object bean =proceedingJoinPoint.getTarget();
+            BaseRateLimiter.KeyInfoNode keyInfoNode = BaseRateLimiter.keyInfoMap.get(methodKey);
+            String fallBackMethodStr = keyInfoNode.getFallBackMethod();
+            if ("".equals(fallBackMethodStr)) {
+                return "too much request";
+            }
+
+           Method fallBackMethod= keyInfoNode.isPassArgs()?
+                   beanClass.getMethod(fallBackMethodStr,method.getParameterTypes()):
+                   beanClass.getMethod(fallBackMethodStr);
+            fallBackMethod.setAccessible(true);
+           return keyInfoNode.isPassArgs()?fallBackMethod.invoke(bean,proceedingJoinPoint.getArgs()):fallBackMethod.invoke(bean);
         }
     }
 
 
-    public String generateKeyBySpEL(String spELString, ProceedingJoinPoint joinPoint) {
-        Expression expression = expressionParser.parseExpression(spELString);
-        //设置上下文对象，需要在里面取
-        EvaluationContext context = new StandardEvaluationContext();
-        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
-        Object[] args = joinPoint.getArgs();
-        String[] paramNames = defaultParameterNameDiscoverer.getParameterNames(methodSignature.getMethod());
-        for (int i = 0; i < args.length; i++) {
-            context.setVariable(paramNames[i], args[i]);
-        }
-        return expression.getValue(context).toString();
-    }
+
 }

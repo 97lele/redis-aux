@@ -1,8 +1,7 @@
 package com.opensource.redisaux.limiter.annonations;
 
 
-import com.opensource.redisaux.limiter.core.FailStrategy;
-import com.opensource.redisaux.limiter.core.RateLimiter;
+import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@LimiterType(mode = RateLimiter.WINDOW_LIMITER)
+@LimiterType(mode = BaseRateLimiter.WINDOW_LIMITER)
 public @interface WindowLimiter {
     /**
      * 持续时间，窗口间隔
@@ -28,8 +27,10 @@ public @interface WindowLimiter {
      */
     long value();
 
-    Class failStrategy() default FailStrategy.DefaultStrategy.class;
+    String fallback() default "";
 
-    String msg() default "";
+    boolean passArgs() default false;
+
+
 
 }

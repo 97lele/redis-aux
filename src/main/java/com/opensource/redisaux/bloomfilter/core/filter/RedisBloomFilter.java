@@ -1,19 +1,13 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.opensource.redisaux.CommonUtil;
 import com.opensource.redisaux.RedisAuxException;
 import com.opensource.redisaux.bloomfilter.support.GetBloomFilterField;
 import com.opensource.redisaux.bloomfilter.support.SFunction;
 import org.springframework.util.StringUtils;
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class RedisBloomFilter {
 
@@ -66,7 +60,6 @@ public class RedisBloomFilter {
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
         String keyName = checkKey(keyPrefix, key);
         if (filter == null) {
-            res = JSON.toJSONBytes(member, SerializerFeature.NotWriteDefaultValue);
             filter = bloomFilterMap.get(Byte.class);
         }
         filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit, enableGrow, growRate);
@@ -108,7 +101,10 @@ public class RedisBloomFilter {
         String keyName = checkKey(keyPrefix, key);
         Class clzz = members.get(0).getClass();
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
-        List resList = getAddList(members, filter);
+        List<Object> resList = new ArrayList(members.size());
+        for (R member : members) {
+            resList.add(member);
+        }
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
@@ -129,9 +125,7 @@ public class RedisBloomFilter {
         String keyName = checkKey(keyPrefix, key);
         Class clzz = member.getClass();
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
-        Object res = member;
         if (filter == null) {
-            res = JSON.toJSONBytes(member, SerializerFeature.NotWriteDefaultValue);
             filter = bloomFilterMap.get(Byte.class);
         }
         return filter.mightContain(keyName, member);
@@ -155,7 +149,10 @@ public class RedisBloomFilter {
         String keyName = checkKey(keyPrefix, key);
         Class clzz = members.get(0).getClass();
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
-        List resList = getAddList(members, filter);
+        List<Object> resList = new ArrayList(members.size());
+        for (R member : members) {
+            resList.add(member);
+        }
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
@@ -189,7 +186,11 @@ public class RedisBloomFilter {
      * @param keyPrefix
      */
     public void removeAll(Collection<String> keys, String keyPrefix) {
-        List<String> keyList = keys.stream().map(e -> checkKey(keyPrefix, e)).collect(Collectors.toList());
+
+        List<String> keyList = new LinkedList();
+        for (String key : keys) {
+            keyList.add(checkKey(keyPrefix,key));
+        }
         for (RedisBloomFilterItem filter : bloomFilterMap.values()) {
             filter.removeAll(keyList);
         }
@@ -231,17 +232,7 @@ public class RedisBloomFilter {
         }
     }
 
-    private static <R> List getAddList(List<R> members, RedisBloomFilterItem filter) {
-        List<Object> resList = new ArrayList(members.size());
-        for (R member : members) {
-            Object res = member;
-            if (filter == null) {
-                res = JSON.toJSONBytes(member, SerializerFeature.NotWriteDefaultValue);
-            }
-            resList.add(res);
-        }
-        return resList;
-    }
+
 
     private GetBloomFilterField.BloomFilterInfo check(SFunction sFunction) {
         GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
@@ -257,7 +248,9 @@ public class RedisBloomFilter {
 
     @PreDestroy
     protected void destory() {
-        this.bloomFilterMap.values().forEach(e -> e.clear());
+        for (RedisBloomFilterItem value : this.bloomFilterMap.values()) {
+            value.clear();
+        }
         this.bloomFilterMap.clear();
     }
 

@@ -5,8 +5,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.primitives.Longs;
 import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
 
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author: lele
@@ -39,21 +39,22 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> boolean putAll(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = objects.stream().map(e -> {
-                byte[] bytes = getHash(e, funnel);
-                return getIndex(bytes, numHashFunctions, bitSize);
-            }).collect(Collectors.toList());
+            List<long[]> res=new LinkedList<long[]>();
+            for (T object : objects) {
+                byte[] bytes = getHash(object, funnel);
+                res.add(getIndex(bytes,numHashFunctions,bitSize));
+            }
             return bits.setBatch(res);
         }
 
         @Override
         public <T> List<Boolean> mightContains(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = objects.stream().map(e -> {
-                byte[] bytes = getHash(e, funnel);
-                return getIndex(bytes, numHashFunctions, bitSize);
-            }).collect(Collectors.toList());
-
+            List<long[]> res=new LinkedList<long[]>();
+            for (T object : objects) {
+                byte[] bytes = getHash(object, funnel);
+                res.add(getIndex(bytes,numHashFunctions,bitSize));
+            }
             return bits.getBatch(res);
         }
 
@@ -107,20 +108,22 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> boolean putAll(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = objects.stream().map(e -> {
-                long bytes = getHash(e, funnel);
-                return getIndex(bytes, numHashFunctions, bitSize);
-            }).collect(Collectors.toList());
+            List<long[]> res=new LinkedList<long[]>();
+            for (T object : objects) {
+                long bytes = getHash(object, funnel);
+                res.add(getIndex(bytes,numHashFunctions,bitSize));
+            }
             return bits.setBatch(res);
         }
 
         @Override
         public <T> List<Boolean> mightContains(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = objects.stream().map(e -> {
-                long bytes = getHash(e, funnel);
-                return getIndex(bytes, numHashFunctions, bitSize);
-            }).collect(Collectors.toList());
+            List<long[]> res=new LinkedList<long[]>();
+            for (T object : objects) {
+                long bytes = getHash(object, funnel);
+                res.add(getIndex(bytes,numHashFunctions,bitSize));
+            }
             return bits.getBatch(res);
         }
 

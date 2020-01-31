@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  * 根据滑动窗口实现,请看atuoConfiguration类注释
  */
 
-public class WindowRateLimiter implements RateLimiter{
+public class WindowRateLimiter extends BaseRateLimiter {
 
     private RedisTemplate redisTemplate;
 
@@ -28,10 +28,12 @@ public class WindowRateLimiter implements RateLimiter{
     }
 
     @Override
-    public Boolean canExecute(Annotation baseLimiter, String key) {
+    public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         WindowLimiter windowLimiter=(WindowLimiter)baseLimiter;
         int i = windowLimiter.during();
         TimeUnit timeUnit = windowLimiter.timeUnit();
+        String methodName=windowLimiter.fallback();
+        boolean passArgs=windowLimiter.passArgs();
         //转为毫秒实现
         long l = timeUnit.toMillis(i);
         long value = windowLimiter.value();
@@ -40,7 +42,7 @@ public class WindowRateLimiter implements RateLimiter{
         //上一个截止的时间戳
         long last = current - l;
         Object[] args = {current ,last,value};
-        Object execute = redisTemplate.execute(redisScript, RateLimiter.getKeyAndPutFailStrategyIfAbsent(key,windowLimiter.failStrategy(),windowLimiter.msg()), args);
+        Object execute = redisTemplate.execute(redisScript, BaseRateLimiter.getKey(methodKey,methodName,passArgs), args);
         return (Boolean) execute;
     }
 

@@ -1,7 +1,6 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -55,16 +54,16 @@ public final class AddCondition {
     }
 
      InnerInfo build(){
-        if(Objects.isNull(keyName)){
+        if(keyName==null){
             throw new RedisAuxException("key is null!");
         }
-        this.fpp=Objects.isNull(fpp)?0.03:fpp;
-        this.exceptionInsert=Objects.isNull(exceptionInsert)?1000L:exceptionInsert;
-        this.timeUnit=Objects.isNull(timeUnit)?TimeUnit.SECONDS:timeUnit;
-        this.timeout=Objects.isNull(timeout)?-1L:timeout;
-        this.growRate=Objects.isNull(growRate)?0.7:growRate;
+        this.fpp=fpp==null?0.03:fpp;
+        this.exceptionInsert=exceptionInsert==null?1000L:exceptionInsert;
+        this.timeUnit=timeUnit==null?TimeUnit.SECONDS:timeUnit;
+        this.timeout=timeout==null?-1L:timeout;
+        this.growRate=growRate==null?0.7:growRate;
         //默认不开启自增
-        this.enableGrow=Objects.isNull(enableGrow)?false:enableGrow;
+        this.enableGrow=enableGrow==null?false:enableGrow;
         return new InnerInfo(this);
 
     }

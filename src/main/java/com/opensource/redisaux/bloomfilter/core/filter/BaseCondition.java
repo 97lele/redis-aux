@@ -2,7 +2,6 @@ package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.RedisAuxException;
 
-import java.util.Objects;
 
 /**
  * @author lulu
@@ -20,7 +19,7 @@ public final class BaseCondition {
         return this;
     }
      InnerInfo build(){
-        if(Objects.isNull(keyName)){
+        if(keyName==null){
             throw new RedisAuxException("key is null!");
         }
         return new InnerInfo(this);
