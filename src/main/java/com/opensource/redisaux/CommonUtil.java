@@ -11,7 +11,7 @@ public class CommonUtil {
         return keyPrefix+":"+key;
     }
 
-    
+
     public static int optimalNumOfHashFunctions(long n, long m) {
         // (m / n) * log(2), but avoid truncation due to division!
         return Math.max(1, (int) Math.round((double) m / n * Math.log(2)));

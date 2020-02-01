@@ -7,9 +7,11 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -44,6 +46,8 @@ public class RedisBitArray implements BitArray {
 
     private double growRate;
 
+    private volatile int count;
+
     public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
         this.redisTemplate = redisTemplate;
         this.key = key;
@@ -56,6 +60,7 @@ public class RedisBitArray implements BitArray {
         this.growRate = growRate;
         this.enableGrow = enableGrow;
         readWriteLock = new ReentrantReadWriteLock();
+        count = 0;
     }
 
 
@@ -70,6 +75,7 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean set(long[] index) {
         readWriteLock.writeLock().lock();
+        count++;
         boolean grow = ensureCapacity();
         for (String s : keyList) {
             setBitScriptExecute(index, s);
@@ -89,6 +95,7 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean setBatch(List index) {
         readWriteLock.writeLock().lock();
+        count += index.size();
         long[] res = getArrayFromList(index);
         boolean grow = ensureCapacity();
         for (String s : keyList) {
@@ -171,8 +178,14 @@ public class RedisBitArray implements BitArray {
         readWriteLock.writeLock().lock();
         keyList.clear();
         keyList.add(key);
+        count = 0;
         readWriteLock.writeLock().unlock();
         redisTemplate.execute(resetBitScript, keyList, bitSize);
+    }
+
+    @Override
+    public int getSize() {
+        return count;
     }
 
 
@@ -194,7 +207,7 @@ public class RedisBitArray implements BitArray {
     }
 
     private void afterGrow(boolean grow) {
-        List<String> list=new LinkedList();
+        List<String> list = new LinkedList();
         list.add(key);
         list.add(keyList.getLast());
         if (grow) {
@@ -212,9 +225,9 @@ public class RedisBitArray implements BitArray {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
-            value[i]=new Long(index[i]);
+            value[i] = new Long(index[i]);
         }
-        List<String> list=new LinkedList();
+        List<String> list = new LinkedList();
         list.add(key);
         list.add(length.toString());
         redisTemplate.execute(setBitScript, list, value);
@@ -230,9 +243,9 @@ public class RedisBitArray implements BitArray {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
-            value[i]=new Long(index[i]);
+            value[i] = new Long(index[i]);
         }
-        List<String> list=new LinkedList();
+        List<String> list = new LinkedList();
         list.add(key);
         list.add(length.toString());
         List res = (List) redisTemplate.execute(getBitScript, list, value);
@@ -263,9 +276,9 @@ public class RedisBitArray implements BitArray {
         return keyList;
     }
 
-    public void clear(){
+    public void clear() {
         keyList.clear();
-        keyList=null;
-        readWriteLock=null;
+        keyList = null;
+        readWriteLock = null;
     }
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class GetBloomFilterField {
 
     private static Map<Class, SerializedLambda> map = new ConcurrentHashMap();
+    private static Map<String, BloomFilterInfo> bloomFilterInfoMap = new ConcurrentHashMap<>();
 
     public static <T> BloomFilterInfo resolveFieldName(SFunction<T> sFunction) {
         SerializedLambda lambda = map.get(sFunction.getClass());
@@ -31,7 +32,6 @@ public class GetBloomFilterField {
                 Method writeReplace = sFunction.getClass().getDeclaredMethod(BloomFilterConsts.LAMBDAMETHODNAME);
                 writeReplace.setAccessible(Boolean.TRUE);
                 lambda = (SerializedLambda) writeReplace.invoke(sFunction);
-                map.put(sFunction.getClass(), lambda);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();
             } catch (IllegalAccessException e) {
@@ -39,17 +39,26 @@ public class GetBloomFilterField {
             } catch (InvocationTargetException e) {
                 e.printStackTrace();
             }
+            map.put(sFunction.getClass(), lambda);
         }
         String fieldName = getFieldName(lambda);
-        String capturingClass = lambda.getImplClass().replace("/", ".");
-        try {
-            Class<?> aClass = Class.forName(capturingClass);
+        String capturingClass = lambda.getImplClass();
+        String infoKey = CommonUtil.getKeyName(fieldName, capturingClass);
+        BloomFilterInfo res = bloomFilterInfoMap.get(infoKey);
+        if (res == null) {
+            capturingClass = capturingClass.replace("/", ".");
+            Class<?> aClass = null;
+            try {
+                aClass = Class.forName(capturingClass);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
             if (aClass.isAnnotationPresent(BloomFilterPrefix.class)) {
                 BloomFilterPrefix annotation = aClass.getAnnotation(BloomFilterPrefix.class);
                 if (RedisBloomFilterRegistar.bloomFilterFieldMap != null) {
                     Map<String, BloomFilterProperty> map = RedisBloomFilterRegistar.bloomFilterFieldMap.get(annotation.prefix());
                     BloomFilterProperty field = map.get(CommonUtil.getKeyName(annotation.prefix(), fieldName));
-                    return new BloomFilterInfo(annotation.prefix().trim().equals("") ? aClass.getCanonicalName() : annotation.prefix(),
+                    res = new BloomFilterInfo(annotation.prefix().trim().equals("") ? aClass.getCanonicalName() : annotation.prefix(),
                             field.key().trim().equals("") ? fieldName : field.key(),
                             field.exceptionInsert(),
                             field.fpp(),
@@ -59,10 +68,12 @@ public class GetBloomFilterField {
                             field.growRate());
                 }
             }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            if (res != null) {
+                bloomFilterInfoMap.put(infoKey, res);
+            }
+
         }
-        return null;
+        return res;
 
     }
 
@@ -76,15 +87,15 @@ public class GetBloomFilterField {
         private boolean enableGrow;
         private double growRate;
 
-        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit,boolean enableGrow,double growRate) {
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate) {
             this.keyPrefix = keyPrefix;
             this.keyName = keyName;
             this.exceptionInsert = exceptionInsert;
             this.fpp = fpp;
             this.timeout = timeout;
             this.timeUnit = timeUnit;
-            this.enableGrow=enableGrow;
-            this.growRate=growRate;
+            this.enableGrow = enableGrow;
+            this.growRate = growRate;
 
         }
 
@@ -112,9 +123,13 @@ public class GetBloomFilterField {
             return timeUnit;
         }
 
-        public boolean isEnableGrow(){return enableGrow;}
+        public boolean isEnableGrow() {
+            return enableGrow;
+        }
 
-        public double getGrowRate(){return growRate;}
+        public double getGrowRate() {
+            return growRate;
+        }
     }
 
 

@@ -85,6 +85,13 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
+    public int getElementSize(String key){
+        if(bitArrayMap.get(key)!=null){
+            return bitArrayMap.get(key).getSize();
+        }
+        return -1;
+    }
+
     /**
      * 这里判断不为空才删除的原因是，有可能里面的键不在里面
      *
@@ -121,6 +128,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
             numHashFunctionsMap.remove(key);
             redisBitArrayOperator.delete(tBitArray.getKeyList());
             tBitArray.clear();
+            tBitArray=null;
         }
     }
 

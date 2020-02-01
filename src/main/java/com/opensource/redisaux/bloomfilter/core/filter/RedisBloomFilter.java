@@ -5,6 +5,7 @@ import com.opensource.redisaux.RedisAuxException;
 import com.opensource.redisaux.bloomfilter.support.GetBloomFilterField;
 import com.opensource.redisaux.bloomfilter.support.SFunction;
 import org.springframework.util.StringUtils;
+
 import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -189,7 +190,7 @@ public class RedisBloomFilter {
 
         List<String> keyList = new LinkedList();
         for (String key : keys) {
-            keyList.add(checkKey(keyPrefix,key));
+            keyList.add(checkKey(keyPrefix, key));
         }
         for (RedisBloomFilterItem filter : bloomFilterMap.values()) {
             filter.removeAll(keyList);
@@ -232,6 +233,25 @@ public class RedisBloomFilter {
         }
     }
 
+    public <T> int getElementSize(SFunction<T> sFunction) {
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
+        return getElementSize(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName());
+    }
+
+    public int getElementSize(BaseCondition baseCondition) {
+        return getElementSize(baseCondition.keyPrefix, baseCondition.keyName);
+    }
+
+    private int getElementSize(String keyPrefix, String keyName) {
+        keyName = checkKey(keyPrefix, keyName);
+        int res = -1;
+        for (RedisBloomFilterItem value : bloomFilterMap.values()) {
+            if ((res = value.getElementSize(keyName)) != -1) {
+             break;
+            }
+        }
+        return res;
+    }
 
 
     private GetBloomFilterField.BloomFilterInfo check(SFunction sFunction) {

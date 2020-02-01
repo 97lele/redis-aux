@@ -67,6 +67,7 @@ class RedisAuxApplicationTests {
         bloomFilter.addAll(TestEntity::getName, Arrays.asList(13, 14, 15, 16));
         System.out.println(bloomFilter.mightContain(TestEntity::getName, 15));
         System.out.println(bloomFilter.mightContains(TestEntity::getName, Arrays.asList(13, 200)));
+        System.out.println(bloomFilter.getElementSize(TestEntity::getName));
     }
 
     @Test
