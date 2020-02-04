@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: lele
  * @date: 2020/1/3 下午10:27
  */
-
+@SuppressWarnings("unchecked")
 public abstract class BaseRateLimiter {
     public final static int WINDOW_LIMITER =1;
     public final static int TOKEN_LIMITER =2;

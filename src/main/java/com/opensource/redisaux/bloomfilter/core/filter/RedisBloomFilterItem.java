@@ -17,6 +17,7 @@ import static com.opensource.redisaux.CommonUtil.optimalNumOfHashFunctions;
  * @author: lele
  * @date: 2019/12/20 上午11:35
  */
+@SuppressWarnings("unchecked")
 public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
 
@@ -85,12 +86,6 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    public int getElementSize(String key){
-        if(bitArrayMap.get(key)!=null){
-            return bitArrayMap.get(key).getSize();
-        }
-        return -1;
-    }
 
     /**
      * 这里判断不为空才删除的原因是，有可能里面的键不在里面

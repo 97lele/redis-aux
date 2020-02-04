@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author: lele
  * @date: 2020/1/4 上午8:12
  */
+@SuppressWarnings("unchecked")
 public class FunnelRateLimiter extends BaseRateLimiter {
     private RedisTemplate redisTemplate;
     private DefaultRedisScript redisScript;

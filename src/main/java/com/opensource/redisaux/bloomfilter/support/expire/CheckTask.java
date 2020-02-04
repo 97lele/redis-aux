@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static com.opensource.redisaux.bloomfilter.support.BloomFilterConsts.CHECK_TASK_PER_SECOND;
-
+@SuppressWarnings("unchecked")
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
     private List<KeyExpireListener> listeners = new ArrayList();
     private PriorityBlockingQueue<WatiForDeleteKey> priorityQueue;

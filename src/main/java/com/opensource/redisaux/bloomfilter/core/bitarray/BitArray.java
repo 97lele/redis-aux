@@ -27,5 +27,4 @@ public interface BitArray<T> {
 
     void reset();
 
-    int getSize();
 }

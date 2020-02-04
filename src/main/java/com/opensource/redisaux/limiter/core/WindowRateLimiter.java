@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @date: 2019/12/31 下午4:26
  * 根据滑动窗口实现,请看atuoConfiguration类注释
  */
-
+@SuppressWarnings("unchecked")
 public class WindowRateLimiter extends BaseRateLimiter {
 
     private RedisTemplate redisTemplate;

@@ -9,18 +9,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author: lele
  * @date: 2019/12/20 上午11:39
- * 操作redis的bitset,lua脚本
  */
+@SuppressWarnings("unchecked")
 public class RedisBitArray implements BitArray {
 
 
@@ -28,7 +26,9 @@ public class RedisBitArray implements BitArray {
 
     private long bitSize;
 
-    //读可以共享，写不可以
+    /**
+     * 读可以共享，写不可以
+     */
     private ReadWriteLock readWriteLock;
 
     private LinkedList<String> keyList;
@@ -47,7 +47,6 @@ public class RedisBitArray implements BitArray {
 
     private double growRate;
 
-    private volatile int count;
 
     public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
         this.redisTemplate = redisTemplate;
@@ -61,7 +60,6 @@ public class RedisBitArray implements BitArray {
         this.growRate = growRate;
         this.enableGrow = enableGrow;
         readWriteLock = new ReentrantReadWriteLock();
-        count = 0;
     }
 
 
@@ -76,7 +74,6 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean set(long[] index) {
         readWriteLock.writeLock().lock();
-        count++;
         boolean grow = ensureCapacity();
         setBitScriptExecute(index);
         afterGrow(grow);
@@ -94,7 +91,6 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean setBatch(List index) {
         readWriteLock.writeLock().lock();
-        count += index.size();
         long[] res = getArrayFromList(index);
         boolean grow = ensureCapacity();
         setBitScriptExecute(res);
@@ -119,19 +115,14 @@ public class RedisBitArray implements BitArray {
      */
     @Override
     public List<Boolean> getBatch(List index) {
-        //index.size*keyList.size个数
+        //index.size*keyList.size
         readWriteLock.readLock().lock();
-        //把List<Long[]>转为单个long[]
         long[] array = getArrayFromList(index);
-        //返回所有的key对应的bitmap，长度为array*keyList.size
         List<Long> list = getBitScriptExecute(array);
         List<Boolean> res = new ArrayList(index.size());
         int e = 0;
-
-        //根据键所对应的区间查找是否有false，这里的查找要分区间执行
         for (int q = 0; q < index.size(); q++) {
             boolean hasAdd = false;
-            //获取单个元素所属于的位置,还要判断扩容之后的相应位置
             int length =  ((long[]) index.get(q)).length+e;
             for (; e < length; e++) {
                 for(int i=0;i<keyList.size();i++){
@@ -148,10 +139,7 @@ public class RedisBitArray implements BitArray {
                 res.add(Boolean.TRUE);
             }
         }
-
-
         readWriteLock.readLock().unlock();
-
         return res;
     }
 
@@ -161,23 +149,16 @@ public class RedisBitArray implements BitArray {
         return this.bitSize;
     }
 
-    /**
-     * 重置改为删除其他多余的，重置第一个
-     */
+
     @Override
     public void reset() {
         readWriteLock.writeLock().lock();
         keyList.clear();
         keyList.add(key);
-        count = 0;
         readWriteLock.writeLock().unlock();
         redisTemplate.execute(resetBitScript, keyList, bitSize);
     }
 
-    @Override
-    public int getSize() {
-        return count;
-    }
 
 
     private boolean ensureCapacity() {
@@ -207,8 +188,6 @@ public class RedisBitArray implements BitArray {
     }
 
     /**
-     * 通过lua脚本设置值
-     *
      * @param index
      * @return
      */
@@ -216,7 +195,7 @@ public class RedisBitArray implements BitArray {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
-            value[i] = new Long(index[i]);
+            value[i] = Long.valueOf(index[i]);
         }
         LinkedList<String> list = new LinkedList();
         for (String s : keyList) {
@@ -228,8 +207,6 @@ public class RedisBitArray implements BitArray {
     }
 
     /**
-     * 通过lua脚本返回对应位数的值
-     *
      * @param index
      * @return
      */
@@ -237,7 +214,7 @@ public class RedisBitArray implements BitArray {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
-            value[i] = new Long(index[i]);
+            value[i] = Long.valueOf(index[i]);
         }
         LinkedList<String> list = new LinkedList();
         for (String s : keyList) {

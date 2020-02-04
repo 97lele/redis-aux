@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
  * @date: 2020/01/28 下午17:29
  *新建数组操作类及过期、删除功能
  */
+@SuppressWarnings("unchecked")
 public class RedisBitArrayOperator {
         private final DefaultRedisScript setBitScript;
 

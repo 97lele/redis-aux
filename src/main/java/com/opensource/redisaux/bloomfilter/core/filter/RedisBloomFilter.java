@@ -10,9 +10,12 @@ import javax.annotation.PreDestroy;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * @author: lele
+ * @date: 2019/12/20 上午11:35
+ */
+@SuppressWarnings("unchecked")
 public class RedisBloomFilter {
-
-
     private final Map<Class, RedisBloomFilterItem> bloomFilterMap;
 
 
@@ -232,27 +235,6 @@ public class RedisBloomFilter {
             filter.expire(keyName, timeout, timeUnit);
         }
     }
-
-    public <T> int getElementSize(SFunction<T> sFunction) {
-        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = check(sFunction);
-        return getElementSize(bloomFilterInfo.getKeyPrefix(), bloomFilterInfo.getKeyName());
-    }
-
-    public int getElementSize(BaseCondition baseCondition) {
-        return getElementSize(baseCondition.keyPrefix, baseCondition.keyName);
-    }
-
-    private int getElementSize(String keyPrefix, String keyName) {
-        keyName = checkKey(keyPrefix, keyName);
-        int res = -1;
-        for (RedisBloomFilterItem value : bloomFilterMap.values()) {
-            if ((res = value.getElementSize(keyName)) != -1) {
-             break;
-            }
-        }
-        return res;
-    }
-
 
     private GetBloomFilterField.BloomFilterInfo check(SFunction sFunction) {
         GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);

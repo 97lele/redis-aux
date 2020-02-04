@@ -12,6 +12,7 @@ import java.util.Map;
  * @author: lele
  * @date: 2020/1/2 下午4:10
  */
+@SuppressWarnings("unchecked")
 public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {

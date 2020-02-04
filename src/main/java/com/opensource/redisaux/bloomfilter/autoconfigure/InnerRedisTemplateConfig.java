@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat;
  * @date: 2020/01/28 下午17:29
  * 自定义的redisTemplate
  */
+@SuppressWarnings("unchecked")
 @Configuration
 public class InnerRedisTemplateConfig {
     @Bean(name = BloomFilterConsts.INNERTEMPLATE)

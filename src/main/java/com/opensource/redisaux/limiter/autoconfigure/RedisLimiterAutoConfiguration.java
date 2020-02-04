@@ -26,6 +26,7 @@ import java.util.Map;
  * @author: lele
  * @date: 2020/1/2 下午5:12
  */
+@SuppressWarnings("unchecked")
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @ConditionalOnBean(RedisTemplate.class)

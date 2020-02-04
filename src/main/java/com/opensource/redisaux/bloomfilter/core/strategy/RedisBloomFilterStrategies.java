@@ -13,6 +13,7 @@ import java.util.List;
  * @date: 2019/12/20 上午11:39
  * 沿用guava的hash方法，通过jvm位数选择不同的hash策略，主要核心类
  */
+@SuppressWarnings("unchecked")
 public enum RedisBloomFilterStrategies {
 
 

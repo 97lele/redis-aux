@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import java.util.Properties;
 @Configuration
 @ConditionalOnClass(RedisBloomFilter.class)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
+@SuppressWarnings("unchecked")
 public class RedisBloomFilterAutoConfiguration {
 
     @Autowired
@@ -43,7 +43,6 @@ public class RedisBloomFilterAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RedisBloomFilter.class)
     public RedisBloomFilter redisBloomFilter() {
-
         Properties properties = System.getProperties();
         String property = properties.getProperty("sun.arch.data.model");
         Strategy strategy = RedisBloomFilterStrategies.getStrategy(property);
@@ -61,7 +60,7 @@ public class RedisBloomFilterAutoConfiguration {
 
     @Bean(name = "resetBitScript")
     public DefaultRedisScript resetBitScript() {
-        DefaultRedisScript script = new DefaultRedisScript();
+        DefaultRedisScript<Void> script = new DefaultRedisScript<Void>();
         script.setLocation(new ClassPathResource("ResetBitScript.lua"));
         return script;
     }
@@ -75,7 +74,7 @@ public class RedisBloomFilterAutoConfiguration {
 
     @Bean(name = "getBitScript")
     public DefaultRedisScript getBitScript() {
-        DefaultRedisScript script = new DefaultRedisScript();
+        DefaultRedisScript<List> script = new DefaultRedisScript();
         script.setLocation(new ClassPathResource("GetBitScript.lua"));
         script.setResultType(List.class);
         return script;

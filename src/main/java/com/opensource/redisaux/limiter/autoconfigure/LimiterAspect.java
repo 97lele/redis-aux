@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author: lele
  * @date: 2020/1/2 下午5:12
  */
+@SuppressWarnings("unchecked")
 @Aspect
 public class LimiterAspect  {
 
@@ -32,7 +33,7 @@ public class LimiterAspect  {
     public LimiterAspect(Map<Integer, BaseRateLimiter> rateLimiterMap
     ) {
         this.rateLimiterMap = rateLimiterMap;
-        this.annotationMap = new ConcurrentHashMap<>();
+        this.annotationMap = new ConcurrentHashMap();
     }
 
 

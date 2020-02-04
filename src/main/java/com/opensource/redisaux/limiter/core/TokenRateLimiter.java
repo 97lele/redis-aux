@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * @author: lele
  * @date: 2020/1/3 下午10:28
  */
+@SuppressWarnings("unchecked")
 public class TokenRateLimiter extends BaseRateLimiter {
 
     private RedisTemplate redisTemplate;

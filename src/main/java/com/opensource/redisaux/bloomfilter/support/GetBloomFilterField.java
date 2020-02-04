@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class GetBloomFilterField {
 
     private static Map<Class, SerializedLambda> map = new ConcurrentHashMap();
-    private static Map<String, BloomFilterInfo> bloomFilterInfoMap = new ConcurrentHashMap<>();
+    private static Map<String, BloomFilterInfo> bloomFilterInfoMap = new ConcurrentHashMap();
 
     public static <T> BloomFilterInfo resolveFieldName(SFunction<T> sFunction) {
         SerializedLambda lambda = map.get(sFunction.getClass());
