@@ -30,7 +30,7 @@ public class GetBloomFilterField {
         if (lambda == null) {
             try {
                 Method writeReplace = sFunction.getClass().getDeclaredMethod(BloomFilterConsts.LAMBDAMETHODNAME);
-                writeReplace.setAccessible(Boolean.TRUE);
+                writeReplace.setAccessible(true);
                 lambda = (SerializedLambda) writeReplace.invoke(sFunction);
             } catch (NoSuchMethodException e) {
                 e.printStackTrace();

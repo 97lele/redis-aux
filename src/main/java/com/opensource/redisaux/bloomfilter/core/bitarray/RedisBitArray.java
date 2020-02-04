@@ -102,8 +102,8 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean get(long[] index) {
         readWriteLock.readLock().lock();
-        List<Long> res = getBitScriptExecute(index);
-        boolean exists = !res.contains(BloomFilterConsts.FALSE);
+        List<Long> res = getBitScriptExecute(index,index.length);
+        boolean exists=res.get(0).equals(BloomFilterConsts.TRUE);
         readWriteLock.readLock().unlock();
         return exists;
     }
@@ -118,26 +118,10 @@ public class RedisBitArray implements BitArray {
         //index.size*keyList.size
         readWriteLock.readLock().lock();
         long[] array = getArrayFromList(index);
-        List<Long> list = getBitScriptExecute(array);
+        List<Long> list = getBitScriptExecute(array,((long[]) index.get(0)).length);
         List<Boolean> res = new ArrayList(index.size());
-        int e = 0;
-        for (int q = 0; q < index.size(); q++) {
-            boolean hasAdd = false;
-            int length =  ((long[]) index.get(q)).length+e;
-            for (; e < length; e++) {
-                for(int i=0;i<keyList.size();i++){
-                    int offset=e+i*array.length;
-                    if (list.get(offset).equals(BloomFilterConsts.FALSE)) {
-                        res.add(Boolean.FALSE);
-                        e = length-1;
-                        hasAdd = true;
-                        break;
-                    }
-                }
-            }
-            if (!hasAdd) {
-                res.add(Boolean.TRUE);
-            }
+        for (Long temp : list) {
+            res.add(Boolean.valueOf(temp.equals(BloomFilterConsts.TRUE)));
         }
         readWriteLock.readLock().unlock();
         return res;
@@ -197,20 +181,14 @@ public class RedisBitArray implements BitArray {
         for (int i = 0; i < length; i++) {
             value[i] = Long.valueOf(index[i]);
         }
-        LinkedList<String> list = new LinkedList();
-        for (String s : keyList) {
-            list.add(s);
-        }
-        list.addFirst(length.toString());
-        list.addFirst(list.size() + "");
-        redisTemplate.execute(setBitScript, list, value);
+        redisTemplate.execute(setBitScript, keyList, value);
     }
 
     /**
      * @param index
      * @return
      */
-    private List<Long> getBitScriptExecute(long[] index) {
+    private List<Long> getBitScriptExecute(long[] index,int size) {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
@@ -220,8 +198,7 @@ public class RedisBitArray implements BitArray {
         for (String s : keyList) {
             list.add(s);
         }
-        list.addFirst(length.toString());
-        list.addFirst(list.size() + "");
+        list.addFirst(size+"");
         List res = (List) redisTemplate.execute(getBitScript, list, value);
         return res;
     }

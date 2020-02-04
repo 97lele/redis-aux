@@ -10,7 +10,7 @@ public final class BloomFilterConsts {
 
     }
 
-    public static final Long FALSE = 0L;
+    public static final Long TRUE = 1L;
     public static final String LAMBDAMETHODNAME = "writeReplace";
     public static final String GET = "get";
     public static final String IS = "is";

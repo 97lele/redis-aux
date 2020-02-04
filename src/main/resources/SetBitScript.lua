@@ -1,7 +1,8 @@
---key[1]代表keyList的长度，key[2]代表字节位的长度，索要3--key[1]代表键
-for i = 2, tonumber(KEYS[1])
+local kL=table.getn(KEYS)
+local aL=table.getn(ARGV)
+for i = 1, kL
 do
-    for k = 1, tonumber(KEYS[2])
-    do redis.call('setbit', KEYS[i+1], tonumber(ARGV[k]), 1)
+    for k = 1,aL
+    do redis.call('setbit', KEYS[i], tonumber(ARGV[k]), 1)
     end
 end

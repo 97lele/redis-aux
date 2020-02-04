@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.opensource</groupId>
     <artifactId>redis-aux</artifactId>
-    <version>0.2.4</version>
+    <version>0.2.5</version>
     <name>redis-aux</name>
     <parent>
         <groupId>org.springframework.boot</groupId>
