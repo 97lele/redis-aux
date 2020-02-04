@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -77,9 +78,7 @@ public class RedisBitArray implements BitArray {
         readWriteLock.writeLock().lock();
         count++;
         boolean grow = ensureCapacity();
-        for (String s : keyList) {
-            setBitScriptExecute(index, s);
-        }
+        setBitScriptExecute(index);
         afterGrow(grow);
         readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
@@ -98,9 +97,7 @@ public class RedisBitArray implements BitArray {
         count += index.size();
         long[] res = getArrayFromList(index);
         boolean grow = ensureCapacity();
-        for (String s : keyList) {
-            setBitScriptExecute(res, s);
-        }
+        setBitScriptExecute(res);
         afterGrow(grow);
         readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
@@ -109,56 +106,50 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean get(long[] index) {
         readWriteLock.readLock().lock();
-        boolean exists = true;
-        for (String s : keyList) {
-            List<Long> bits = getBitScriptExecute(index, s);
-            if (bits.contains(BloomFilterConsts.FALSE)) {
-                exists = false;
-            }
-        }
+        List<Long> res = getBitScriptExecute(index);
+        boolean exists = !res.contains(BloomFilterConsts.FALSE);
         readWriteLock.readLock().unlock();
         return exists;
     }
 
+    /**
+     *
+     * @param index  List<long[]>
+     * @return
+     */
     @Override
     public List<Boolean> getBatch(List index) {
         //index.size*keyList.size个数
         readWriteLock.readLock().lock();
-        List<Boolean> lists = new ArrayList(index.size() * keyList.size());
-        for (String s : keyList) {
-            long[] array = getArrayFromList(index);
-            List<Long> list = getBitScriptExecute(array, s);
-            List<Boolean> res = new ArrayList(index.size());
-            int e = 0;
-            //根据键所对应的区间查找是否有false
-            for (int q = 0; q < index.size(); q++) {
-                Boolean hasAdd = Boolean.FALSE;
-                int length = ((long[]) index.get(q)).length + e;
-                for (; e < length; e++) {
-                    if (list.get(e).equals(BloomFilterConsts.FALSE)) {
+        //把List<Long[]>转为单个long[]
+        long[] array = getArrayFromList(index);
+        //返回所有的key对应的bitmap，长度为array*keyList.size
+        List<Long> list = getBitScriptExecute(array);
+        List<Boolean> res = new ArrayList(index.size());
+        int e = 0;
+
+        //根据键所对应的区间查找是否有false，这里的查找要分区间执行
+        for (int q = 0; q < index.size(); q++) {
+            boolean hasAdd = false;
+            //获取单个元素所属于的位置,还要判断扩容之后的相应位置
+            int length =  ((long[]) index.get(q)).length+e;
+            for (; e < length; e++) {
+                for(int i=0;i<keyList.size();i++){
+                    int offset=e+i*array.length;
+                    if (list.get(offset).equals(BloomFilterConsts.FALSE)) {
                         res.add(Boolean.FALSE);
-                        e = length;
-                        hasAdd = Boolean.TRUE;
+                        e = length-1;
+                        hasAdd = true;
                         break;
                     }
                 }
-                if (!hasAdd) {
-                    res.add(Boolean.TRUE);
-                }
             }
-            lists.addAll(res);
-        }
-        List<Boolean> res = new ArrayList(index.size());
-        for (int i = 0; i < index.size(); i++) {
-            boolean exists = true;
-            for (int k = 0; k < keyList.size(); k++) {
-                int idx = i + k * index.size();
-                if (!lists.get(idx)) {
-                    exists = false;
-                }
+            if (!hasAdd) {
+                res.add(Boolean.TRUE);
             }
-            res.add(exists);
         }
+
+
         readWriteLock.readLock().unlock();
 
         return res;
@@ -221,15 +212,18 @@ public class RedisBitArray implements BitArray {
      * @param index
      * @return
      */
-    private void setBitScriptExecute(long[] index, String key) {
+    private void setBitScriptExecute(long[] index) {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
             value[i] = new Long(index[i]);
         }
-        List<String> list = new LinkedList();
-        list.add(key);
-        list.add(length.toString());
+        LinkedList<String> list = new LinkedList();
+        for (String s : keyList) {
+            list.add(s);
+        }
+        list.addFirst(length.toString());
+        list.addFirst(list.size() + "");
         redisTemplate.execute(setBitScript, list, value);
     }
 
@@ -239,15 +233,18 @@ public class RedisBitArray implements BitArray {
      * @param index
      * @return
      */
-    private List<Long> getBitScriptExecute(long[] index, String key) {
+    private List<Long> getBitScriptExecute(long[] index) {
         Integer length = index.length;
         Object[] value = new Long[length];
         for (int i = 0; i < length; i++) {
             value[i] = new Long(index[i]);
         }
-        List<String> list = new LinkedList();
-        list.add(key);
-        list.add(length.toString());
+        LinkedList<String> list = new LinkedList();
+        for (String s : keyList) {
+            list.add(s);
+        }
+        list.addFirst(length.toString());
+        list.addFirst(list.size() + "");
         List res = (List) redisTemplate.execute(getBitScript, list, value);
         return res;
     }

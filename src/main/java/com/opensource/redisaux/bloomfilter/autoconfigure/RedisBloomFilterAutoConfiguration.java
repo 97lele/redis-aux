@@ -69,14 +69,14 @@ public class RedisBloomFilterAutoConfiguration {
     @Bean(name = "setBitScript")
     public DefaultRedisScript setBitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
-        script.setScriptText("for i=1,tonumber(KEYS[2]) do redis.call('setbit',KEYS[1],tonumber(ARGV[i]),1) end");
+        script.setLocation(new ClassPathResource("SetBitScript.lua"));
         return script;
     }
 
     @Bean(name = "getBitScript")
     public DefaultRedisScript getBitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
-        script.setScriptText("local array={} for i=1,tonumber(KEYS[2])  do array[i]=redis.call('getbit',KEYS[1],ARGV[i]) end return array");
+        script.setLocation(new ClassPathResource("GetBitScript.lua"));
         script.setResultType(List.class);
         return script;
     }
