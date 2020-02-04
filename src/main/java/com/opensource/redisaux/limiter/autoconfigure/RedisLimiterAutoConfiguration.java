@@ -36,17 +36,6 @@ public class RedisLimiterAutoConfiguration {
     @Qualifier(BloomFilterConsts.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
 
-
-    @Bean
-    public ExpressionParser expressionParser(){
-        return new SpelExpressionParser();
-    }
-    @Bean
-    public DefaultParameterNameDiscoverer parameterNameDiscoverer(){
-       return  new DefaultParameterNameDiscoverer();
-    }
-
-
     /**
      * 滑动窗口的lua脚本，步骤：
      * 1.记录当前时间戳

@@ -189,17 +189,12 @@ public class RedisBitArray implements BitArray {
      * @return
      */
     private List<Long> getBitScriptExecute(long[] index,int size) {
-        Integer length = index.length;
-        Object[] value = new Long[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = Long.valueOf(index[i]);
+        Object[] value = new Long[index.length+1];
+        value[0]=Long.valueOf(size);
+        for (int i = 1; i < value.length; i++) {
+            value[i] = Long.valueOf(index[i-1]);
         }
-        LinkedList<String> list = new LinkedList();
-        for (String s : keyList) {
-            list.add(s);
-        }
-        list.addFirst(size+"");
-        List res = (List) redisTemplate.execute(getBitScript, list, value);
+        List res = (List) redisTemplate.execute(getBitScript, keyList, value);
         return res;
     }
 
