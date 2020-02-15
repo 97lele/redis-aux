@@ -16,7 +16,6 @@ do local notAdd = true
         local k = 1
         while (notAdd and k <= kL)
         do
-
             if redis.call('getbit', KEYS[k], ARGV[i]) == 0 then
                 array[index] = 0
                 notAdd = false

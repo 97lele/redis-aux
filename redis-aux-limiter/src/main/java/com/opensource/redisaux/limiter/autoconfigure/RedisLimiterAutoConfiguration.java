@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -89,7 +88,7 @@ public class RedisLimiterAutoConfiguration {
     public DefaultRedisScript tokenLimitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
         script.setResultType(Long.class);
-        script.setLocation(new ClassPathResource("TokenRateLimit.lua"));
+        script.setScriptText(tokenRateStr());
         return script;
     }
 
@@ -102,7 +101,7 @@ public class RedisLimiterAutoConfiguration {
     public DefaultRedisScript funnelLimitScript() {
         DefaultRedisScript script = new DefaultRedisScript();
         script.setResultType(Boolean.class);
-        script.setLocation(new ClassPathResource("FunnelRateLimit.lua"));
+        script.setScriptText(funnelRateStr());
         return script;
     }
 
@@ -120,5 +119,37 @@ public class RedisLimiterAutoConfiguration {
         return new LimiterAspect(map);
     }
 
+    private String funnelRateStr() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'passRate', 'addWater', 'water', 'lastTs')\n")
+                .append("local capacity = limitInfo[1]\n").append("local passRate = limitInfo[2]\n")
+                .append("local addWater = limitInfo[3]\n").append("local water = limitInfo[4]\n")
+                .append("local lastTs = limitInfo[5]\n").append("if capacity == false then\n")
+                .append("    capacity = tonumber(ARGV[1])\n").append("    passRate = tonumber(ARGV[2])\n")
+                .append("    addWater = tonumber(ARGV[3])\n").append("    water = 0\n")
+                .append("    lastTs = tonumber(ARGV[4])\n").append("    redis.call('hmset', KEYS[1], 'capacity', capacity, 'passRate', passRate, 'addWater', addWater, 'water', water, 'lastTs', lastTs)\n")
+                .append("    return true\n").append("else\n").append("    local nowTs = tonumber(ARGV[4])\n")
+                .append("    local waterPass = tonumber((nowTs - lastTs) * passRate)\n").append("    water = math.max(0, water - waterPass)\n")
+                .append("    lastTs = nowTs\n").append("    addWater = tonumber(addWater)\n").append("    if capacity - water >= addWater then\n")
+                .append("        water = water + addWater\n").append("        redis.call('hmset', KEYS[1], 'water', water, 'lastTs', lastTs)\n")
+                .append("        return true\n    end\n    return false\nend");
+        return builder.toString();
+    }
 
+    private String tokenRateStr() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'passRate', 'leftToken', 'lastTs')\n")
+                .append("local capacity = limitInfo[1]\n").append("local rate = limitInfo[2]\n")
+                .append("local leftToken = limitInfo[3]\n").append("local lastTs = limitInfo[4]\n")
+                .append("if capacity == false then\n").append("    capacity = tonumber(ARGV[1])\n")
+                .append("    rate = tonumber(ARGV[2])\n").append("    leftToken = tonumber(ARGV[1])\n")
+                .append("    lastTs = tonumber(ARGV[4])\n").append("    redis.call('hmset', KEYS[1], 'capacity', capacity, 'passRate', rate, 'leftToken', leftToken, 'lastTs', lastTs)\n")
+                .append("    return -1\nelse\n").append("    local nowTs = tonumber(ARGV[4])\n")
+                .append("    local genTokenNum = tonumber((nowTs - lastTs) * rate)\n").append("    leftToken = genTokenNum + leftToken\n")
+                .append("    leftToken = math.min(capacity, leftToken)\n    lastTs = nowTs\n    local need = tonumber(ARGV[3])\n")
+                .append("    if leftToken >= need then\n        leftToken = leftToken - need\n")
+                .append("        redis.call('hmset', KEYS[1], 'leftToken', leftToken, 'lastTs', lastTs)\n")
+                .append("        return -1\n    end\n    return (need - leftToken) / rate\nend");
+        return builder.toString();
+    }
 }

@@ -5,12 +5,11 @@
     <parent>
         <groupId>com.opensource</groupId>
         <artifactId>redis-aux</artifactId>
-        <version>0.2.5</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>0.2.7</version><!-- lookup parent from repository -->
     </parent>
     <groupId>com.opensource</groupId>
     <artifactId>redis-aux-test</artifactId>
-    <version>0.2.5</version>
+    <version>0.2.7</version>
     <name>redis-aux-test</name>
     <description>测试用例</description>
 
