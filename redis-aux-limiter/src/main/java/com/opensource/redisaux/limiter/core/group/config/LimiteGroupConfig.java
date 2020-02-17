@@ -5,6 +5,7 @@ import com.opensource.redisaux.common.LimiterConstants;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lulu
@@ -25,11 +26,15 @@ public class LimiteGroupConfig {
         this.funnelRateConfig = builder.funnelRateConfig;
         this.windowRateConfig = builder.windowRateConfig;
         this.tokenRateConfig = builder.tokenRateConfig;
-        this.blackRuleFallback = builder.blackRuleFallback == null ? "" : blackRuleFallback;
-        this.enableWhiteList = builder.enableWhiteList == null ? false : enableWhiteList;
-        this.enableBlackList = builder.enableBlackList == null ? false : enableBlackList;
-        this.enableURLPrefix = builder.enableURLPrefix == null ? "/*" : enableURLPrefix;
-        this.unableURLPrefix = builder.unableURLPrefix == null ? "" : unableURLPrefix;
+        this.blackRuleFallback = builder.blackRuleFallback == null ? "" : builder.blackRuleFallback;
+        this.enableWhiteList = builder.enableWhiteList == null ? false : builder.enableWhiteList;
+        this.enableBlackList = builder.enableBlackList == null ? false : builder.enableBlackList;
+        this.enableURLPrefix = builder.enableURLPrefix == null ? "/*" : builder.enableURLPrefix;
+        this.unableURLPrefix = builder.unableURLPrefix == null ? "" : builder.unableURLPrefix;
+        this.countDuring = builder.countDuring == null ? -1L : builder.countDuring;
+        this.enableCount = builder.enableCount == null ? false : builder.enableCount;
+        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.SECONDS : builder.countDuringUnit;
+        this.urlFallBack = builder.urlFallBack==null?"":builder.urlFallBack;
 
     }
 
@@ -55,15 +60,66 @@ public class LimiteGroupConfig {
 
     private WindowRateConfig windowRateConfig;
 
-    private Boolean enableBlackList;
+    private boolean enableBlackList;
 
-    private Boolean enableWhiteList;
+    private boolean enableWhiteList;
 
     private String blackRuleFallback;
-
+    //分号分隔
     private String enableURLPrefix;
-
+    //分号分隔
     private String unableURLPrefix;
+
+    public String getUrlFallBack() {
+        return urlFallBack;
+    }
+
+    private String urlFallBack;
+
+    private boolean enableCount;
+
+    private long countDuring;
+
+    private Long startTime;
+
+
+    public Long getStartTime() {
+        return startTime;
+    }
+
+    public boolean setStartTime(Long startTime) {
+        if (this.startTime == null) {
+            this.startTime = startTime;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isEnableCount() {
+        return enableCount;
+    }
+
+    public long getCountDuring() {
+        return countDuring;
+    }
+
+    public TimeUnit getCountDuringUnit() {
+        return countDuringUnit;
+    }
+
+    private TimeUnit countDuringUnit;
+
+    public void setEnableCount(boolean enableCount) {
+        this.enableCount = enableCount;
+    }
+
+    public void setCountDuring(long countDuring) {
+        this.countDuring = countDuring;
+    }
+
+    public void setCountDuringUnit(TimeUnit countDuringUnit) {
+        this.countDuringUnit = countDuringUnit;
+    }
 
     public String getEnableURLPrefix() {
         return enableURLPrefix;
@@ -182,6 +238,11 @@ public class LimiteGroupConfig {
         this.windowRateConfig = windowRateConfig;
     }
 
+    public void destory() {
+        this.funnelRateConfig = null;
+        this.windowRateConfig = null;
+        this.tokenRateConfig = null;
+    }
 
     public static Builder of() {
         return new Builder();
@@ -201,6 +262,10 @@ public class LimiteGroupConfig {
         private String blackRuleFallback;
         private String enableURLPrefix;
         private String unableURLPrefix;
+        private Boolean enableCount;
+        private Long countDuring;
+        private TimeUnit countDuringUnit;
+        private String urlFallBack;
 
         public Builder id(String id) {
             this.id = id;
@@ -247,6 +312,16 @@ public class LimiteGroupConfig {
             return this;
         }
 
+        public Builder urlFallBack(String urlFallBack) {
+            this.urlFallBack = urlFallBack;
+            return this;
+        }
+
+        public Builder enableBlackList(Boolean enableBlackList) {
+            this.enableBlackList = enableBlackList;
+            return this;
+        }
+
         public Builder blackRuleFallback(String blackRuleFallback) {
             this.blackRuleFallback = blackRuleFallback;
             return this;
@@ -259,6 +334,21 @@ public class LimiteGroupConfig {
 
         public Builder unableURLPrefix(String unableURLPrefix) {
             this.unableURLPrefix = unableURLPrefix;
+            return this;
+        }
+
+        public Builder enableCount(Boolean enableCount) {
+            this.enableCount = enableCount;
+            return this;
+        }
+
+        public Builder countDuring(Long countDuring) {
+            this.countDuring = countDuring;
+            return this;
+        }
+
+        public Builder countDuringUnit(TimeUnit countDuringUnit) {
+            this.countDuringUnit = countDuringUnit;
             return this;
         }
 

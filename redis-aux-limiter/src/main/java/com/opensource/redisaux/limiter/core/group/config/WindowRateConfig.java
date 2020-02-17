@@ -1,5 +1,7 @@
 package com.opensource.redisaux.limiter.core.group.config;
 
+import com.opensource.redisaux.common.LimiterConstants;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -7,6 +9,8 @@ import java.util.concurrent.TimeUnit;
  * @Date 2020/2/16 15:48
  */
 public class WindowRateConfig {
+    public  int type= LimiterConstants.WINDOW_LIMITER;
+
     private Long passCount;
 
     private TimeUnit duringUnit;
@@ -26,7 +30,9 @@ public class WindowRateConfig {
     public Long getPassCount() {
         return passCount;
     }
-
+    public Integer getType() {
+        return type;
+    }
     public void setPassCount(Long passCount) {
         this.passCount = passCount;
     }

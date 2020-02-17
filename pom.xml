@@ -5,7 +5,7 @@
     <groupId>com.opensource</groupId>
     <artifactId>redis-aux</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <modules>
         <module>redis-aux-common</module>
         <module>redis-aux-bloomfilter</module>
@@ -19,7 +19,7 @@
     </parent>
     <properties>
         <java.version>1.8</java.version>
-        <project.version>0.3.0</project.version>
+        <project.version>0.3.1</project.version>
     </properties>
 
     <dependencyManagement>

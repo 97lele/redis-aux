@@ -1,5 +1,7 @@
 package com.opensource.redisaux.limiter.core.group.config;
 
+import com.opensource.redisaux.common.LimiterConstants;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -7,6 +9,8 @@ import java.util.concurrent.TimeUnit;
  * @Date 2020/2/16 15:48
  */
 public class FunnelRateConfig {
+
+    private Integer type= LimiterConstants.FUNNEL_LIMITER;
     //漏斗配置
     private Double capacity;
 
@@ -41,6 +45,10 @@ public class FunnelRateConfig {
 
     public void setCapacity(Double capacity) {
         this.capacity = capacity;
+    }
+
+    public Integer getType() {
+        return type;
     }
 
     public Double getFunnelRate() {

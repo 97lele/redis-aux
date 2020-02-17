@@ -16,5 +16,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Import({RedisLimiterRegistar.class})
 public @interface EnableLimiter {
-    boolean exposeActuator() default false;
 }

@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat;
  * @Date 2020/2/16 16:47
  */
 @Configuration
- class InnerTemplateConfig {
+ class BloomRedisTemplateConfig {
     @Bean(name = BloomFilterConstants.INNERTEMPLATE)
     @Primary
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {

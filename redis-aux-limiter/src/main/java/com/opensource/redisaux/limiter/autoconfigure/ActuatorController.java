@@ -9,22 +9,17 @@ import com.opensource.redisaux.limiter.core.group.config.WindowRateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnJava;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * @author lulu
  * @Date 2020/2/16 19:38
  */
 @RestController
-@ConditionalOnExpression("'${redis.aux.limiter.actuator}'.equals('true')")
 public class ActuatorController {
-
-
 
     @Autowired
     private LimiterGroupService limiterGroupService;
@@ -87,8 +82,8 @@ public class ActuatorController {
     @PostMapping("/changeWindowConfig")
     public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("passCount") Long passCount,
-                                                @RequestParam("during") Long during,
-                                                @RequestParam("duringUnit") Integer mode
+                                                @RequestParam(value = "during", required = false) Long during,
+                                                @RequestParam(value = "duringUnit", required = false) Integer mode
     ) {
         WindowRateConfig config = WindowRateConfig.of().passCount(passCount).during(during).duringUnit(TimeUnitEnum.getTimeUnit(mode)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
@@ -100,10 +95,10 @@ public class ActuatorController {
     @PostMapping("/changeTokenConfig")
     public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("capacity") Double capacity,
-                                                @RequestParam("initToken") Double initToken,
+                                                @RequestParam(value = "initToken", required = false) Double initToken,
                                                 @RequestParam("tokenRate") Double tokenRate,
-                                                @RequestParam("requestNeed") Double requestNeed,
-                                                @RequestParam("duringUnit") Integer mode
+                                                @RequestParam(value = "requestNeed", required = false) Double requestNeed,
+                                                @RequestParam(value = "duringUnit", required = false) Integer mode
     ) {
         TokenRateConfig config = TokenRateConfig.of().capacity(capacity).initToken(initToken).tokenRate(tokenRate)
                 .requestNeed(requestNeed).tokenRateUnit(TimeUnitEnum.getTimeUnit(mode)).build();
@@ -111,6 +106,12 @@ public class ActuatorController {
         limiter.setTokenRateConfig(config);
         limiterGroupService.save(limiter, true, false);
         return limiter;
+    }
+
+    @GetMapping("/getCount/{groupId}")
+    public Map<String, String> changeCountConfig(@PathVariable("groupId") String groupId
+    ) {
+        return limiterGroupService.getCount(groupId);
     }
 
 }

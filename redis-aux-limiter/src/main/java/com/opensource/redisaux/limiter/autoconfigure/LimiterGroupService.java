@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author lulu
@@ -77,7 +79,7 @@ public class LimiterGroupService {
                 }
                 if (currentMode.equals(LimiterConstants.WINDOW_LIMITER)) {
                     keyList = Arrays.asList(CommonUtil.getLimiterTypeName(limiteGroup.getId(), LimiterConstants.TOKEN),
-                             CommonUtil.getLimiterTypeName(limiteGroup.getId(), LimiterConstants.FUNNEL));
+                            CommonUtil.getLimiterTypeName(limiteGroup.getId(), LimiterConstants.FUNNEL));
                 }
                 redisTemplate.execute(delGroupScript, keyList);
             }
@@ -86,6 +88,47 @@ public class LimiterGroupService {
         BaseRateLimiter.createOrUpdateGroups(limiteGroup);
 
     }
+
+
+    public void updateCount(boolean success, LimiteGroupConfig config) {
+        String countName = CommonUtil.getLimiterCountName(config.getId(), success);
+        if (config.setStartTime(System.currentTimeMillis())) {
+            save(config, true, false);
+        }
+        ;
+        redisTemplate.opsForHyperLogLog().add(countName, System.currentTimeMillis());
+        if (-1L != config.getCountDuring() && Long.valueOf(-1).equals(redisTemplate.getExpire(countName))) {
+            redisTemplate.expire(countName, config.getCountDuring(), config.getCountDuringUnit());
+        }
+    }
+
+    public Map<String, String> getCount(String groupId) {
+        String fail = CommonUtil.getLimiterCountName(groupId, false);
+        String success = CommonUtil.getLimiterCountName(groupId, true);
+        long failCount = redisTemplate.opsForHyperLogLog().size(fail);
+        long successCount = redisTemplate.opsForHyperLogLog().size(success);
+        LimiteGroupConfig limiterConfig = getLimiterConfig(groupId);
+        Map<String, String> map = new HashMap<>();
+        long total = failCount + successCount;
+        map.put("fail", failCount + "");
+        map.put("success", successCount + "");
+        map.put("total", total + "");
+        String qps;
+        String highQPS;
+        if (limiterConfig.getCountDuring() == -1) {
+            qps = CommonUtil.getQPS(total, TimeUnit.MILLISECONDS, limiterConfig.getStartTime() == null ? -1 : System.currentTimeMillis() - limiterConfig.getStartTime());
+            highQPS = CommonUtil.getHighQPS(total, TimeUnit.MILLISECONDS, limiterConfig.getStartTime() == null ? -1 : System.currentTimeMillis() - limiterConfig.getStartTime());
+        } else {
+            qps = CommonUtil.getQPS(total, limiterConfig.getCountDuringUnit(), limiterConfig.getCountDuring());
+            highQPS = CommonUtil.getHighQPS(total, limiterConfig.getCountDuringUnit(), limiterConfig.getCountDuring());
+
+        }
+        map.put("qps", qps);
+        map.put("highqps", highQPS);
+        return map;
+    }
+
+
 
 
     public void saveAll(List<LimiteGroupConfig> limiteGroups, boolean saveInRedis) {
@@ -107,19 +150,25 @@ public class LimiterGroupService {
     public LimiteGroupConfig getLimiterConfig(String groupId) {
         LimiteGroupConfig group = BaseRateLimiter.rateLimitGroupConfigMap.get(groupId);
         if (group == null) {
-            String test = redisTemplate.opsForValue().get(CommonUtil.getLimiterConfigName(groupId)).toString();
-            try {
-                if (test != null && test.length() > 0) {
-                    group = objectMapper.readValue(test, LimiteGroupConfig.class);
-                    BaseRateLimiter.rateLimitGroupConfigMap.put(groupId, group);
-                }
-            } catch (JsonProcessingException e) {
-                throw new RedisAuxException("json序列化异常:" + e.getMessage());
-            }
+            reload(groupId);
         }
         return BaseRateLimiter.rateLimitGroupConfigMap.get(groupId);
     }
 
+    public void reload(String groupId) {
+        String configStr = redisTemplate.opsForValue().get(CommonUtil.getLimiterConfigName(groupId)).toString();
+        try {
+            if (!StringUtils.isEmpty(configStr)) {
+                BaseRateLimiter.rateLimitGroupConfigMap.put(groupId, objectMapper.readValue(configStr, LimiteGroupConfig.class));
+            }
+        } catch (JsonProcessingException e) {
+            throw new RedisAuxException("json序列化异常:" + e.getMessage());
+        }
+    }
+    public void clear(String groupId){
+        BaseRateLimiter.rateLimitGroupConfigMap.remove(groupId);
+        redisTemplate.execute(delGroupScript,Collections.singletonList(CommonUtil.getLimiterConfigName(groupId)+"*"));
+    }
 
     public List<LimiteGroupConfig> getAll() {
         List<LimiteGroupConfig> list = new LinkedList<>();
@@ -179,7 +228,6 @@ public class LimiterGroupService {
 
 
     private String getAllGroupScript() {
-
         StringBuilder builder = new StringBuilder();
         builder.append("local array = {}\n")
                 .append("local others = redis.call('keys', 'limiter-*')\n")

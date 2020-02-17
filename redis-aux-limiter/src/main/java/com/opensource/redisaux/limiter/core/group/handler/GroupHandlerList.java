@@ -20,11 +20,16 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
         if (head != null) {
             Node p = head;
             while (p.next != null) {
-                if (p.next.val.getOrder() == p.next.val.getOrder()) {
-                    throw new RedisAuxException("order equal error");
+                if (p.next.val.getOrder() == a.getOrder()) {
+                    throw new RedisAuxException(String.format("order equal error,source:%s-%d,target:%s-d",
+                            p.next.val.getClass().getCanonicalName(), p.next.val.getOrder(),
+                            a.getClass().getCanonicalName(), a.getOrder()
+                    ));
                 }
+                p = p.next;
             }
             n.next = head.next;
+            head.next = n;
         } else {
             head = n;
         }
@@ -42,6 +47,7 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
                 if (p.val.getOrder() < p.next.val.getOrder()) {
                     return false;
                 }
+                p = p.next;
             }
         }
         return true;
@@ -55,6 +61,7 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
                     p.next = p.next.next;
                     break;
                 }
+                p=p.next;
             }
         }
 
@@ -121,7 +128,7 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
 
             @Override
             public boolean hasNext() {
-                return p != null && p.next == null;
+                return p != null;
             }
 
             @Override
@@ -135,7 +142,7 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
     }
 
 
-    public static class Node {
+    private static class Node {
         GroupHandler val;
         Node next;
 

@@ -18,6 +18,5 @@ public final class LimiterConstants {
     public final static int TOOMUCHREQUEST = -1;
     public final static int CONTINUE = 0;
     public final static int PASS = 1;
-    public final static String ENABLEACTUATOR = "enableActuator";
 
 }

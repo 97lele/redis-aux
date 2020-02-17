@@ -38,6 +38,7 @@ public class RedisLimiterAspect {
     private LimiterGroupService service;
 
     private final Map<String, Annotation> annotationMap;
+
     public final Map<Integer, BaseRateLimiter> rateLimiterMap;
 
 
@@ -116,29 +117,35 @@ public class RedisLimiterAspect {
         limitGroupConfig = service.getLimiterConfig(annonation.groupId());
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
-        String ipAddr = IpCheckUtil.getIpAddr(request);
+        String ipAddr = limitGroupConfig.isEnableBlackList()||limitGroupConfig.isEnableWhiteList()?IpCheckUtil.getIpAddr(request):null;
         String requestURI = request.getRequestURI();
         BaseRateLimiter baseRateLimiter = rateLimiterMap.get(limitGroupConfig.getCurrentMode());
         int handle = service.handle(limitGroupConfig, ipAddr, requestURI, baseRateLimiter, methodKey);
-        if(handle!= LimiterConstants.PASS){
-            if(handle==LimiterConstants.TOOMUCHREQUEST){
-                //否则执行失败逻辑
-                return executeFallBack(annonation.passArgs(), annonation.fallback(),
-                        beanClass, method.getParameterTypes(),
-                        proceedingJoinPoint.getArgs(), bean);
-            }else{
-                return executeFallBack(annonation.passArgs(), limitGroupConfig.getBlackRuleFallback(),
-                        beanClass, method.getParameterTypes(),
-                        proceedingJoinPoint.getArgs(), bean);
+        if (handle != LimiterConstants.PASS) {
+            if (limitGroupConfig.isEnableCount()) {
+                service.updateCount(false, limitGroupConfig);
             }
+            String methodStr = annonation.fallback();
+            if (handle == LimiterConstants.WRONGPREFIX&&limitGroupConfig.getUrlFallBack()!=null) {
+                methodStr=limitGroupConfig.getUrlFallBack();
+            }
+            if(handle==LimiterConstants.INBLACKLIST&&limitGroupConfig.getBlackRuleFallback()!=null){
+                methodStr=limitGroupConfig.getBlackRuleFallback();
+            }
+            return this.executeFallBack(annonation.passArgs(), methodStr, beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), bean);
+        } else {
+            if (limitGroupConfig.isEnableCount()) {
+                service.updateCount(true, limitGroupConfig);
+            }
+            return proceedingJoinPoint.proceed();
         }
-        return proceedingJoinPoint.proceed();
+
 
     }
 
     private Object executeFallBack(Boolean passArgs, String methodStr, Class clazz, Class[] paramType, Object[] params, Object bean) throws Exception {
         if ("".equals(methodStr)) {
-            throw new RedisAuxException("too much request or you are in black list");
+            throw new RedisAuxException("too much request");
         }
         Method fallBackMethod = passArgs ? clazz.getMethod(methodStr, paramType) : clazz.getMethod(methodStr);
         fallBackMethod.setAccessible(true);

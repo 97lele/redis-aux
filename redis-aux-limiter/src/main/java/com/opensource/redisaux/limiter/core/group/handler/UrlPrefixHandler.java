@@ -16,15 +16,24 @@ public class UrlPrefixHandler implements GroupHandler {
     @Override
     public int handle(LimiteGroupConfig limitGroupConfig, String ip, String url, BaseRateLimiter baseRateLimiter, String methodKey) {
         String enablePrefix = limitGroupConfig.getEnableURLPrefix();
-        if (url.startsWith(limitGroupConfig.getUnableURLPrefix())) {
-            return LimiterConstants.WRONGPREFIX;
+        String unableURLPrefix = limitGroupConfig.getUnableURLPrefix();
+        for (String s : unableURLPrefix.split(";")) {
+            if (url.startsWith(s)) {
+                return LimiterConstants.WRONGPREFIX;
+            }
         }
-        if ("/*".equals(enablePrefix) || url.startsWith(limitGroupConfig.getEnableURLPrefix())) {
-            return LimiterConstants.PASS;
+        if("/*".equals(enablePrefix)){
+            return LimiterConstants.CONTINUE;
+        }
+        for (String s : enablePrefix.split(";")) {
+            if(url.startsWith(s)){
+                return LimiterConstants.PASS;
+            }
         }
         return LimiterConstants.CONTINUE;
     }
 
+    @Override
     public GroupHandler order(int order){
         this.order=order;
         return this;

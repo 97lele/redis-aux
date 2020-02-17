@@ -6,6 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
@@ -49,8 +51,39 @@ public class CommonUtil {
     }
 
     public static String getLimiterConfigName(String groupId) {
-        return LimiterConstants.LIMITER + "-" + groupId;
+        StringBuilder builder = new StringBuilder(LimiterConstants.LIMITER).append("-").append(groupId);
+        return builder.toString();
     }
+
+    public static String getLimiterCountName(String groupId, boolean success) {
+        StringBuilder builder = new StringBuilder(LimiterConstants.LIMITER).append("-").append(groupId).append(success ? "-success" : "-fail");
+        return builder.toString();
+    }
+
+    public static String getHighQPS(long total, TimeUnit duringTimeUnit, long during) {
+        if (during == -1) {
+            return 0+"";
+        }
+        long l = duringTimeUnit.toDays(during);
+        if(l==0){
+            l=1;
+        }
+        BigDecimal total1 = new BigDecimal(total).multiply(BigDecimal.valueOf(0.8));
+        BigDecimal t=new BigDecimal(l).multiply(BigDecimal.valueOf(0.2)).multiply(BigDecimal.valueOf(86400));
+        return total1.divide(t,3,BigDecimal.ROUND_UP).toString();
+    }
+
+    public static String getQPS(long total, TimeUnit duringTimeUnit, long during) {
+        if (during == -1) {
+            return 0+"";
+        }
+        long second = duringTimeUnit.toSeconds(during);
+        BigDecimal bigDecimal=new BigDecimal(total);
+        BigDecimal bigDecimal1=new BigDecimal(second);
+
+        return bigDecimal.divide(bigDecimal1,3, BigDecimal.ROUND_UP).toString();
+    }
+
 
     public static String getLimiterName(String groupId, String methodKey, String type) {
         StringBuilder str = new StringBuilder(LimiterConstants.LIMITER);
@@ -58,7 +91,7 @@ public class CommonUtil {
         return str.toString();
     }
 
-    public static String getLimiterTypeName(String groupId,String type){
+    public static String getLimiterTypeName(String groupId, String type) {
         StringBuilder str = new StringBuilder(LimiterConstants.LIMITER);
         str.append("-").append(groupId).append(":").append(type).append(":").append("*");
         return str.toString();

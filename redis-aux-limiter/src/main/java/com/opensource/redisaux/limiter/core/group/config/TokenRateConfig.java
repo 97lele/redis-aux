@@ -1,5 +1,7 @@
 package com.opensource.redisaux.limiter.core.group.config;
 
+import com.opensource.redisaux.common.LimiterConstants;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -7,6 +9,8 @@ import java.util.concurrent.TimeUnit;
  * @Date 2020/2/16 15:49
  */
 public class TokenRateConfig {
+    public  int type= LimiterConstants.TOKEN_LIMITER;
+
     private Double capacity;
 
     /**
@@ -37,7 +41,9 @@ public class TokenRateConfig {
         this.tokenRateUnit = builder.tokenRateUnit == null ? TimeUnit.SECONDS : builder.tokenRateUnit;
         this.initToken= builder.initToken==null?0:builder.initToken;
     }
-
+    public Integer getType() {
+        return type;
+    }
     public Double getCapacity() {
         return capacity;
     }
