@@ -25,9 +25,10 @@ public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
         ClassPathBeanDefinitionScanner scanConfigure =
                 new ClassPathBeanDefinitionScanner(registry, true);
         String path=LimiterConstants.SCAPATH;
-        delayConnect=(Boolean)attributes.get("delayConnect");
+
         if(!(Boolean) attributes.get("enableGroup")){
             path=path+".normal";
+            delayConnect=(Boolean)attributes.get("delayConnect");
         }
         scanConfigure.scan(path);
     }

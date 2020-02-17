@@ -213,10 +213,10 @@ public class LimiterGroupService {
         return this;
     }
 
-    public Integer handle(LimiteGroupConfig limitGroupConfig, String ip,
-                          String url, BaseRateLimiter baseRateLimiter,
-                          String methodKey) {
-        Integer handle = null;
+    public int handle(LimiteGroupConfig limitGroupConfig, String ip,
+                      String url, BaseRateLimiter baseRateLimiter,
+                      String methodKey) {
+        int handle = LimiterConstants.PASS;
         if (!groupHandlers.isSort()) {
             groupHandlers.sort();
         }

@@ -16,19 +16,19 @@ import java.util.Map;
  * @author lulu
  * @Date 2020/2/16 19:38
  */
-@RestController("/redis-aux")
+@RestController
 public class ActuatorController {
 
     @Autowired
     private LimiterGroupService limiterGroupService;
 
-    @GetMapping("/getIp")
+    @GetMapping("/redis-aux/getIp")
     public String getIp(HttpServletRequest request) {
         return IpCheckUtil.getIpAddr(request);
     }
 
     //更改ip规则
-    @PostMapping("/changeIpRule")
+    @PostMapping("/redis-aux/changeIpRule")
     public LimiteGroupConfig changeRule(@RequestParam("groupId") String groupId,
                                         @RequestParam(value = "rule", required = false) String rule,
                                         @RequestParam(value = "enable", required = false) Boolean enable,
@@ -46,7 +46,7 @@ public class ActuatorController {
     }
 
     //更改url匹配规则
-    @PostMapping("/changeUrlRule")
+    @PostMapping("/redis-aux/changeUrlRule")
     public LimiteGroupConfig changeUrlRule(@RequestParam("groupId") String groupId,
                                            @RequestParam("enableUrl") String enableUrl,
                                            @RequestParam("unableUrl") String unableUrl
@@ -64,7 +64,7 @@ public class ActuatorController {
 
 
     //更改模式
-    @PostMapping("/changeLimitMode")
+    @PostMapping("/redis-aux/changeLimitMode")
     public LimiteGroupConfig changeMode(@RequestParam("groupId") String groupId, @RequestParam("mode") Integer mode
             , @RequestParam("removeOther") Boolean removeOther
     ) {
@@ -77,7 +77,7 @@ public class ActuatorController {
     }
 
     //更改限流规则
-    @PostMapping("/changeFunnelConfig")
+    @PostMapping("/redis-aux/changeFunnelConfig")
     public LimiteGroupConfig changeFunnelConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam(value = "requestNeed", required = false) Double requestNeed,
                                                 @RequestParam("capacity") Double capacity,
@@ -94,7 +94,7 @@ public class ActuatorController {
         return limiter;
     }
 
-    @PostMapping("/changeWindowConfig")
+    @PostMapping("/redis-aux/changeWindowConfig")
     public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("passCount") Long passCount,
                                                 @RequestParam(value = "during", required = false) Long during,
@@ -107,7 +107,7 @@ public class ActuatorController {
         return limiter;
     }
 
-    @PostMapping("/changeTokenConfig")
+    @PostMapping("/redis-aux/changeTokenConfig")
     public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("capacity") Double capacity,
                                                 @RequestParam(value = "initToken", required = false) Double initToken,
@@ -123,7 +123,7 @@ public class ActuatorController {
         return limiter;
     }
 
-    @GetMapping("/getCount/{groupId}")
+    @GetMapping("/redis-aux/getCount/{groupId}")
     public Map<String, String> changeCountConfig(@PathVariable("groupId") String groupId
     ) {
         return limiterGroupService.getCount(groupId);
