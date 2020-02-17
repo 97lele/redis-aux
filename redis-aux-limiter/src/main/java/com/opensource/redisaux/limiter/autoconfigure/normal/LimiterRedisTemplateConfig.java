@@ -1,4 +1,4 @@
-package com.opensource.redisaux.limiter.autoconfigure;
+package com.opensource.redisaux.limiter.autoconfigure.normal;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensource.redisaux.common.BloomFilterConstants;
 import com.opensource.redisaux.common.LimiterConstants;
 import io.lettuce.core.RedisConnectionException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.cglib.core.internal.Function;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +28,7 @@ import java.util.function.Supplier;
  * @Date 2020/2/16 16:47
  */
 @Configuration
-public class LimiterRedisTemplateConfig {
+public class LimiterRedisTemplateConfig  {
     @Bean(name = LimiterConstants.LIMITER)
     @Primary
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
@@ -53,6 +55,7 @@ public class LimiterRedisTemplateConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
     }
+
 
 
 }

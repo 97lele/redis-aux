@@ -1,14 +1,11 @@
 package com.opensource.redisaux.common;
 
-import io.lettuce.core.RedisConnectionException;
-import org.springframework.data.redis.core.RedisConnectionUtils;
-import org.springframework.data.redis.core.RedisTemplate;
+
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /**
  * @author: lele
@@ -41,14 +38,6 @@ public class CommonUtil {
         return builder.toString();
     }
 
-    public static <T> T execute(Supplier<T> function, RedisTemplate redisTemplate) {
-        try {
-            return function.get();
-        } catch (RedisConnectionException exception) {
-            RedisConnectionUtils.unbindConnection(redisTemplate.getConnectionFactory());
-        }
-        return null;
-    }
 
     public static String getLimiterConfigName(String groupId) {
         StringBuilder builder = new StringBuilder(LimiterConstants.LIMITER).append("-").append(groupId);

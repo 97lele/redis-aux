@@ -35,8 +35,8 @@ public class FunnelRateConfig {
     public FunnelRateConfig(Builder builder){
         this.capacity =builder.capacity;
         this.funnelRate =builder.funnelRate;
-        this.requestNeed =builder.requestNeed==null?1: requestNeed;
-        this.funnelRateUnit =builder.funnelRateUnit==null?TimeUnit.SECONDS: funnelRateUnit;
+        this.requestNeed =builder.requestNeed==null?1: builder.requestNeed;
+        this.funnelRateUnit =builder.funnelRateUnit==null?TimeUnit.SECONDS: builder.funnelRateUnit;
     }
 
     public Double getCapacity() {

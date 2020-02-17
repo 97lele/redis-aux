@@ -7,8 +7,6 @@ import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
 import com.opensource.redisaux.limiter.core.group.config.TokenRateConfig;
 import com.opensource.redisaux.limiter.core.group.config.WindowRateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnJava;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,7 +16,7 @@ import java.util.Map;
  * @author lulu
  * @Date 2020/2/16 19:38
  */
-@RestController
+@RestController("/redis-aux")
 public class ActuatorController {
 
     @Autowired
@@ -32,9 +30,9 @@ public class ActuatorController {
     //更改ip规则
     @PostMapping("/changeIpRule")
     public LimiteGroupConfig changeRule(@RequestParam("groupId") String groupId,
-                                        @RequestParam("rule") String rule,
-                                        @RequestParam("enable") Boolean enable,
-                                        @RequestParam("white") Boolean white) {
+                                        @RequestParam(value = "rule", required = false) String rule,
+                                        @RequestParam(value = "enable", required = false) Boolean enable,
+                                        @RequestParam(value = "white", required = false) Boolean white) {
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if (white) {
             limiter.setWhiteRule(rule);
@@ -42,6 +40,23 @@ public class ActuatorController {
         } else {
             limiter.setBlackRule(rule);
             limiter.setEnableBlackList(enable);
+        }
+        limiterGroupService.save(limiter, true, false);
+        return limiter;
+    }
+
+    //更改url匹配规则
+    @PostMapping("/changeUrlRule")
+    public LimiteGroupConfig changeUrlRule(@RequestParam("groupId") String groupId,
+                                           @RequestParam("enableUrl") String enableUrl,
+                                           @RequestParam("unableUrl") String unableUrl
+                                           ) {
+        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        if (enableUrl != null) {
+            limiter.setEnableURLPrefix(enableUrl);
+        }
+        if (unableUrl != null) {
+            limiter.setUnableURLPrefix(unableUrl);
         }
         limiterGroupService.save(limiter, true, false);
         return limiter;

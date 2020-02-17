@@ -1,6 +1,5 @@
 package com.opensource.redisaux.limiter.core;
 
-import com.opensource.redisaux.common.CommonUtil;
 import com.opensource.redisaux.limiter.annonations.normal.TokenLimiter;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
 import com.opensource.redisaux.limiter.core.group.config.TokenRateConfig;
@@ -54,8 +53,8 @@ public class TokenRateLimiter extends BaseRateLimiter {
         double millRate = rate / l;
         long last = System.currentTimeMillis();
         Object[] args = new Double[]{capacity, millRate, need, Double.valueOf(last), initToken};
-        Object waitMill = CommonUtil.execute(() -> redisTemplate.execute(redisScript, keyList, args), redisTemplate);
-        return waitMill == null ? true : Long.valueOf(-1L).equals(waitMill) ? true : false;
+        Long waitMill  = (Long) redisTemplate.execute(redisScript, keyList, args);
+        return Long.valueOf(-1L).equals(waitMill);
     }
 
 }

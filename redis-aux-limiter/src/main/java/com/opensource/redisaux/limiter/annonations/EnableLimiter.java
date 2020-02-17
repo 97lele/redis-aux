@@ -1,6 +1,6 @@
 package com.opensource.redisaux.limiter.annonations;
 
-import com.opensource.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
+import com.opensource.redisaux.limiter.autoconfigure.normal.RedisLimiterRegistar;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -16,4 +16,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Import({RedisLimiterRegistar.class})
 public @interface EnableLimiter {
+    boolean enableGroup() default false;
+    boolean delayConnect() default true;
 }

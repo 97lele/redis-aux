@@ -1,6 +1,5 @@
 package com.opensource.redisaux.limiter.core;
 
-import com.opensource.redisaux.common.CommonUtil;
 import com.opensource.redisaux.limiter.annonations.normal.WindowLimiter;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
 import com.opensource.redisaux.limiter.core.group.config.WindowRateConfig;
@@ -36,23 +35,23 @@ public class WindowRateLimiter extends BaseRateLimiter {
         String methodName = windowLimiter.fallback();
         boolean passArgs = windowLimiter.passArgs();
         List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
-        return handleParam(keyList,windowLimiter.passCount(),windowLimiter.duringUnit(),windowLimiter.during());
+        return handleParam(keyList, windowLimiter.passCount(), windowLimiter.duringUnit(), windowLimiter.during());
     }
 
     @Override
     public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
         List<String> keyList = limiteGroup.getWindowKeyName(methodKey);
         WindowRateConfig windowRateConfig = limiteGroup.getWindowRateConfig();
-        return handleParam(keyList,windowRateConfig.getPassCount(),windowRateConfig.getDuringUnit(),windowRateConfig.getDuring());
+        return handleParam(keyList, windowRateConfig.getPassCount(), windowRateConfig.getDuringUnit(), windowRateConfig.getDuring());
     }
 
     private Boolean handleParam(List<String> keyList, long value, TimeUnit timeUnit, long during) {
         long l = timeUnit.toMillis(during);
         long current = System.currentTimeMillis();
-        long last=current-l;
-        Object[] args={current,last,value};
-        Object res = CommonUtil.execute(() -> redisTemplate.execute(redisScript, keyList, args), redisTemplate);
-        return res==null?true:(Boolean)res;
+        long last = current - l;
+        Object[] args = {current, last, value};
+        Object res = redisTemplate.execute(redisScript, keyList, args);
+        return (Boolean) res;
     }
 
 }

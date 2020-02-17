@@ -1,11 +1,11 @@
-package com.opensource.redisaux.limiter.autoconfigure;
+package com.opensource.redisaux.limiter.autoconfigure.normal;
 
 import com.opensource.redisaux.common.LimiterConstants;
 import com.opensource.redisaux.limiter.core.FunnelRateLimiter;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import com.opensource.redisaux.limiter.core.TokenRateLimiter;
 import com.opensource.redisaux.limiter.core.WindowRateLimiter;
-import com.opensource.redisaux.limiter.core.aspect.RedisLimiterAspect;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -27,12 +27,13 @@ import java.util.Map;
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @ConditionalOnBean(RedisTemplate.class)
-class RedisLimiterAutoConfiguration {
+public class RedisLimiterAutoConfiguration implements InitializingBean {
 
     @Autowired
     @Qualifier(LimiterConstants.LIMITER)
     private RedisTemplate redisTemplate;
 
+    public static Map<Integer, BaseRateLimiter> rateLimiterMap = new HashMap();
 
     /**
      * 滑动窗口的lua脚本，步骤：
@@ -83,20 +84,12 @@ class RedisLimiterAutoConfiguration {
      * @return
      */
     @Bean
-    public RedisLimiterAspect limiterAspect() {
-        Map<Integer, BaseRateLimiter> map = new HashMap();
-        map.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
-        map.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
-        map.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
-        return new RedisLimiterAspect(map);
+    public NormalLimiterAspect limiterAspect() {
+        rateLimiterMap.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
+        rateLimiterMap.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
+        rateLimiterMap.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
+        return new NormalLimiterAspect(rateLimiterMap);
     }
-
-    @Bean
-    public LimiterGroupService limiterGroupService() {
-        return new LimiterGroupService();
-    }
-
-
 
     private String funnelRateStr() {
         StringBuilder builder = new StringBuilder();
@@ -132,5 +125,12 @@ class RedisLimiterAutoConfiguration {
         return builder.toString();
     }
 
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        if (!RedisLimiterRegistar.delayConnect) {
+            redisTemplate.getExpire("-1");
+        }
+    }
 
 }

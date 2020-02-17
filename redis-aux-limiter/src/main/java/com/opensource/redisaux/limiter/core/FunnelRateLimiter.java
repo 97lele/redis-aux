@@ -1,6 +1,5 @@
 package com.opensource.redisaux.limiter.core;
 
-import com.opensource.redisaux.common.CommonUtil;
 import com.opensource.redisaux.limiter.annonations.normal.FunnelLimiter;
 import com.opensource.redisaux.limiter.core.group.config.FunnelRateConfig;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
@@ -51,8 +50,8 @@ public class FunnelRateLimiter extends BaseRateLimiter {
 
     private Boolean handleParam(List<String> keyList, double capacity, double need, double rate, TimeUnit timeUnit) {
         double millRate = rate / timeUnit.toMillis(1);
-        Object res = CommonUtil.execute(() -> redisTemplate.execute(redisScript, keyList, new Object[]{capacity, millRate, need, Double.valueOf(System.currentTimeMillis())}), redisTemplate);
-        return res == null ? true : (Boolean) res;
+        Object res=redisTemplate.execute(redisScript, keyList, new Object[]{capacity, millRate, need, Double.valueOf(System.currentTimeMillis())});
+        return (Boolean)res;
     }
 
 

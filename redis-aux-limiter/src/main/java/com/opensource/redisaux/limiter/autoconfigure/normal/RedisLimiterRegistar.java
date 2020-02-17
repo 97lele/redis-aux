@@ -1,4 +1,4 @@
-package com.opensource.redisaux.limiter.autoconfigure;
+package com.opensource.redisaux.limiter.autoconfigure.normal;
 
 import com.opensource.redisaux.common.LimiterConstants;
 import com.opensource.redisaux.limiter.annonations.EnableLimiter;
@@ -15,12 +15,21 @@ import java.util.Map;
  */
 @SuppressWarnings("unchecked")
 public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
+    public static boolean delayConnect=true;
+
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+        Map<String, Object> attributes = importingClassMetadata
+                .getAnnotationAttributes(EnableLimiter.class.getCanonicalName());
         //如果开启限流，则扫描组件、初始化对应的限流器和切面
         ClassPathBeanDefinitionScanner scanConfigure =
                 new ClassPathBeanDefinitionScanner(registry, true);
-        scanConfigure.scan(LimiterConstants.SCAPATH);
+        String path=LimiterConstants.SCAPATH;
+        delayConnect=(Boolean)attributes.get("delayConnect");
+        if(!(Boolean) attributes.get("enableGroup")){
+            path=path+".normal";
+        }
+        scanConfigure.scan(path);
     }
 
 }
