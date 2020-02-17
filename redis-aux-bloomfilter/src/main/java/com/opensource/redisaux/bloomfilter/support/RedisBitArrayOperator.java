@@ -51,5 +51,4 @@ public class RedisBitArrayOperator {
         redisTemplate.delete(keys);
     }
 
-
 }

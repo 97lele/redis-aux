@@ -1,5 +1,7 @@
 package com.opensource.redisaux.limiter.core;
 
+import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
+
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.List;
@@ -12,15 +14,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @SuppressWarnings("unchecked")
 public abstract class BaseRateLimiter {
-    public final static int WINDOW_LIMITER = 1;
-    public final static int TOKEN_LIMITER = 2;
-    public final static int FUNNEL_LIMITER = 3;
-    //存放的是keyNameList、是否传参，回调方法名
+
+    /**
+     * 存放的是keyNameList、是否传参，回调方法名
+     */
     public static Map<String, KeyInfoNode> keyInfoMap = new ConcurrentHashMap();
+    /**
+     * 存放组的信息
+     */
+    public static Map<String, LimiteGroupConfig> rateLimitGroupConfigMap = new ConcurrentHashMap<>();
 
 
     /**
-     * 生成key，并且把对应的失败策略实例化存储
+     * 生成key，并把该key对应的keynode信息保存
      *
      * @return
      */
@@ -36,6 +42,17 @@ public abstract class BaseRateLimiter {
         return keyInfoNode.getKeyNameList();
     }
 
+    public static void createOrUpdateGroups(List<LimiteGroupConfig> limiteGroup) {
+        for (LimiteGroupConfig group : limiteGroup) {
+            rateLimitGroupConfigMap.put(group.getId(), group);
+        }
+    }
+
+    public static void createOrUpdateGroups(LimiteGroupConfig limiteGroup) {
+        rateLimitGroupConfigMap.put(limiteGroup.getId(),limiteGroup);
+    }
+
+
     /**
      * 限流情况下，是否可以通过执行
      *
@@ -47,15 +64,15 @@ public abstract class BaseRateLimiter {
         return null;
     }
 
-    ;
+    public Boolean canExecute(LimiteGroupConfig limiteGroup,String methodKey) {
+        return null;
+    }
 
 
     public static class KeyInfoNode {
-
         private List<String> keyNameList;
         private boolean passArgs;
         private String fallBackMethod;
-
 
         public List<String> getKeyNameList() {
             return keyNameList;

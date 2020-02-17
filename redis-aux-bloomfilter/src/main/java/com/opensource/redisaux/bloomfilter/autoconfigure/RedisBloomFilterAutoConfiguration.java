@@ -42,35 +42,13 @@ import java.util.Properties;
 @ConditionalOnClass(RedisBloomFilter.class)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @SuppressWarnings("unchecked")
-public class RedisBloomFilterAutoConfiguration {
+class RedisBloomFilterAutoConfiguration {
 
     @Autowired
     @Qualifier(BloomFilterConstants.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
 
-    @Bean(name = BloomFilterConstants.INNERTEMPLATE)
-    @Primary
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate template = new RedisTemplate();
-        template.setConnectionFactory(factory);
-        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        objectMapper.setDefaultTyping(ObjectMapper.DefaultTypeResolverBuilder.noTypeInfoBuilder());
-        objectMapper.setDateFormat(dateFormat);
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-        template.setKeySerializer(stringRedisSerializer);
-        template.setHashKeySerializer(stringRedisSerializer);
-        template.setValueSerializer(jackson2JsonRedisSerializer);
-        template.setStringSerializer(stringRedisSerializer);
-        template.setDefaultSerializer(jackson2JsonRedisSerializer);
-        template.setConnectionFactory(factory);
-        template.setEnableTransactionSupport(RedisBloomFilterRegistar.transaction);
-        template.afterPropertiesSet();
-        return template;
-    }
+
 
     @Bean
     @ConditionalOnMissingBean(RedisBloomFilter.class)

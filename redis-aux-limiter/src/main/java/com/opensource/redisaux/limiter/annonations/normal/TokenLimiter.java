@@ -1,5 +1,6 @@
-package com.opensource.redisaux.limiter.annonations;
+package com.opensource.redisaux.limiter.annonations.normal;
 
+import com.opensource.redisaux.common.LimiterConstants;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 
 import java.lang.annotation.ElementType;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@LimiterType(mode = BaseRateLimiter.TOKEN_LIMITER)
+@LimiterType(mode = LimiterConstants.TOKEN_LIMITER)
 public @interface TokenLimiter {
 
     /**
@@ -30,42 +31,24 @@ public @interface TokenLimiter {
      *
      * @return
      */
-    double rate();
+    double tokenRate();
 
     /**
      * 速率时间单位，默认秒
      *
      * @return
      */
-    TimeUnit rateUnit() default TimeUnit.SECONDS;
+    TimeUnit tokenRateUnit() default TimeUnit.SECONDS;
 
     /**
      * 每次请求所需要的令牌数
      *
      * @return
      */
-    double need();
+    double requestNeed() default 1;
 
-    /**
-     * 是否阻塞等待
-     *
-     * @return
-     */
-    boolean isAbort() default false;
+    double initToken() default 0;
 
-    /**
-     * 阻塞超时时间
-     *
-     * @return
-     */
-    int timeout() default -1;
-
-    /**
-     * 单位，默认毫秒
-     *
-     * @return
-     */
-    TimeUnit timeoutUnit() default TimeUnit.MILLISECONDS;
 
     String fallback() default "";
 

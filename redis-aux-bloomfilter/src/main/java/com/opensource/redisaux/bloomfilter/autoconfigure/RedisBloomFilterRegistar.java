@@ -2,6 +2,7 @@ package com.opensource.redisaux.bloomfilter.autoconfigure;
 
 import com.opensource.redisaux.bloomfilter.annonations.BloomFilterPrefix;
 import com.opensource.redisaux.bloomfilter.annonations.BloomFilterProperty;
+import com.opensource.redisaux.bloomfilter.annonations.EnableBloomFilter;
 import com.opensource.redisaux.common.BloomFilterConstants;
 import com.opensource.redisaux.common.CommonUtil;
 import org.springframework.beans.factory.config.BeanDefinition;

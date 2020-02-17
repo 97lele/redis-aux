@@ -1,6 +1,7 @@
 package com.opensource.redisaux.limiter.autoconfigure;
 
 import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.limiter.annonations.EnableLimiter;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -14,6 +15,8 @@ import java.util.Map;
  */
 @SuppressWarnings("unchecked")
 public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
+    public static String enableActuator = null;
+
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         Map<String, Object> attributes = importingClassMetadata
@@ -22,7 +25,7 @@ public class RedisLimiterRegistar implements ImportBeanDefinitionRegistrar {
         ClassPathBeanDefinitionScanner scanConfigure =
                 new ClassPathBeanDefinitionScanner(registry, true);
         scanConfigure.scan(LimiterConstants.SCAPATH);
-
+        enableActuator = (String) attributes.get(LimiterConstants.ENABLEACTUATOR);
     }
 
 }

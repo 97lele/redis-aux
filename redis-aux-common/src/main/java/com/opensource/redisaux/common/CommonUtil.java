@@ -1,7 +1,12 @@
 package com.opensource.redisaux.common;
 
+import io.lettuce.core.RedisConnectionException;
+import org.springframework.data.redis.core.RedisConnectionUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.util.function.Supplier;
 
 /**
  * @author: lele
@@ -34,5 +39,29 @@ public class CommonUtil {
         return builder.toString();
     }
 
+    public static <T> T execute(Supplier<T> function, RedisTemplate redisTemplate) {
+        try {
+            return function.get();
+        } catch (RedisConnectionException exception) {
+            RedisConnectionUtils.unbindConnection(redisTemplate.getConnectionFactory());
+        }
+        return null;
+    }
+
+    public static String getLimiterConfigName(String groupId) {
+        return LimiterConstants.LIMITER + "-" + groupId;
+    }
+
+    public static String getLimiterName(String groupId, String methodKey, String type) {
+        StringBuilder str = new StringBuilder(LimiterConstants.LIMITER);
+        str.append("-").append(groupId).append(":").append(type).append(":").append(methodKey);
+        return str.toString();
+    }
+
+    public static String getLimiterTypeName(String groupId,String type){
+        StringBuilder str = new StringBuilder(LimiterConstants.LIMITER);
+        str.append("-").append(groupId).append(":").append(type).append(":").append("*");
+        return str.toString();
+    }
 
 }

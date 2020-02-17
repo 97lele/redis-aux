@@ -1,10 +1,14 @@
 package com.opensource.redisaux.limiter.core;
 
-import com.opensource.redisaux.limiter.annonations.WindowLimiter;
+import com.opensource.redisaux.common.CommonUtil;
+import com.opensource.redisaux.limiter.annonations.normal.WindowLimiter;
+import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
+import com.opensource.redisaux.limiter.core.group.config.WindowRateConfig;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -29,20 +33,26 @@ public class WindowRateLimiter extends BaseRateLimiter {
     @Override
     public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         WindowLimiter windowLimiter = (WindowLimiter) baseLimiter;
-        int i = windowLimiter.during();
-        TimeUnit timeUnit = windowLimiter.timeUnit();
         String methodName = windowLimiter.fallback();
         boolean passArgs = windowLimiter.passArgs();
-        //转为毫秒实现
-        long l = timeUnit.toMillis(i);
-        long value = windowLimiter.value();
-        //当前时间戳
+        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
+        return handleParam(keyList,windowLimiter.passCount(),windowLimiter.duringUnit(),windowLimiter.during());
+    }
+
+    @Override
+    public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
+        List<String> keyList = limiteGroup.getWindowKeyName(methodKey);
+        WindowRateConfig windowRateConfig = limiteGroup.getWindowRateConfig();
+        return handleParam(keyList,windowRateConfig.getPassCount(),windowRateConfig.getDuringUnit(),windowRateConfig.getDuring());
+    }
+
+    private Boolean handleParam(List<String> keyList, long value, TimeUnit timeUnit, long during) {
+        long l = timeUnit.toMillis(during);
         long current = System.currentTimeMillis();
-        //上一个截止的时间戳
-        long last = current - l;
-        Object[] args = {current, last, value};
-        Object execute = redisTemplate.execute(redisScript, BaseRateLimiter.getKey(methodKey, methodName, passArgs), args);
-        return (Boolean) execute;
+        long last=current-l;
+        Object[] args={current,last,value};
+        Object res = CommonUtil.execute(() -> redisTemplate.execute(redisScript, keyList, args), redisTemplate);
+        return res==null?true:(Boolean)res;
     }
 
 }

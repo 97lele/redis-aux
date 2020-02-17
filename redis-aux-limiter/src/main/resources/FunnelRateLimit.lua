@@ -1,5 +1,5 @@
 --参数说明,key[1]为对应服务接口的信息，argv1为capacity,argv2为漏水速率,argv3为一次所需流出的水量,argv4为时间戳
-local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'passRate', 'addWater', 'water', 'lastTs')
+local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'funnelRate', 'requestNeed', 'water', 'lastTs')
 local capacity = limitInfo[1]
 local passRate = limitInfo[2]
 local addWater = limitInfo[3]
@@ -15,7 +15,7 @@ if capacity == false then
     --当前水量
     water = 0
     lastTs = tonumber(ARGV[4])
-    redis.call('hmset', KEYS[1], 'capacity', capacity, 'passRate', passRate, 'addWater', addWater, 'water', water, 'lastTs', lastTs)
+    redis.call('hmset', KEYS[1], 'capacity', capacity, 'funnelRate', passRate, 'requestNeed', addWater, 'water', water, 'lastTs', lastTs)
     return true
 else
     local nowTs = tonumber(ARGV[4])

@@ -1,6 +1,9 @@
 package com.opensource.redisaux.limiter.core;
 
-import com.opensource.redisaux.limiter.annonations.TokenLimiter;
+import com.opensource.redisaux.common.CommonUtil;
+import com.opensource.redisaux.limiter.annonations.normal.TokenLimiter;
+import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
+import com.opensource.redisaux.limiter.core.group.config.TokenRateConfig;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
@@ -19,7 +22,6 @@ public class TokenRateLimiter extends BaseRateLimiter {
 
     private DefaultRedisScript redisScript;
 
-
     public TokenRateLimiter(RedisTemplate redisTemplate, DefaultRedisScript redisScript) {
         this.redisScript = redisScript;
         this.redisTemplate = redisTemplate;
@@ -29,117 +31,31 @@ public class TokenRateLimiter extends BaseRateLimiter {
     @Override
     public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         TokenLimiter tokenLimiter = (TokenLimiter) baseLimiter;
-        TimeUnit rateUnit = tokenLimiter.rateUnit();
+        TimeUnit rateUnit = tokenLimiter.tokenRateUnit();
         double capacity = tokenLimiter.capacity();
-        double need = tokenLimiter.need();
-        double rate = tokenLimiter.rate();
-        long l = rateUnit.toMillis(1);
-        double millRate = rate / l;
-        long last = System.currentTimeMillis();
+        double need = tokenLimiter.requestNeed();
+        double rate = tokenLimiter.tokenRate();
         String methodName = tokenLimiter.fallback();
         boolean passArgs = tokenLimiter.passArgs();
         List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
-        Object[] args = new Double[]{capacity, millRate, need, Double.valueOf(last)};
-        Long waitMill = (Long) redisTemplate.execute(redisScript, keyList, args);
-        if (waitMill.equals(-1L)) {
-            return true;
-        }
-        if (tokenLimiter.isAbort()) {
-            PendingNode pendingNode = new PendingNode(waitMill, args, keyList, last);
-            while (!pendingNode.isDone()) {
-                try {
-                    //如果要等待的时间大于timeout，直接失败
-                    int timeout = tokenLimiter.timeout();
-                    if (timeout > 0 && tokenLimiter.timeoutUnit().toMillis(timeout) < pendingNode.getWaitMill()) {
-                        //复杂对象帮助gc
-                        pendingNode.setArgs(null);
-                        pendingNode.setKeyList(null);
-                        pendingNode = null;
-                        return false;
-                    }
-                    //睡眠等待
-                    TimeUnit.MILLISECONDS.sleep(pendingNode.getWaitMill() + 1);
-                    //结束后，可以对参数进行重新赋值
-                    long now = System.currentTimeMillis();
-                    Object[] tryExecuteArgs = pendingNode.getArgs();
-                    tryExecuteArgs[3] = Double.valueOf(now);
-                    Long execute = (Long) redisTemplate.execute(redisScript, keyList, tryExecuteArgs);
-                    if (execute.equals(-1L)) {
-                        pendingNode.setDone();
-                    } else {
-                        //不成功就更新值
-                        pendingNode.setWaitMill(execute);
-                        pendingNode.setLastExecuteTime(now);
-                        pendingNode.setArgs(tryExecuteArgs);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            //返回前的资源处理
-            pendingNode.setArgs(null);
-            pendingNode.setKeyList(null);
-            pendingNode = null;
-            return true;
-        }
-        return false;
+        return handleParam(keyList, capacity, need, rate, rateUnit, tokenLimiter.initToken());
+
     }
 
-    /**
-     * 当阻塞时候启用的节点
-     */
-    class PendingNode {
-        private Long waitMill;
-        private Object[] args;
-        private List<String> keyList;
-        private long lastExecuteTime;
-        private volatile boolean done = false;
-
-        public PendingNode(long waitMill, Object[] args, List<String> keyList, long lastExecuteTime) {
-            this.waitMill = waitMill;
-            this.args = args;
-            this.keyList = keyList;
-            this.lastExecuteTime = lastExecuteTime;
-        }
-
-        public void setDone() {
-            this.done = true;
-        }
-
-        public boolean isDone() {
-            return done;
-        }
-
-        public long getLastExecuteTime() {
-            return lastExecuteTime;
-        }
-
-        public void setLastExecuteTime(long lastExecuteTime) {
-            this.lastExecuteTime = lastExecuteTime;
-        }
-
-        public long getWaitMill() {
-            return waitMill;
-        }
-
-        public void setWaitMill(long waitMill) {
-            this.waitMill = waitMill;
-        }
-
-        public Object[] getArgs() {
-            return args;
-        }
-
-        public void setArgs(Object[] args) {
-            this.args = args;
-        }
-
-        public List<String> getKeyList() {
-            return keyList;
-        }
-
-        public void setKeyList(List<String> keyList) {
-            this.keyList = keyList;
-        }
+    @Override
+    public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
+        TokenRateConfig tokenRateConfig = limiteGroup.getTokenRateConfig();
+        return handleParam(limiteGroup.getTokenKeyName(methodKey), tokenRateConfig.getCapacity(), tokenRateConfig.getRequestNeed(),
+                tokenRateConfig.getTokenRate(), tokenRateConfig.getTokenRateUnit(), tokenRateConfig.getInitToken());
     }
+
+    private Boolean handleParam(List<String> keyList, double capacity, double need, double rate, TimeUnit timeUnit, double initToken) {
+        long l = timeUnit.toMillis(1);
+        double millRate = rate / l;
+        long last = System.currentTimeMillis();
+        Object[] args = new Double[]{capacity, millRate, need, Double.valueOf(last), initToken};
+        Object waitMill = CommonUtil.execute(() -> redisTemplate.execute(redisScript, keyList, args), redisTemplate);
+        return waitMill == null ? true : Long.valueOf(-1L).equals(waitMill) ? true : false;
+    }
+
 }

@@ -1,5 +1,5 @@
 --参数说明,key[1]为对应服务接口的信息，argv1为capacity,argv2为令牌生成速率,argv3为每次需要的令牌数,argv4为当前时间戳
-local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'passRate', 'leftToken', 'lastTs')
+local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'funnelRate', 'leftToken', 'lastTs')
 local capacity = limitInfo[1]
 local rate = limitInfo[2]
 local leftToken = limitInfo[3]
@@ -9,9 +9,9 @@ local lastTs = limitInfo[4]
 if capacity == false then
     capacity = tonumber(ARGV[1])
     rate = tonumber(ARGV[2])
-    leftToken = tonumber(ARGV[1])
+    leftToken = tonumber(ARGV[5])
     lastTs = tonumber(ARGV[4])
-    redis.call('hmset', KEYS[1], 'capacity', capacity, 'passRate', rate, 'leftToken', leftToken, 'lastTs', lastTs)
+    redis.call('hmset', KEYS[1], 'capacity', capacity, 'funnelRate', rate, 'leftToken', leftToken, 'lastTs', lastTs)
     return -1
 else
     local nowTs = tonumber(ARGV[4])

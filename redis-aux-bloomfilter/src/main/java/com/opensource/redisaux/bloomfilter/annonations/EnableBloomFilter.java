@@ -1,5 +1,6 @@
-package com.opensource.redisaux.bloomfilter.autoconfigure;
+package com.opensource.redisaux.bloomfilter.annonations;
 
+import com.opensource.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistar;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -16,6 +17,7 @@ import java.lang.annotation.Target;
 @Import({RedisBloomFilterRegistar.class})
 public @interface EnableBloomFilter {
     boolean transaction() default false;
+
     String[] bloomFilterPath() default "";
 
 }

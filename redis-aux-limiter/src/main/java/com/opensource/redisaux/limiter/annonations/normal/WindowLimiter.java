@@ -1,7 +1,7 @@
-package com.opensource.redisaux.limiter.annonations;
+package com.opensource.redisaux.limiter.annonations.normal;
 
 
-import com.opensource.redisaux.limiter.core.BaseRateLimiter;
+import com.opensource.redisaux.common.LimiterConstants;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,23 +11,23 @@ import java.util.concurrent.TimeUnit;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@LimiterType(mode = BaseRateLimiter.WINDOW_LIMITER)
+@LimiterType(mode = LimiterConstants.WINDOW_LIMITER)
 public @interface WindowLimiter {
     /**
      * 持续时间，窗口间隔
      *
      * @return
      */
-    int during();
+    int during() default 1;
 
-    TimeUnit timeUnit() default TimeUnit.SECONDS;
+    TimeUnit duringUnit() default TimeUnit.SECONDS;
 
     /**
      * 通过的请求数
      *
      * @return
      */
-    long value();
+    long passCount();
 
     String fallback() default "";
 

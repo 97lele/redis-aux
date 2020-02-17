@@ -1,5 +1,6 @@
-package com.opensource.redisaux.limiter.annonations;
+package com.opensource.redisaux.limiter.annonations.normal;
 
+import com.opensource.redisaux.common.LimiterConstants;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 
 import java.lang.annotation.ElementType;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@LimiterType(mode = BaseRateLimiter.FUNNEL_LIMITER)
+@LimiterType(mode = LimiterConstants.FUNNEL_LIMITER)
 public @interface FunnelLimiter {
 
     /**
@@ -29,21 +30,21 @@ public @interface FunnelLimiter {
      *
      * @return
      */
-    double passRate();
+    double funnelRate() ;
 
     /**
      * 时间单位
      *
      * @return
      */
-    TimeUnit timeUnit() default TimeUnit.SECONDS;
+    TimeUnit funnelRateUnit() default TimeUnit.SECONDS;
 
     /**
      * 每次请求所需加的水量
      *
      * @return
      */
-    double addWater();
+    double requestNeed() default 1;
 
     String fallback() default "";
 
