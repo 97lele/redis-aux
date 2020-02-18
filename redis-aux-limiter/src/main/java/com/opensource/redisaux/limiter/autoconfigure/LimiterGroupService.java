@@ -40,6 +40,10 @@ public class LimiterGroupService {
 
     private DefaultRedisScript delGroupScript;
 
+    private DefaultRedisScript updateCountScript;
+
+    private DefaultRedisScript getCountScript;
+
     public LimiterGroupService() {
         groupHandlers = new GroupHandlerList();
         getGroupScript = new DefaultRedisScript();
@@ -47,6 +51,11 @@ public class LimiterGroupService {
         getGroupScript.setScriptText(getAllGroupScript());
         delGroupScript = new DefaultRedisScript();
         delGroupScript.setScriptText(delGroupScript());
+        updateCountScript = new DefaultRedisScript();
+        updateCountScript.setScriptText(updateCountStript());
+        getCountScript = new DefaultRedisScript();
+        getCountScript.setResultType(List.class);
+        getCountScript.setScriptText(getCountScript());
     }
 
     /**
@@ -93,42 +102,51 @@ public class LimiterGroupService {
 
 
     public void updateCount(boolean success, LimiteGroupConfig config) {
+        long duringMills = config.getCountDuringUnit().toMillis(config.getCountDuring());
         String countName = CommonUtil.getLimiterCountName(config.getId(), success);
-
-        if (config.setStartTime(System.currentTimeMillis())) {
+        List<String> param=Collections.singletonList(countName);
+        long expire = 0L;
+        long del = 0L;
+        long current = System.currentTimeMillis();
+//ARGV 1是代表统计数目，2为执行过期的标志，3为毫秒生存时间，4为是否删除的标志
+        if (config.setStartTime(current, false)) {
             save(config, true, false);
+            expire = 1L;
+        } else {
+            //判断统计时间是否过期
+            if (current - config.getStartTime() > duringMills) {
+                expire = 1L;
+                del = 1L;
+                config.setStartTime(current, true);
+                save(config, true, false);
+                String counNameOther=CommonUtil.getLimiterCountName(config.getId(),!success);
+                param=Arrays.asList(countName,counNameOther);
+            }
         }
-
-        redisTemplate.opsForHyperLogLog().add(countName, System.currentTimeMillis());
-        if (-1L != config.getCountDuring() && Long.valueOf(-1).equals(redisTemplate.getExpire(countName))) {
-            redisTemplate.expire(countName, config.getCountDuring(), config.getCountDuringUnit());
-        }
+        Long[] args = new Long[]{System.nanoTime(), expire, duringMills, del};
+        redisTemplate.execute(updateCountScript, param, args);
 
     }
 
     public Map<String, String> getCount(String groupId) {
         String fail = CommonUtil.getLimiterCountName(groupId, false);
         String success = CommonUtil.getLimiterCountName(groupId, true);
-        long failCount = redisTemplate.opsForHyperLogLog().size(fail);
-        long successCount = redisTemplate.opsForHyperLogLog().size(success);
+        List execute = (List) redisTemplate.execute(getCountScript, Arrays.asList(fail, success));
+        Long failCount = (Long) execute.get(0);
+        Long successCount = (Long) execute.get(1);
+        Long total = failCount + successCount;
         LimiteGroupConfig limiterConfig = getLimiterConfig(groupId);
         Map<String, String> map = new HashMap<>();
-        long total = failCount + successCount;
-        map.put("fail", failCount + "");
-        map.put("success", successCount + "");
-        map.put("total", total + "");
-        String qps;
-        String highQPS;
-        if (limiterConfig.getCountDuring() == -1) {
-            qps = CommonUtil.getQPS(total, TimeUnit.MILLISECONDS, limiterConfig.getStartTime() == null ? -1 : System.currentTimeMillis() - limiterConfig.getStartTime());
-            highQPS = CommonUtil.getHighQPS(total, TimeUnit.MILLISECONDS, limiterConfig.getStartTime() == null ? -1 : System.currentTimeMillis() - limiterConfig.getStartTime());
-        } else {
-            qps = CommonUtil.getQPS(total, limiterConfig.getCountDuringUnit(), limiterConfig.getCountDuring());
-            highQPS = CommonUtil.getHighQPS(total, limiterConfig.getCountDuringUnit(), limiterConfig.getCountDuring());
-
+        map.put("fail", failCount.toString());
+        map.put("success", successCount.toString());
+        map.put("total", total.toString());
+        long current = System.currentTimeMillis();
+        String qps="0";
+        if(limiterConfig.getStartTime()!=null&&total!=null){
+            qps= CommonUtil.getQPS(total, TimeUnit.MILLISECONDS, current-limiterConfig.getStartTime());
         }
         map.put("qps", qps);
-        map.put("highqps", highQPS);
+
         return map;
     }
 
@@ -217,7 +235,7 @@ public class LimiterGroupService {
                       String url, BaseRateLimiter baseRateLimiter,
                       String methodKey) {
         int handle = LimiterConstants.PASS;
-        if (!groupHandlers.isSort()) {
+        if (groupHandlers.isChange()) {
             groupHandlers.sort();
         }
         for (GroupHandler groupHandler : groupHandlers) {
@@ -229,6 +247,26 @@ public class LimiterGroupService {
         return handle;
     }
 
+    /**
+     * ARGV 1是当前时间戳，2为执行过期的标志，3为毫秒生存时间，4为是否删除的标志
+     *
+     * @return
+     */
+    private String updateCountStript() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("if tonumber(ARGV[4]) == 1 then redis.call('del',KEYS[1])\n redis.call('del',KEYS[2])\nend\n")
+                .append("redis.call('pfadd',KEYS[1],ARGV[1])\n")
+                .append("if tonumber(ARGV[2]) == 1 then redis.call('pexpire',KEYS[1],ARGV[3]) end");
+        return builder.toString();
+    }
+
+    private String getCountScript() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("local array={}\n")
+                .append("array[1] = redis.call('pfcount',KEYS[1])\n")
+                .append("array[2] = redis.call('pfcount',KEYS[2])\nreturn array");
+        return builder.toString();
+    }
 
     private String getAllGroupScript() {
         StringBuilder builder = new StringBuilder();

@@ -49,28 +49,11 @@ public class CommonUtil {
         return builder.toString();
     }
 
-    public static String getHighQPS(long total, TimeUnit duringTimeUnit, long during) {
-        if (during == -1) {
-            return 0+"";
-        }
-        long l = duringTimeUnit.toDays(during);
-        if(l==0){
-            l=1;
-        }
-        BigDecimal total1 = new BigDecimal(total).multiply(BigDecimal.valueOf(0.8));
-        BigDecimal t=new BigDecimal(l).multiply(BigDecimal.valueOf(0.2)).multiply(BigDecimal.valueOf(86400));
-        return total1.divide(t,3,BigDecimal.ROUND_UP).toString();
-    }
-
-    public static String getQPS(long total, TimeUnit duringTimeUnit, long during) {
-        if (during == -1) {
-            return 0+"";
-        }
+    public static String getQPS(Long total, TimeUnit duringTimeUnit, long during) {
         long second = duringTimeUnit.toSeconds(during);
         BigDecimal bigDecimal=new BigDecimal(total);
         BigDecimal bigDecimal1=new BigDecimal(second);
-
-        return bigDecimal.divide(bigDecimal1,3, BigDecimal.ROUND_UP).toString();
+        return bigDecimal.divide(bigDecimal1,5, BigDecimal.ROUND_UP).toString();
     }
 
 

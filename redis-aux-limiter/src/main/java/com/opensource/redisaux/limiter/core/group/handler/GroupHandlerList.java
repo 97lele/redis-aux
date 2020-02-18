@@ -13,6 +13,8 @@ import java.util.function.Consumer;
  */
 public class GroupHandlerList implements Iterable<GroupHandler> {
 
+    private volatile boolean change=false;
+
     private Node head;
 
     public void add(GroupHandler a) {
@@ -30,27 +32,21 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
             }
             n.next = head.next;
             head.next = n;
+            change=true;
         } else {
             head = n;
+            change=true;
         }
 
     }
 
     public void sort() {
         this.head = sort(head);
+        change=false;
     }
 
-    public boolean isSort() {
-        if (head != null) {
-            Node p = head;
-            while (p.next != null) {
-                if (p.val.getOrder() < p.next.val.getOrder()) {
-                    return false;
-                }
-                p = p.next;
-            }
-        }
-        return true;
+    public boolean isChange() {
+        return change;
     }
 
     public void remove(GroupHandler groupHandler) {
@@ -59,6 +55,7 @@ public class GroupHandlerList implements Iterable<GroupHandler> {
             while (p.next != null) {
                 if (p.next.val.getOrder() == groupHandler.getOrder()) {
                     p.next = p.next.next;
+                    change=true;
                     break;
                 }
                 p=p.next;

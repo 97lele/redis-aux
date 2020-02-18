@@ -31,9 +31,9 @@ public class LimiteGroupConfig {
         this.enableBlackList = builder.enableBlackList == null ? false : builder.enableBlackList;
         this.enableURLPrefix = builder.enableURLPrefix == null ? "/*" : builder.enableURLPrefix;
         this.unableURLPrefix = builder.unableURLPrefix == null ? "" : builder.unableURLPrefix;
-        this.countDuring = builder.countDuring == null ? -1L : builder.countDuring;
+        this.countDuring = builder.countDuring == null ? 1L : builder.countDuring;
         this.enableCount = builder.enableCount == null ? false : builder.enableCount;
-        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.SECONDS : builder.countDuringUnit;
+        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.DAYS : builder.countDuringUnit;
         this.urlFallBack = builder.urlFallBack==null?"":builder.urlFallBack;
 
     }
@@ -87,8 +87,8 @@ public class LimiteGroupConfig {
         return startTime;
     }
 
-    public boolean setStartTime(Long startTime) {
-        if (this.startTime == null) {
+    public Boolean setStartTime(Long startTime,boolean force) {
+        if (this.startTime == null||force) {
             this.startTime = startTime;
             return true;
         }
