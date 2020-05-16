@@ -216,10 +216,12 @@ public class RedisBitArray implements BitArray {
         return res;
     }
 
-    public LinkedList<String> getKeyList() {
+    @Override
+    public List<String> getKeyList() {
         return keyList;
     }
 
+    @Override
     public void clear() {
         keyList.clear();
         keyList = null;

@@ -1,11 +1,8 @@
 package com.opensource.redisaux.bloomfilter.autoconfigure;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opensource.redisaux.bloomfilter.core.strategy.RedisBloomFilterStrategies;
 import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
-import com.opensource.redisaux.bloomfilter.support.RedisBitArrayOperator;
+import com.opensource.redisaux.bloomfilter.support.BitArrayOperator;
 import com.opensource.redisaux.bloomfilter.core.FunnelEnum;
 import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilter;
 import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilterItem;
@@ -19,15 +16,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,9 +89,9 @@ class RedisBloomFilterAutoConfiguration {
     }
 
     @Bean
-    public RedisBitArrayOperator redisBitArrayFactory() {
+    public BitArrayOperator redisBitArrayFactory() {
 
-        return new RedisBitArrayOperator(
+        return new BitArrayOperator(
                 setBitScript(),
                 getBitScript(),
                 resetBitScript(),

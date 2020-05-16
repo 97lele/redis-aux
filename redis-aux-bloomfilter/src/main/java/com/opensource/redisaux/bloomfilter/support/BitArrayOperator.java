@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  * 新建数组操作类及过期、删除功能
  */
 @SuppressWarnings("unchecked")
-public class RedisBitArrayOperator {
+public class BitArrayOperator {
     private final DefaultRedisScript setBitScript;
 
     private final DefaultRedisScript getBitScript;
@@ -28,7 +28,7 @@ public class RedisBitArrayOperator {
 
     private final DefaultRedisScript afterGrowScript;
 
-    public RedisBitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask, DefaultRedisScript afterGrowScript) {
+    public BitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask, DefaultRedisScript afterGrowScript) {
         this.setBitScript = setBitScript;
         this.getBitScript = getBitScript;
         this.resetBitScript = resetBitScript;
@@ -42,9 +42,11 @@ public class RedisBitArrayOperator {
     }
 
     //过期之后删除
-    public void expire(String key, long timeout, TimeUnit timeUnit) {
-        checkTask.addExpireKey(new WatiForDeleteKey(key, timeUnit.toMillis(timeout), System.currentTimeMillis()));
-        redisTemplate.expire(key, timeout, timeUnit);
+    public void expire(String key, long timeout, TimeUnit timeUnit,boolean local) {
+        checkTask.addExpireKey(new WatiForDeleteKey(key, timeUnit.toMillis(timeout), System.currentTimeMillis(),local));
+        if(!local){
+            redisTemplate.expire(key, timeout, timeUnit);
+        }
     }
 
     public void delete(Collection<String> keys) {

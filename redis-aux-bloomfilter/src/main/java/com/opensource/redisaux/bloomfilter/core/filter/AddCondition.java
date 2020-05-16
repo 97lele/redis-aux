@@ -20,6 +20,7 @@ public final class AddCondition {
     protected Double growRate;
     protected BaseCondition baseCondition;
     protected ExpireCondition expireCondition;
+    protected Boolean local;
 
 
     public AddCondition fpp(Double fpp) {
@@ -62,6 +63,11 @@ public final class AddCondition {
         return this;
     }
 
+    public AddCondition local(Boolean local) {
+        this.local = local;
+        return this;
+    }
+
     InnerInfo build() {
         if (keyName == null) {
             throw new RedisAuxException("key is null!");
@@ -73,6 +79,7 @@ public final class AddCondition {
         this.growRate = growRate == null ? 0.7 : growRate;
         //默认不开启自增
         this.enableGrow = enableGrow == null ? false : enableGrow;
+        this.local=local==null?false:local;
         return new InnerInfo(this);
 
     }
@@ -86,7 +93,7 @@ public final class AddCondition {
 
     public ExpireCondition toExpireCondition() {
         if (this.expireCondition == null) {
-            this.expireCondition = ExpireCondition.create().keyName(keyName).keyPrefix(keyPrefix).timeout(timeout).timeUnit(timeUnit);
+            this.expireCondition = ExpireCondition.create().keyName(keyName).keyPrefix(keyPrefix).timeout(timeout).timeUnit(timeUnit).local(local);
         }
         return this.expireCondition;
     }

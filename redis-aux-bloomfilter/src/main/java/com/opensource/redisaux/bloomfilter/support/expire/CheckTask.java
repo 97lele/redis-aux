@@ -93,7 +93,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
 
     @PreDestroy
     public void stopRun() {
-        this.run = Boolean.FALSE;
+        this.run = false;
         executors.shutdown();
     }
 }

@@ -15,6 +15,7 @@ public final class ExpireCondition {
     protected Long timeout;
     protected TimeUnit timeUnit;
     protected BaseCondition baseCondition;
+    protected Boolean local;
 
     public ExpireCondition keyPrefix(String keyPrefix) {
         this.keyPrefix = keyPrefix;
@@ -33,6 +34,11 @@ public final class ExpireCondition {
 
     public ExpireCondition timeUnit(TimeUnit timeUnit) {
         this.timeUnit = timeUnit;
+        return this;
+    }
+
+    public ExpireCondition local(Boolean local){
+        this.local=local;
         return this;
     }
 

@@ -29,4 +29,8 @@ public interface BitArray<T> {
 
     void reset();
 
+    void clear();
+
+    List<String> getKeyList();
+
 }

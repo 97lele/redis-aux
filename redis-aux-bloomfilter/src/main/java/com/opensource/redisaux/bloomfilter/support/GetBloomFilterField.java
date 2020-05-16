@@ -67,7 +67,9 @@ public class GetBloomFilterField {
                             field.timeout(),
                             field.timeUnit(),
                             field.enableGrow(),
-                            field.growRate());
+                            field.growRate(),
+                    field.local()
+                    );
                 }
             }
             if (res != null) {
@@ -80,16 +82,17 @@ public class GetBloomFilterField {
     }
 
     public static class BloomFilterInfo {
-        private String keyPrefix;
-        private String keyName;
-        private long exceptionInsert;
-        private double fpp;
-        private long timeout;
-        private TimeUnit timeUnit;
-        private boolean enableGrow;
-        private double growRate;
+        private final String keyPrefix;
+        private final String keyName;
+        private final long exceptionInsert;
+        private final double fpp;
+        private final long timeout;
+        private final TimeUnit timeUnit;
+        private final boolean enableGrow;
+        private final double growRate;
+        private final boolean local;
 
-        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate) {
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate,boolean local) {
             this.keyPrefix = keyPrefix;
             this.keyName = keyName;
             this.exceptionInsert = exceptionInsert;
@@ -98,6 +101,7 @@ public class GetBloomFilterField {
             this.timeUnit = timeUnit;
             this.enableGrow = enableGrow;
             this.growRate = growRate;
+            this.local=local;
 
         }
 
@@ -132,6 +136,8 @@ public class GetBloomFilterField {
         public double getGrowRate() {
             return growRate;
         }
+
+        public boolean isLocal(){return local;}
     }
 
 

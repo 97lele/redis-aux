@@ -11,6 +11,7 @@ class InnerInfo {
     private TimeUnit timeUnit;
     private boolean enableGrow;
     private double growRate;
+    private boolean local;
 
     public InnerInfo(AddCondition addCondition) {
         this.fpp = addCondition.fpp;
@@ -21,6 +22,7 @@ class InnerInfo {
         this.timeUnit = addCondition.timeUnit;
         this.growRate = addCondition.growRate;
         this.enableGrow = addCondition.enableGrow;
+        this.local=addCondition.local;
     }
 
     public InnerInfo(ExpireCondition expireCondition) {
@@ -66,4 +68,6 @@ class InnerInfo {
     public boolean isEnableGrow() {
         return enableGrow;
     }
+
+    public boolean isLocal(){return local;}
 }

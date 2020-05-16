@@ -8,9 +8,9 @@ import com.opensource.redisaux.common.RedisAuxException;
  * @Date 2020/1/11 19:49
  */
 public class WatiForDeleteKey implements Comparable {
-    private String key;
-    private long existTime;
-    private long startTime;
+    private final String key;
+    private final long existTime;
+    private final long startTime;
 
     public String getKey() {
         return key;
@@ -24,7 +24,7 @@ public class WatiForDeleteKey implements Comparable {
         return startTime;
     }
 
-    public WatiForDeleteKey(String key, long existTime, long startTime) {
+    public WatiForDeleteKey(String key, long existTime, long startTime,boolean mode) {
         this.key = key;
         this.existTime = existTime;
         this.startTime = startTime;
