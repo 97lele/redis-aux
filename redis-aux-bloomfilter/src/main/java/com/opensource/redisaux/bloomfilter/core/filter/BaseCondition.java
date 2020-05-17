@@ -31,4 +31,13 @@ public final class BaseCondition {
     public static BaseCondition create() {
         return new BaseCondition();
     }
+
+
+    @Override
+    public String toString() {
+        return "BaseCondition{" +
+                "keyPrefix='" + keyPrefix + '\'' +
+                ", keyName='" + keyName + '\'' +
+                '}';
+    }
 }

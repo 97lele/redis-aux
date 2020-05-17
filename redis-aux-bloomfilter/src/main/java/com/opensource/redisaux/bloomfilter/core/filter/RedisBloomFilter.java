@@ -260,5 +260,20 @@ public class RedisBloomFilter {
         this.bloomFilterMap.clear();
     }
 
-
+    private boolean containKey(String keyPrefix,String keyName){
+        String key = checkKey(keyPrefix, keyName);
+        for (RedisBloomFilterItem filter : bloomFilterMap.values()) {
+           if(filter.containKey(key)){
+               return true;
+           };
+        }
+        return false;
+    }
+    public boolean containKey(BaseCondition condition){
+        return this.containKey(condition.keyPrefix,condition.keyName);
+    }
+    public <T> boolean containKey(SFunction<T> sFunction){
+        GetBloomFilterField.BloomFilterInfo bloomFilterInfo = GetBloomFilterField.resolveFieldName(sFunction);
+        return this.containKey(bloomFilterInfo.getKeyPrefix(),bloomFilterInfo.getKeyName());
+    }
 }

@@ -21,8 +21,8 @@ public @interface BloomFilterProperty {
 
     boolean enableGrow() default false;
 
-    //当redis布隆过滤器的bitcount大于预计插入数量所计算得出的bitcount的0.7倍时，新增一个
-    double growRate() default 0.7;
+    //当redis布隆过滤器的bitcount大于预计插入数量所计算得出的bitcount的0.79倍时，新增一个
+    double growRate() default 0.79;
 
     boolean local() default false;
 }

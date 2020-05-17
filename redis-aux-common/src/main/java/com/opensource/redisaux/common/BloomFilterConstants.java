@@ -19,9 +19,8 @@ public final class BloomFilterConstants {
     public static final String PATH = "com.opensource.redisaux.bloomfilter.autoconfigure";
     public static final String INNERTEMPLATE = "bloom";
     public static final long CHECK_TASK_PER_SECOND = 5L;
-    public static final int SINGLE=0;
-    public static final int COPY=1;
-    public static final int NEW=2;
+
+
 
 
 }

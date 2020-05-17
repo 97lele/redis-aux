@@ -179,7 +179,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
                 //获取容量
                 bits.setBitSize(numBits);
             } else {
-               bits=new LocalBitArray(numBits,key,enableGrow,growRate);
+               bits=new LocalBitArray(numBits);
             }
             bitArrayMap.put(key, bits);
             //获取hash函数数量
@@ -188,6 +188,9 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         return noAdd;
     }
 
+    boolean containKey(String key){
+        return this.bitArrayMap.get(key)!=null;
+    }
 
     @Override
     public void removeKey(String key) {

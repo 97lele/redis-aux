@@ -76,7 +76,7 @@ public final class AddCondition {
         this.exceptionInsert = exceptionInsert == null ? 1000L : exceptionInsert;
         this.timeUnit = timeUnit == null ? TimeUnit.SECONDS : timeUnit;
         this.timeout = timeout == null ? -1L : timeout;
-        this.growRate = growRate == null ? 0.7 : growRate;
+        this.growRate = growRate == null ? 0.79 : growRate;
         //默认不开启自增
         this.enableGrow = enableGrow == null ? false : enableGrow;
         this.local=local==null?false:local;
@@ -107,4 +107,54 @@ public final class AddCondition {
         this.baseCondition = null;
     }
 
+    public Double getFpp() {
+        return fpp;
+    }
+
+    public Long getExceptionInsert() {
+        return exceptionInsert;
+    }
+
+    public String getKeyPrefix() {
+        return keyPrefix;
+    }
+
+    public String getKeyName() {
+        return keyName;
+    }
+
+    public Long getTimeout() {
+        return timeout;
+    }
+
+    public TimeUnit getTimeUnit() {
+        return timeUnit;
+    }
+
+    public Boolean getEnableGrow() {
+        return enableGrow;
+    }
+
+    public Double getGrowRate() {
+        return growRate;
+    }
+
+    public Boolean getLocal() {
+        return local;
+    }
+
+    @Override
+    public String toString() {
+        return "AddCondition{" +
+                "fpp=" + fpp +
+                ", exceptionInsert=" + exceptionInsert +
+                ", keyPrefix='" + keyPrefix + '\'' +
+                ", keyName='" + keyName + '\'' +
+                ", timeout=" + timeout +
+                ", timeUnit=" + timeUnit +
+                ", enableGrow=" + enableGrow +
+                ", growRate=" + growRate +
+                ", local=" + local +
+                '}';
+    }
 }

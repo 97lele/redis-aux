@@ -65,4 +65,16 @@ public final class ExpireCondition {
     protected void clear() {
         this.baseCondition = null;
     }
+
+
+    @Override
+    public String toString() {
+        return "ExpireCondition{" +
+                "keyPrefix='" + keyPrefix + '\'' +
+                ", keyName='" + keyName + '\'' +
+                ", timeout=" + timeout +
+                ", timeUnit=" + timeUnit +
+                ", local=" + local +
+                '}';
+    }
 }
