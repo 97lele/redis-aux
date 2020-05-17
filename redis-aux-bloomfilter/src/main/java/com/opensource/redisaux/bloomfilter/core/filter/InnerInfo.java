@@ -9,8 +9,6 @@ class InnerInfo {
     private String keyName;
     private long timeout;
     private TimeUnit timeUnit;
-    private boolean enableGrow;
-    private double growRate;
     private boolean local;
 
     public InnerInfo(AddCondition addCondition) {
@@ -20,8 +18,6 @@ class InnerInfo {
         this.keyName = addCondition.keyName;
         this.timeout = addCondition.timeout;
         this.timeUnit = addCondition.timeUnit;
-        this.growRate = addCondition.growRate;
-        this.enableGrow = addCondition.enableGrow;
         this.local=addCondition.local;
     }
 
@@ -39,10 +35,6 @@ class InnerInfo {
 
     public double getFpp() {
         return fpp;
-    }
-
-    public double getGrowRate() {
-        return growRate;
     }
 
     public long getExceptionInsert() {
@@ -63,10 +55,6 @@ class InnerInfo {
 
     public TimeUnit getTimeUnit() {
         return timeUnit;
-    }
-
-    public boolean isEnableGrow() {
-        return enableGrow;
     }
 
     public boolean isLocal(){return local;}

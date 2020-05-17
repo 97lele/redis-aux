@@ -102,7 +102,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
             BitArray tBitArray = bitArrayMap.get(s);
             if (tBitArray != null) {
                 if(tBitArray instanceof RedisBitArray){
-                    list.add(tBitArray.getKeyList());
+                    list.add(((RedisBitArray) tBitArray).getKeyList());
                 }
                 bitArrayMap.remove(s);
                 numHashFunctionsMap.remove(s);
@@ -129,20 +129,20 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
             bitArrayMap.remove(key);
             numHashFunctionsMap.remove(key);
             if(tBitArray instanceof RedisBitArray){
-                bitArrayOperator.delete(tBitArray.getKeyList());
+                bitArrayOperator.delete(((RedisBitArray) tBitArray).getKeyList());
             }
             tBitArray.clear();
             tBitArray = null;
         }
     }
 
-    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate,boolean local) {
+    public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit,boolean local) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         //获取keyname
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp, enableGrow, growRate,local);
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,local);
         BitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
         strategy.put(member, funnel, numHashFunctions, bits);
@@ -152,14 +152,14 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate,boolean local) {
+    public void putAll(String key, long expectedInsertions, double fpp, List<T> members, long timeout, TimeUnit timeUnit,boolean local) {
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
         Preconditions.checkArgument(members.size() < expectedInsertions, "once add size (%s) shoud smaller than expectInsertions(%s) ", members.size(), expectedInsertions);
 
-        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp, enableGrow, growRate,local);
+        Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp, local);
 
         BitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
@@ -170,17 +170,11 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
-    private Boolean genCache(BitArray bits, String key, long expectedInsertions, double fpp, boolean enableGrow, double growRate, boolean local) {
+    private Boolean genCache(BitArray bits, String key, long expectedInsertions, double fpp,  boolean local) {
         Boolean noAdd = bits == null;
         if ((noAdd)) {
             long numBits = CommonUtil.optimalNumOfBits(expectedInsertions, fpp);
-            if (!local) {
-                bits = bitArrayOperator.createBitArray(key, enableGrow, growRate);
-                //获取容量
-                bits.setBitSize(numBits);
-            } else {
-               bits=new LocalBitArray(numBits);
-            }
+            bits = bitArrayOperator.createBitArray(key, numBits, local);
             bitArrayMap.put(key, bits);
             //获取hash函数数量
             numHashFunctionsMap.put(key, CommonUtil.optimalNumOfHashFunctions(expectedInsertions, numBits));

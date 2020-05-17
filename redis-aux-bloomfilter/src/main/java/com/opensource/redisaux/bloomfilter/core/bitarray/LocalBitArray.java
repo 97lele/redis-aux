@@ -20,21 +20,20 @@ public class LocalBitArray implements BitArray {
     private AtomicLongArray data;
     private LongAdder bitCount;
     private final long bitSize;
+    private final String key;
 
-    public LocalBitArray(Long bitSize) {
+    public LocalBitArray(String key,Long bitSize) {
         long[] longs = new long[Ints.checkedCast(LongMath.divide(bitSize, 64, RoundingMode.CEILING))];
         this.data = new AtomicLongArray(longs);
         this.bitCount = new LongAdder();
         long bitCount = 0;
         this.bitCount.add(bitCount);
         this.bitSize = bitSize;
+        this.key=key;
     }
 
 
-    @Override
-    public void setBitSize(long bitSize) {
-        return;
-    }
+
 
     @Override
     public boolean set(long[] indexs) {
@@ -97,9 +96,11 @@ public class LocalBitArray implements BitArray {
     }
 
     @Override
-    public List<String> getKeyList() {
-        return null;
+    public String getKey() {
+        return this.key;
     }
+
+
 
     @Override
     public List<Boolean> getBatch(List indexs) {

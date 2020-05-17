@@ -38,8 +38,6 @@ public class RedisBloomFilter {
                 bloomFilterInfo.getFpp(),
                 bloomFilterInfo.getTimeout(),
                 bloomFilterInfo.getTimeUnit(),
-                bloomFilterInfo.isEnableGrow(),
-                bloomFilterInfo.getGrowRate(),
                 bloomFilterInfo.isLocal(),
                 member);
     }
@@ -53,14 +51,12 @@ public class RedisBloomFilter {
                 condition.getFpp(),
                 condition.getTimeout(),
                 condition.getTimeUnit(),
-                condition.isEnableGrow(),
-                condition.getGrowRate(),
                 condition.isLocal(),
                 member
         );
     }
 
-    private <R> void add(String keyPrefix, String key, long exceptedInsertions, double fpp, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate, boolean local,R member) {
+    private <R> void add(String keyPrefix, String key, long exceptedInsertions, double fpp, long timeout, TimeUnit timeUnit, boolean local,R member) {
         Class clzz = member.getClass();
         Object res = member;
         RedisBloomFilterItem filter = bloomFilterMap.get(clzz);
@@ -68,7 +64,7 @@ public class RedisBloomFilter {
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit, enableGrow, growRate,local);
+        filter.put(keyName, res, exceptedInsertions, fpp, timeout, timeUnit,local);
     }
 
     public <T, R> void addAll(SFunction<T> sFunction, List<R> members) {
@@ -79,8 +75,6 @@ public class RedisBloomFilter {
                 bloomFilterInfo.getFpp(),
                 bloomFilterInfo.getTimeout(),
                 bloomFilterInfo.getTimeUnit(),
-                bloomFilterInfo.isEnableGrow(),
-                bloomFilterInfo.getGrowRate(),
                 bloomFilterInfo.isLocal(),
                 members);
     }
@@ -95,14 +89,12 @@ public class RedisBloomFilter {
                 innerInfo.getFpp(),
                 innerInfo.getTimeout(),
                 innerInfo.getTimeUnit(),
-                innerInfo.isEnableGrow(),
-                innerInfo.getGrowRate(),
                 innerInfo.isLocal(),
                 members
         );
     }
 
-    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate,boolean local, List<R> members) {
+    private <R> void addAll(String keyPrefix, String key, Long exceptedInsertions, Double fpp, long timeout, TimeUnit timeUnit, boolean local, List<R> members) {
         if (members.isEmpty()) {
             throw new RedisAuxException("参数有误!");
         }
@@ -116,7 +108,7 @@ public class RedisBloomFilter {
         if (filter == null) {
             filter = bloomFilterMap.get(Byte.class);
         }
-        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit, enableGrow, growRate,local);
+        filter.putAll(keyName, exceptedInsertions, fpp, resList, timeout, timeUnit,local);
     }
 
     public <R> boolean mightContain(BaseCondition queryCondition, R member) {

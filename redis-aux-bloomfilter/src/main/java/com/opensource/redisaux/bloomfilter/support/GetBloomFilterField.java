@@ -66,8 +66,7 @@ public class GetBloomFilterField {
                             field.fpp(),
                             field.timeout(),
                             field.timeUnit(),
-                            field.enableGrow(),
-                            field.growRate(),
+
                     field.local()
                     );
                 }
@@ -88,19 +87,15 @@ public class GetBloomFilterField {
         private final double fpp;
         private final long timeout;
         private final TimeUnit timeUnit;
-        private final boolean enableGrow;
-        private final double growRate;
         private final boolean local;
 
-        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit, boolean enableGrow, double growRate,boolean local) {
+        public BloomFilterInfo(String keyPrefix, String keyName, Long exceptionInsert, double fpp, Long timeout, TimeUnit timeUnit, boolean local) {
             this.keyPrefix = keyPrefix;
             this.keyName = keyName;
             this.exceptionInsert = exceptionInsert;
             this.fpp = fpp;
             this.timeout = timeout;
             this.timeUnit = timeUnit;
-            this.enableGrow = enableGrow;
-            this.growRate = growRate;
             this.local=local;
 
         }
@@ -127,14 +122,6 @@ public class GetBloomFilterField {
 
         public TimeUnit getTimeUnit() {
             return timeUnit;
-        }
-
-        public boolean isEnableGrow() {
-            return enableGrow;
-        }
-
-        public double getGrowRate() {
-            return growRate;
         }
 
         public boolean isLocal(){return local;}

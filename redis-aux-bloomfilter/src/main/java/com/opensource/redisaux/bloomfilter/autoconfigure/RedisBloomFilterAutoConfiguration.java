@@ -81,12 +81,6 @@ class RedisBloomFilterAutoConfiguration {
         return script;
     }
 
-    @Bean
-    public DefaultRedisScript afterGrowScript() {
-        DefaultRedisScript script = new DefaultRedisScript();
-        script.setScriptText("local ttl=redis.call('ttl',KEYS[1]) redis.call('expire',KEYS[2],ttl)");
-        return script;
-    }
 
     @Bean
     public BitArrayOperator redisBitArrayFactory() {
@@ -96,8 +90,7 @@ class RedisBloomFilterAutoConfiguration {
                 getBitScript(),
                 resetBitScript(),
                 redisTemplate,
-                checkTask(),
-                afterGrowScript()
+                checkTask()
         );
     }
 
@@ -149,10 +142,7 @@ class RedisBloomFilterAutoConfiguration {
                 .append("    for i = start, t do\n")
                 .append("        redis.call('SETBIT', key, i, b)\n    end\n    start = t + 1\nend\n")
                 .append("local rs, re = start / 8, (last + 1) / 8\nlocal rl = re - rs\nif rl > 0 then\n")
-                .append("    redis.call('SETRANGE', key, rs, string.rep(b, rl))\nend\n")
-                .append("local others = redis.call('keys', string.format(\"%s-*\", key))\n")
-                .append("for i = 1, table.getn(others)\n")
-                .append("do redis.call('del', others[i])\nend");
+                .append("    redis.call('SETRANGE', key, rs, string.rep(b, rl))\nend\n");
         return builder.toString();
     }
 

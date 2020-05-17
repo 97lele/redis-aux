@@ -25,7 +25,6 @@ public class RedisBitArray implements BitArray {
     private RedisTemplate redisTemplate;
 
     private long bitSize;
-
     /**
      * 读可以共享，写不可以
      */
@@ -41,14 +40,13 @@ public class RedisBitArray implements BitArray {
 
     private DefaultRedisScript resetBitScript;
 
-    private DefaultRedisScript afterGrowScript;
-
-    private boolean enableGrow;
-
-    private double growRate;
 
 
-    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, DefaultRedisScript afterGrowScript, boolean enableGrow, double growRate) {
+    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript,long bitSize) {
+        if (bitSize > BloomFilterConstants.MAX_REDIS_BIT_SIZE) {
+            throw new RedisAuxException("Invalid redis bit size, must small than 2 to the 32");
+        }
+        this.bitSize = bitSize;
         this.redisTemplate = redisTemplate;
         this.key = key;
         this.setBitScript = setBitScript;
@@ -56,27 +54,16 @@ public class RedisBitArray implements BitArray {
         this.keyList = new LinkedList();
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
-        this.afterGrowScript = afterGrowScript;
-        this.growRate = growRate;
-        this.enableGrow = enableGrow;
         readWriteLock = new ReentrantReadWriteLock();
     }
 
 
-    @Override
-    public void setBitSize(long bitSize) {
-        if (bitSize > BloomFilterConstants.MAX_REDIS_BIT_SIZE) {
-            throw new RedisAuxException("Invalid redis bit size, must small than 2 to the 32");
-        }
-        this.bitSize = bitSize;
-    }
+
 
     @Override
     public boolean set(long[] index) {
         readWriteLock.writeLock().lock();
-        boolean grow = ensureCapacity();
         setBitScriptExecute(index);
-        afterGrow(grow);
         readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
@@ -92,9 +79,7 @@ public class RedisBitArray implements BitArray {
     public boolean setBatch(List index) {
         readWriteLock.writeLock().lock();
         long[] res = getArrayFromList(index);
-        boolean grow = ensureCapacity();
         setBitScriptExecute(res);
-        afterGrow(grow);
         readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
@@ -143,31 +128,9 @@ public class RedisBitArray implements BitArray {
     }
 
 
-    private boolean ensureCapacity() {
-        boolean grow = false;
-        if (enableGrow) {
-            Long count = (Long) redisTemplate.execute(new RedisCallback() {
-                @Override
-                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                    return redisConnection.bitCount(keyList.getLast().getBytes());
-                }
-            });
-            if (bitSize * growRate < count) {
-                grow = true;
-                this.keyList.addLast(this.key + "-" + keyList.size());
-            }
-        }
-        return grow;
-    }
 
-    private void afterGrow(boolean grow) {
-        List<String> list = new LinkedList();
-        list.add(key);
-        list.add(keyList.getLast());
-        if (grow) {
-            redisTemplate.execute(afterGrowScript, list);
-        }
-    }
+
+
 
     /**
      * @param index
@@ -216,7 +179,6 @@ public class RedisBitArray implements BitArray {
         return res;
     }
 
-    @Override
     public List<String> getKeyList() {
         return keyList;
     }
@@ -227,4 +189,11 @@ public class RedisBitArray implements BitArray {
         keyList = null;
         readWriteLock = null;
     }
+
+    @Override
+    public String getKey() {
+        return this.key;
+    }
+
+
 }

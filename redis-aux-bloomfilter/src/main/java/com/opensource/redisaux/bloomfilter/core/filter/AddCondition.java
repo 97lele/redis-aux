@@ -16,8 +16,6 @@ public final class AddCondition {
     protected String keyName;
     protected Long timeout;
     protected TimeUnit timeUnit;
-    protected Boolean enableGrow;
-    protected Double growRate;
     protected BaseCondition baseCondition;
     protected ExpireCondition expireCondition;
     protected Boolean local;
@@ -53,15 +51,7 @@ public final class AddCondition {
         return this;
     }
 
-    public AddCondition enableGrow(Boolean enableGrow) {
-        this.enableGrow = enableGrow;
-        return this;
-    }
 
-    public AddCondition growRate(Double growRate) {
-        this.growRate = growRate;
-        return this;
-    }
 
     public AddCondition local(Boolean local) {
         this.local = local;
@@ -76,9 +66,6 @@ public final class AddCondition {
         this.exceptionInsert = exceptionInsert == null ? 1000L : exceptionInsert;
         this.timeUnit = timeUnit == null ? TimeUnit.SECONDS : timeUnit;
         this.timeout = timeout == null ? -1L : timeout;
-        this.growRate = growRate == null ? 0.79 : growRate;
-        //默认不开启自增
-        this.enableGrow = enableGrow == null ? false : enableGrow;
         this.local=local==null?false:local;
         return new InnerInfo(this);
 
@@ -131,13 +118,6 @@ public final class AddCondition {
         return timeUnit;
     }
 
-    public Boolean getEnableGrow() {
-        return enableGrow;
-    }
-
-    public Double getGrowRate() {
-        return growRate;
-    }
 
     public Boolean getLocal() {
         return local;
@@ -152,8 +132,6 @@ public final class AddCondition {
                 ", keyName='" + keyName + '\'' +
                 ", timeout=" + timeout +
                 ", timeUnit=" + timeUnit +
-                ", enableGrow=" + enableGrow +
-                ", growRate=" + growRate +
                 ", local=" + local +
                 '}';
     }

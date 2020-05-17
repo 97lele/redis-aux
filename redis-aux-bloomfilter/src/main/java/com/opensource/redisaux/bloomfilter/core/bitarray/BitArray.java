@@ -3,7 +3,6 @@ package com.opensource.redisaux.bloomfilter.core.bitarray;
 import java.util.List;
 
 public interface BitArray<T> {
-    void setBitSize(long bitSize);
 
     /**
      * 设置单个键，indexs为hash后的位数
@@ -25,12 +24,12 @@ public interface BitArray<T> {
 
     List<Boolean> getBatch(List<long[]> indexs);
 
-    long bitSize();
 
     void reset();
 
     void clear();
 
-    List<String> getKeyList();
+    String getKey();
 
+    long bitSize();
 }

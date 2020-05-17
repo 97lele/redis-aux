@@ -1,5 +1,7 @@
 package com.opensource.redisaux.bloomfilter.support;
 
+import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
+import com.opensource.redisaux.bloomfilter.core.bitarray.LocalBitArray;
 import com.opensource.redisaux.bloomfilter.core.bitarray.RedisBitArray;
 import com.opensource.redisaux.bloomfilter.support.expire.WatiForDeleteKey;
 import com.opensource.redisaux.bloomfilter.support.expire.CheckTask;
@@ -26,19 +28,21 @@ public class BitArrayOperator {
 
     private final CheckTask checkTask;
 
-    private final DefaultRedisScript afterGrowScript;
 
-    public BitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask, DefaultRedisScript afterGrowScript) {
+    public BitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask) {
         this.setBitScript = setBitScript;
         this.getBitScript = getBitScript;
         this.resetBitScript = resetBitScript;
         this.redisTemplate = redisTemplate;
         this.checkTask = checkTask;
-        this.afterGrowScript = afterGrowScript;
     }
 
-    public RedisBitArray createBitArray(String key, boolean enableGrow, double growRate) {
-        return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript, resetBitScript, afterGrowScript, enableGrow, growRate);
+    public BitArray createBitArray(String key, long bitSize,boolean local) {
+        if(local){
+            return new LocalBitArray(key,bitSize);
+        }else{
+            return new RedisBitArray(this.redisTemplate, key, setBitScript, getBitScript, resetBitScript,bitSize);
+        }
     }
 
     //过期之后删除
