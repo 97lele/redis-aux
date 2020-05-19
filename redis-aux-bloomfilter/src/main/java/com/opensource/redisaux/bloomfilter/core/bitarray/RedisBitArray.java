@@ -2,17 +2,11 @@ package com.opensource.redisaux.bloomfilter.core.bitarray;
 
 import com.opensource.redisaux.common.BloomFilterConstants;
 import com.opensource.redisaux.common.RedisAuxException;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author: lele
@@ -25,10 +19,6 @@ public class RedisBitArray implements BitArray {
     private RedisTemplate redisTemplate;
 
     private long bitSize;
-    /**
-     * 读可以共享，写不可以
-     */
-    private ReadWriteLock readWriteLock;
 
     private LinkedList<String> keyList;
 
@@ -54,7 +44,6 @@ public class RedisBitArray implements BitArray {
         this.keyList = new LinkedList();
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
-        readWriteLock = new ReentrantReadWriteLock();
     }
 
 
@@ -62,9 +51,7 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public boolean set(long[] index) {
-        readWriteLock.writeLock().lock();
         setBitScriptExecute(index);
-        readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
 
@@ -77,19 +64,15 @@ public class RedisBitArray implements BitArray {
      */
     @Override
     public boolean setBatch(List index) {
-        readWriteLock.writeLock().lock();
         long[] res = getArrayFromList(index);
         setBitScriptExecute(res);
-        readWriteLock.writeLock().unlock();
         return Boolean.TRUE;
     }
 
     @Override
     public boolean get(long[] index) {
-        readWriteLock.readLock().lock();
         List<Long> res = getBitScriptExecute(index, index.length);
         boolean exists = res.get(0).equals(BloomFilterConstants.TRUE);
-        readWriteLock.readLock().unlock();
         return exists;
     }
 
@@ -100,14 +83,12 @@ public class RedisBitArray implements BitArray {
     @Override
     public List<Boolean> getBatch(List index) {
         //index.size*keyList.size
-        readWriteLock.readLock().lock();
         long[] array = getArrayFromList(index);
         List<Long> list = getBitScriptExecute(array, ((long[]) index.get(0)).length);
         List<Boolean> res = new ArrayList(index.size());
         for (Long temp : list) {
             res.add(Boolean.valueOf(temp.equals(BloomFilterConstants.TRUE)));
         }
-        readWriteLock.readLock().unlock();
         return res;
     }
 
@@ -120,10 +101,6 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public void reset() {
-        readWriteLock.writeLock().lock();
-        keyList.clear();
-        keyList.add(key);
-        readWriteLock.writeLock().unlock();
         redisTemplate.execute(resetBitScript, keyList, bitSize);
     }
 
@@ -187,7 +164,6 @@ public class RedisBitArray implements BitArray {
     public void clear() {
         keyList.clear();
         keyList = null;
-        readWriteLock = null;
     }
 
     @Override
