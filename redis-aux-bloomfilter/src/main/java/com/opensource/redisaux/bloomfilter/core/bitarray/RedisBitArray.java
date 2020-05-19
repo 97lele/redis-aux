@@ -5,6 +5,7 @@ import com.opensource.redisaux.common.RedisAuxException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,7 +52,8 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public boolean set(long[] index) {
-        setBitScriptExecute(index);
+        Object[] value = Arrays.stream(index).boxed().toArray();
+        redisTemplate.execute(setBitScript, keyList, value);
         return Boolean.TRUE;
     }
 
@@ -65,8 +67,7 @@ public class RedisBitArray implements BitArray {
     @Override
     public boolean setBatch(List index) {
         long[] res = getArrayFromList(index);
-        setBitScriptExecute(res);
-        return Boolean.TRUE;
+        return set(res);
     }
 
     @Override
@@ -109,24 +110,13 @@ public class RedisBitArray implements BitArray {
 
 
 
-    /**
-     * @param index
-     * @return
-     */
-    private void setBitScriptExecute(long[] index) {
-        Integer length = index.length;
-        Object[] value = new Long[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = Long.valueOf(index[i]);
-        }
-        redisTemplate.execute(setBitScript, keyList, value);
-    }
+
 
     /**
      * @param index
      * @return
      */
-    private List<Long> getBitScriptExecute(long[] index, int size) {
+    private List getBitScriptExecute(long[] index, int size) {
         Object[] value = new Long[index.length + 1];
         value[0] = Long.valueOf(size);
         for (int i = 1; i < value.length; i++) {
