@@ -1,14 +1,18 @@
 package com.opensource.redisaux.limiter.autoconfigure.normal;
 
 import com.opensource.redisaux.common.CommonUtil;
+import com.opensource.redisaux.common.LimiterConstants;
 import com.opensource.redisaux.common.RedisAuxException;
 import com.opensource.redisaux.limiter.annonations.normal.LimiterType;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
+import io.lettuce.core.RedisException;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisConnectionUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -23,6 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Aspect
 public class NormalLimiterAspect {
 
+    @Autowired
+    @Qualifier(LimiterConstants.LIMITER)
+    private RedisTemplate redisTemplate;
 
     private final Map<String, Annotation> annotationMap;
 
@@ -66,7 +73,13 @@ public class NormalLimiterAspect {
         baseLimiter = target.annotationType().getAnnotation(LimiterType.class);
 
         BaseRateLimiter rateLimiter = RedisLimiterAutoConfiguration.rateLimiterMap.get(baseLimiter.mode());
-        if (rateLimiter.canExecute(target, methodKey)) {
+        Boolean b=true;
+        try{
+            b=rateLimiter.canExecute(target, methodKey);
+        }catch (RedisException e){
+            RedisConnectionUtils.unbindConnection(redisTemplate.getConnectionFactory());
+        }
+        if (b) {
             return proceedingJoinPoint.proceed();
         } else {
             //否则执行失败逻辑
@@ -76,6 +89,7 @@ public class NormalLimiterAspect {
 
 
     }
+
 
 
     protected static Object executeFallBack(Boolean passArgs, String methodStr, Class clazz, Class[] paramType, Object[] params, Object bean) throws Exception {

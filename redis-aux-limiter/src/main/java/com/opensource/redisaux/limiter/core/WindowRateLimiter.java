@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * 根据滑动窗口实现,请看atuoConfiguration类注释
  */
 @SuppressWarnings("unchecked")
-public class WindowRateLimiter extends BaseRateLimiter {
+public class WindowRateLimiter implements BaseRateLimiter {
 
     private RedisTemplate redisTemplate;
 

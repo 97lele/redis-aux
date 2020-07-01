@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
  * @Date 2020/2/15 21:00
  */
 public class IpCheckUtil {
+    //ip地址模式匹配
     private static Pattern pattern = Pattern
             .compile("(1\\d{1,2}|2[0-4]\\d|25[0-5]|\\d{1,2})\\." + "(1\\d{1,2}|2[0-4]\\d|25[0-5]|\\d{1,2})\\."
                     + "(1\\d{1,2}|2[0-4]\\d|25[0-5]|\\d{1,2})\\." + "(1\\d{1,2}|2[0-4]\\d|25[0-5]|\\d{1,2})");
@@ -68,8 +69,10 @@ public class IpCheckUtil {
         return from + ";" + end;
     }
 
-    private static Set<String> parseRule(String ruleStr) {
-        Set<String> addList = new HashSet<>();
+
+
+    public static Map<String,String> parseRule(String ruleStr,String id) {
+        Map<String,String> ruleMap = new HashMap<>();
         String[] ruleList = ruleStr.split(";");
         for (String rule : ruleList) {
             if (rule.contains("*")) {// 处理通配符 *
@@ -103,18 +106,18 @@ public class IpCheckUtil {
                 for (String s : tem) {
                     String ip = fromIP.toString().replace("[*]", s.split(";")[0]) + "-"
                             + endIP.toString().replace("[*]", s.split(";")[1]);
-                    addList.add(ip);
+                    ruleMap.put(ip,id);
                 }
                 // 处理 网段 xxx.xxx.xxx./24
             } else if (rule.contains("/")) {
-                addList.add(rule);
+                ruleMap.put(rule,id);
             } else {// 处理单个 ip 或者 范围
                 if (IpCheckUtil.validate(rule)) {
-                    addList.add(rule);
+                    ruleMap.put(rule,id);
                 }
             }
         }
-        return addList;
+        return ruleMap;
     }
 
     /**
@@ -125,10 +128,10 @@ public class IpCheckUtil {
         if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
             ipAddress = request.getHeader("Proxy-Client-IP");
         }
-        if (ipAddress == null || ipAddress.length() == 0|| "unknown".equalsIgnoreCase(ipAddress)) {
+        if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
             ipAddress = request.getHeader("WL-Proxy-Client-IP");
         }
-        if (ipAddress == null || ipAddress.length() == 0|| "unknown".equalsIgnoreCase(ipAddress)) {
+        if (ipAddress == null || ipAddress.length() == 0 || "unknown".equalsIgnoreCase(ipAddress)) {
             ipAddress = request.getRemoteAddr();
             if (ipAddress.equals("127.0.0.1")) {
                 // 根据网卡取本机配置的IP
@@ -137,7 +140,7 @@ public class IpCheckUtil {
                     inet = InetAddress.getLocalHost();
                     ipAddress = inet.getHostAddress();
                 } catch (UnknownHostException e) {
-                    System.out.println("出现异常:"+e.toString());
+                    System.out.println("出现异常:" + e.toString());
                 }
             }
         }
@@ -149,45 +152,62 @@ public class IpCheckUtil {
                 ipAddress = ipAddress.substring(0, ipAddress.indexOf(","));
             }
         }
-        if("0:0:0:0:0:0:0:1".equals(ipAddress)){
-            ipAddress="127.0.0.1";
+        if ("0:0:0:0:0:0:0:1".equals(ipAddress)) {
+            ipAddress = "127.0.0.1";
         }
         return ipAddress;
     }
 
 
-    public static boolean isFit(String ip, String rule) {
-        Set<String> ipList = parseRule(rule);
-        if (ipList.isEmpty() || ipList.contains(ip)) {
+    public static boolean isFit(String ip, Set<String> ipSet) {
+        if (ipSet.isEmpty() || ipSet.contains(ip)) {
             return true;
         }
-        for (String allow : ipList) {
+        for (String allow : ipSet) {
             // 处理 类似 192.168.0.0-192.168.2.1
             if (allow.indexOf("-") > -1) {
-                String[] tempAllow = allow.split("-");
-                String[] from = tempAllow[0].split("\\.");
-                String[] end = tempAllow[1].split("\\.");
-                String[] tag = ip.split("\\.");
-                boolean check = true;
-                // 对IP从左到右进行逐段匹配
-                for (int i = 0; i < 4; i++) {
-                    int s = Integer.valueOf(from[i]);
-                    int t = Integer.valueOf(tag[i]);
-                    int e = Integer.valueOf(end[i]);
-                    if (!(s <= t && t <= e)) {
-                        check = false;
-                        break;
-                    }
-                }
-                if (check) {
-                    return true;
-                }
+                return ipExistsInRange(ip, allow);
                 // 处理 网段 xxx.xxx.xxx./24
             } else if (allow.contains("/")) {
                 return matches(allow, ip);
             }
         }
         return false;
+    }
+
+
+    public static boolean ipExistsInRange(String ip, String ipSection) {
+
+        ipSection = ipSection.trim();
+
+        ip = ip.trim();
+
+        int idx = ipSection.indexOf('-');
+
+        String beginIP = ipSection.substring(0, idx);
+
+        String endIP = ipSection.substring(idx + 1);
+
+        return getIp2long(beginIP) <= getIp2long(ip) && getIp2long(ip) <= getIp2long(endIP);
+
+    }
+
+    public static long getIp2long(String ip) {
+
+        ip = ip.trim();
+
+        String[] ips = ip.split("\\.");
+
+        long ip2long = 0L;
+
+        for (int i = 0; i < 4; ++i) {
+
+            ip2long = ip2long << 8 | Integer.parseInt(ips[i]);
+
+        }
+
+        return ip2long;
+
     }
 
     private static boolean matches(String net, String ip) {

@@ -13,16 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date: 2020/1/3 下午10:27
  */
 @SuppressWarnings("unchecked")
-public abstract class BaseRateLimiter {
+public interface BaseRateLimiter {
 
     /**
      * 存放的是keyNameList、是否传参，回调方法名
      */
-    public static Map<String, KeyInfoNode> keyInfoMap = new ConcurrentHashMap();
+     Map<String, KeyInfoNode> keyInfoMap = new ConcurrentHashMap();
     /**
      * 存放组的信息
      */
-    public static Map<String, LimiteGroupConfig> rateLimitGroupConfigMap = new ConcurrentHashMap<>();
+     Map<String, LimiteGroupConfig> rateLimitGroupConfigMap = new ConcurrentHashMap<>();
 
 
     /**
@@ -42,13 +42,13 @@ public abstract class BaseRateLimiter {
         return keyInfoNode.getKeyNameList();
     }
 
-    public static void createOrUpdateGroups(List<LimiteGroupConfig> limiteGroup) {
+     static void createOrUpdateGroups(List<LimiteGroupConfig> limiteGroup) {
         for (LimiteGroupConfig group : limiteGroup) {
             rateLimitGroupConfigMap.put(group.getId(), group);
         }
     }
 
-    public static void createOrUpdateGroups(LimiteGroupConfig limiteGroup) {
+     static void createOrUpdateGroups(LimiteGroupConfig limiteGroup) {
         rateLimitGroupConfigMap.put(limiteGroup.getId(),limiteGroup);
     }
 
@@ -60,16 +60,12 @@ public abstract class BaseRateLimiter {
      * @param methodKey
      * @return
      */
-    public Boolean canExecute(Annotation redisLimiter, String methodKey) {
-        return null;
-    }
+     Boolean canExecute(Annotation redisLimiter, String methodKey);
 
-    public Boolean canExecute(LimiteGroupConfig limiteGroup,String methodKey) {
-        return null;
-    }
+     Boolean canExecute(LimiteGroupConfig limiteGroup,String methodKey);
 
 
-    public static class KeyInfoNode {
+     class KeyInfoNode {
         private List<String> keyNameList;
         private boolean passArgs;
         private String fallBackMethod;
