@@ -70,12 +70,17 @@ public class IpCheckUtil {
     }
 
 
-
-    public static Map<String,String> parseRule(String ruleStr,String id) {
-        Map<String,String> ruleMap = new HashMap<>();
+    /**
+     * 解析规则字符返回字符列表
+     * @param ruleStr
+     * @return
+     */
+    public static Set<String> parseRule(String ruleStr) {
+        Set<String> ruleSet=new HashSet<>();
         String[] ruleList = ruleStr.split(";");
         for (String rule : ruleList) {
-            if (rule.contains("*")) {// 处理通配符 *
+            // 处理通配符 *
+            if (rule.contains("*")) {
                 String[] ips = rule.split("\\.");
                 String[] from = new String[]{"0", "0", "0", "0"};
                 String[] end = new String[]{"255", "255", "255", "255"};
@@ -106,18 +111,19 @@ public class IpCheckUtil {
                 for (String s : tem) {
                     String ip = fromIP.toString().replace("[*]", s.split(";")[0]) + "-"
                             + endIP.toString().replace("[*]", s.split(";")[1]);
-                    ruleMap.put(ip,id);
+                    ruleSet.add(ip);
+
                 }
                 // 处理 网段 xxx.xxx.xxx./24
             } else if (rule.contains("/")) {
-                ruleMap.put(rule,id);
+                ruleSet.add(rule);
             } else {// 处理单个 ip 或者 范围
                 if (IpCheckUtil.validate(rule)) {
-                    ruleMap.put(rule,id);
+                    ruleSet.add(rule);
                 }
             }
         }
-        return ruleMap;
+        return ruleSet;
     }
 
     /**
@@ -160,7 +166,7 @@ public class IpCheckUtil {
 
 
     public static boolean isFit(String ip, Set<String> ipSet) {
-        if (ipSet.isEmpty() || ipSet.contains(ip)) {
+        if ( ipSet.contains(ip)) {
             return true;
         }
         for (String allow : ipSet) {
