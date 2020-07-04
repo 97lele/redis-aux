@@ -1,6 +1,8 @@
-package com.opensource.redisaux.common;
+package com.opensource.redisaux.common.utils;
 
 
+
+import com.opensource.redisaux.common.consts.LimiterConstants;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -49,14 +51,6 @@ public class CommonUtil {
         return builder.toString();
     }
 
-    public static String getQPS(Long total, TimeUnit duringTimeUnit, long during) {
-        long second = duringTimeUnit.toSeconds(during);
-        BigDecimal bigDecimal=new BigDecimal(total);
-        BigDecimal bigDecimal1=new BigDecimal(second);
-        return bigDecimal.divide(bigDecimal1,5, BigDecimal.ROUND_UP).toString();
-    }
-
-
     public static String getLimiterName(String groupId, String methodKey, String type) {
         StringBuilder str = new StringBuilder(LimiterConstants.LIMITER);
         str.append("-").append(groupId).append(":").append(type).append(":").append(methodKey);
@@ -68,5 +62,6 @@ public class CommonUtil {
         str.append("-").append(groupId).append(":").append(type).append(":").append("*");
         return str.toString();
     }
+
 
 }

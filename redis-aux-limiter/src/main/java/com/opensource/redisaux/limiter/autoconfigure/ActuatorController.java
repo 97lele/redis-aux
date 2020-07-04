@@ -1,7 +1,7 @@
 package com.opensource.redisaux.limiter.autoconfigure;
 
-import com.opensource.redisaux.common.IpCheckUtil;
-import com.opensource.redisaux.common.TimeUnitEnum;
+import com.opensource.redisaux.common.utils.IpCheckUtil;
+import com.opensource.redisaux.common.enums.TimeUnitEnum;
 import com.opensource.redisaux.limiter.core.group.config.FunnelRateConfig;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
 import com.opensource.redisaux.limiter.core.group.config.TokenRateConfig;
@@ -89,7 +89,7 @@ public class ActuatorController {
                 .funnelRate(funnelRate).requestNeed(requestNeed)
                 .funnelRateUnit(TimeUnitEnum.getTimeUnit(funnelRateUnit)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
-        limiter.setFunnelConfig(config);
+        limiter.setFunnelRateConfig(config);
         limiterGroupService.save(limiter, true, false);
         return limiter;
     }

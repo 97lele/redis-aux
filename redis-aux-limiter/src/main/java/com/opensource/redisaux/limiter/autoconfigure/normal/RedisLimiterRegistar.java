@@ -1,6 +1,6 @@
 package com.opensource.redisaux.limiter.autoconfigure.normal;
 
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 import com.opensource.redisaux.limiter.annonations.EnableLimiter;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;

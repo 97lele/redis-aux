@@ -1,14 +1,13 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.bloomfilter.core.bitarray.BitArray;
-import com.opensource.redisaux.bloomfilter.core.bitarray.LocalBitArray;
 import com.opensource.redisaux.bloomfilter.core.bitarray.RedisBitArray;
 import com.opensource.redisaux.bloomfilter.core.strategy.Strategy;
 import com.opensource.redisaux.bloomfilter.support.BitArrayOperator;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Funnel;
 import com.opensource.redisaux.bloomfilter.support.expire.KeyExpireListener;
-import com.opensource.redisaux.common.CommonUtil;
+import com.opensource.redisaux.common.utils.CommonUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

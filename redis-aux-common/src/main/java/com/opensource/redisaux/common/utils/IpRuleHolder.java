@@ -1,5 +1,6 @@
-package com.opensource.redisaux.common;
+package com.opensource.redisaux.common.utils;
 
+import com.opensource.redisaux.common.utils.IpCheckUtil;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
 import java.util.*;

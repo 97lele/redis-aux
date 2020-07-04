@@ -1,9 +1,9 @@
 package com.opensource.redisaux.limiter.autoconfigure;
 
-import com.opensource.redisaux.common.CommonUtil;
-import com.opensource.redisaux.common.IpCheckUtil;
-import com.opensource.redisaux.common.LimiterConstants;
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.utils.CommonUtil;
+import com.opensource.redisaux.common.utils.IpCheckUtil;
+import com.opensource.redisaux.common.consts.LimiterConstants;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 import com.opensource.redisaux.limiter.annonations.group.LimiteExclude;
 import com.opensource.redisaux.limiter.annonations.group.LimiteGroup;
 import com.opensource.redisaux.limiter.autoconfigure.normal.RedisLimiterAutoConfiguration;
@@ -15,7 +15,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -72,10 +71,12 @@ public class GroupLimiterAspect {
         String requestURI = request.getRequestURI();
         BaseRateLimiter baseRateLimiter = RedisLimiterAutoConfiguration.rateLimiterMap.get(limitGroupConfig.getCurrentMode());
         LimiteGroupConfig point = limitGroupConfig;
+        //逻辑链处理
         Integer handle = service.handle(point, ipAddr, requestURI, baseRateLimiter, methodKey);
 
         if (handle != LimiterConstants.PASS) {
-            if (limitGroupConfig.isEnableCount()) {
+            //是否计数
+            if (limitGroupConfig.isEnableQpsCount()) {
                 service.updateCount(false, point);
             }
             String methodStr = annonation.fallback();
@@ -87,7 +88,7 @@ public class GroupLimiterAspect {
             }
             return this.executeFallBack(annonation.passArgs(), methodStr, beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), bean);
         } else {
-            if (limitGroupConfig.isEnableCount()) {
+            if (limitGroupConfig.isEnableQpsCount()) {
                 service.updateCount(true, point);
             }
             return proceedingJoinPoint.proceed();

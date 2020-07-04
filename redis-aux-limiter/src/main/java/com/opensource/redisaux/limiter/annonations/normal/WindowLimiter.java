@@ -1,7 +1,7 @@
 package com.opensource.redisaux.limiter.annonations.normal;
 
 
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

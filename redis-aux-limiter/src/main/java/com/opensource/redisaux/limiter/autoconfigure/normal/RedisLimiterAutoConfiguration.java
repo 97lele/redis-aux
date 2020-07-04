@@ -1,6 +1,6 @@
 package com.opensource.redisaux.limiter.autoconfigure.normal;
 
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 import com.opensource.redisaux.limiter.core.FunnelRateLimiter;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import com.opensource.redisaux.limiter.core.TokenRateLimiter;

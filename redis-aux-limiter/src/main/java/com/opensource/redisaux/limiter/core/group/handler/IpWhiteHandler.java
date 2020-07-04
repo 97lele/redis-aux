@@ -1,15 +1,11 @@
 package com.opensource.redisaux.limiter.core.group.handler;
 
-import com.opensource.redisaux.common.IpCheckUtil;
-import com.opensource.redisaux.common.IpRuleHolder;
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.utils.IpCheckUtil;
+import com.opensource.redisaux.common.utils.IpRuleHolder;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import com.opensource.redisaux.limiter.core.group.GroupHandler;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;
-import org.apache.commons.collections4.trie.PatriciaTrie;
-
-import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
 
 /**
  * @author lulu

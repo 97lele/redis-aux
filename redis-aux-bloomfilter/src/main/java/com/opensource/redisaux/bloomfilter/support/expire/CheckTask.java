@@ -1,6 +1,6 @@
 package com.opensource.redisaux.bloomfilter.support.expire;
 
-import com.opensource.redisaux.common.BloomFilterConstants;
+import com.opensource.redisaux.common.consts.BloomFilterConstants;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.PreDestroy;

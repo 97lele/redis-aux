@@ -3,25 +3,17 @@ package com.opensource.redisaux.limiter.autoconfigure.normal;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opensource.redisaux.common.BloomFilterConstants;
-import com.opensource.redisaux.common.LimiterConstants;
-import io.lettuce.core.RedisConnectionException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.cglib.core.internal.Function;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisConnectionUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import javax.security.auth.callback.Callback;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.function.Supplier;
 
 /**
  * @author lulu

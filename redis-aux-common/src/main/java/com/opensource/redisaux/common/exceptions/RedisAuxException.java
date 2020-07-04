@@ -1,4 +1,4 @@
-package com.opensource.redisaux.common;
+package com.opensource.redisaux.common.exceptions;
 
 /**
  * @author: lele

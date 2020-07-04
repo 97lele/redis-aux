@@ -2,8 +2,8 @@ package com.opensource.redisaux.bloomfilter.core.filter;
 
 import com.opensource.redisaux.bloomfilter.support.GetBloomFilterField;
 import com.opensource.redisaux.bloomfilter.support.SFunction;
-import com.opensource.redisaux.common.CommonUtil;
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.utils.CommonUtil;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PreDestroy;

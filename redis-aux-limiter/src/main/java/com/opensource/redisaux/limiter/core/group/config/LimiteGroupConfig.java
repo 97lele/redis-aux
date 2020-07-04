@@ -1,7 +1,7 @@
 package com.opensource.redisaux.limiter.core.group.config;
 
-import com.opensource.redisaux.common.CommonUtil;
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.utils.CommonUtil;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,94 +31,183 @@ public class LimiteGroupConfig {
         this.enableBlackList = builder.enableBlackList == null ? false : builder.enableBlackList;
         this.enableURLPrefix = builder.enableURLPrefix == null ? "/*" : builder.enableURLPrefix;
         this.unableURLPrefix = builder.unableURLPrefix == null ? "" : builder.unableURLPrefix;
-        this.countDuring = builder.countDuring == null ? 1L : builder.countDuring;
-        this.enableCount = builder.enableCount == null ? false : builder.enableCount;
-        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.DAYS : builder.countDuringUnit;
+        this.countDuring = builder.countDuring == null ? 1 : builder.countDuring;
+        this.enableQpsCount = builder.enableCount == null ? false : builder.enableCount;
+        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.MINUTES : builder.countDuringUnit;
         this.urlFallBack = builder.urlFallBack==null?"":builder.urlFallBack;
+        this.bucketSize=builder.bucketSize==null?10:builder.bucketSize;
 
     }
 
+    /**
+     * 备注
+     */
     private String remark;
-
+    /**
+     * 配置id
+     */
     private String id;
-    //以分号分隔的形式
+    /**
+     * 黑名单ip，分号分隔
+     */
     private String blackRule;
-    //以分号分隔的形式
+    /**
+     * 白名单ip,分号分隔
+     */
     private String whiteRule;
 
+    /**
+     * 当前限流模式
+     */
     private volatile Integer currentMode;
 
-    private List<String> funnelKeyName;
-
+    /**
+     * 漏斗限流配置
+     */
     private FunnelRateConfig funnelRateConfig;
-
-    private List<String> tokenKeyName;
-
+    /**
+     * 令牌桶限流配置
+     */
     private TokenRateConfig tokenRateConfig;
-
-    private List<String> windowKeyName;
-
+    /**
+     * 窗口限流配置
+     */
     private WindowRateConfig windowRateConfig;
 
+    /**
+     * 是否允许黑名单
+     */
     private boolean enableBlackList;
-
+    /**
+     * 是否允许白名单
+     */
     private boolean enableWhiteList;
 
+    /**
+     * 黑名单回调方法
+     */
     private String blackRuleFallback;
-    //分号分隔
+    /**
+     * 允许通过的地址前缀
+     */
     private String enableURLPrefix;
-    //分号分隔
+    /**
+     * 不允许通过的地址前缀
+     */
     private String unableURLPrefix;
-
-    public String getUrlFallBack() {
-        return urlFallBack;
-    }
-
+    /**
+     * 前缀不通过调用的方法
+     */
     private String urlFallBack;
-
-    private boolean enableCount;
-
-    private long countDuring;
-
-    private Long startTime;
-
-
-    public Long getStartTime() {
-        return startTime;
-    }
-
-    public Boolean setStartTime(Long startTime,boolean force) {
-        if (this.startTime == null||force) {
-            this.startTime = startTime;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isEnableCount() {
-        return enableCount;
-    }
-
-    public long getCountDuring() {
-        return countDuring;
-    }
-
-    public TimeUnit getCountDuringUnit() {
-        return countDuringUnit;
-    }
-
+    /**
+     * 是否允许qps统计
+     */
+    private boolean enableQpsCount;
+    /**
+     * 持续周期
+     */
+    private int countDuring;
+    /**
+     * 周期单位
+     */
     private TimeUnit countDuringUnit;
 
-    public void setEnableCount(boolean enableCount) {
-        this.enableCount = enableCount;
+    private Integer bucketSize;
+
+    public Integer getBucketSize() {
+        return bucketSize;
     }
 
-    public void setCountDuring(long countDuring) {
-        this.countDuring = countDuring;
+    public void setBucketSize(Integer bucketSize) {
+        this.bucketSize = bucketSize;
     }
 
-    public void setCountDuringUnit(TimeUnit countDuringUnit) {
-        this.countDuringUnit = countDuringUnit;
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getBlackRule() {
+        return blackRule;
+    }
+
+    public void setBlackRule(String blackRule) {
+        this.blackRule = blackRule;
+    }
+
+    public String getWhiteRule() {
+        return whiteRule;
+    }
+
+    public void setWhiteRule(String whiteRule) {
+        this.whiteRule = whiteRule;
+    }
+
+    public Integer getCurrentMode() {
+        return currentMode;
+    }
+
+    public void setCurrentMode(Integer currentMode) {
+        this.currentMode = currentMode;
+    }
+
+    public FunnelRateConfig getFunnelRateConfig() {
+        return funnelRateConfig;
+    }
+
+    public void setFunnelRateConfig(FunnelRateConfig funnelRateConfig) {
+        this.funnelRateConfig = funnelRateConfig;
+    }
+
+    public TokenRateConfig getTokenRateConfig() {
+        return tokenRateConfig;
+    }
+
+    public void setTokenRateConfig(TokenRateConfig tokenRateConfig) {
+        this.tokenRateConfig = tokenRateConfig;
+    }
+
+    public WindowRateConfig getWindowRateConfig() {
+        return windowRateConfig;
+    }
+
+    public void setWindowRateConfig(WindowRateConfig windowRateConfig) {
+        this.windowRateConfig = windowRateConfig;
+    }
+
+    public boolean isEnableBlackList() {
+        return enableBlackList;
+    }
+
+    public void setEnableBlackList(boolean enableBlackList) {
+        this.enableBlackList = enableBlackList;
+    }
+
+    public boolean isEnableWhiteList() {
+        return enableWhiteList;
+    }
+
+    public void setEnableWhiteList(boolean enableWhiteList) {
+        this.enableWhiteList = enableWhiteList;
+    }
+
+    public String getBlackRuleFallback() {
+        return blackRuleFallback;
+    }
+
+    public void setBlackRuleFallback(String blackRuleFallback) {
+        this.blackRuleFallback = blackRuleFallback;
     }
 
     public String getEnableURLPrefix() {
@@ -137,66 +226,37 @@ public class LimiteGroupConfig {
         this.unableURLPrefix = unableURLPrefix;
     }
 
-    public String getBlackRuleFallback() {
-        return blackRuleFallback;
+    public String getUrlFallBack() {
+        return urlFallBack;
     }
 
-    public Boolean isEnableWhiteList() {
-        return enableWhiteList;
+    public void setUrlFallBack(String urlFallBack) {
+        this.urlFallBack = urlFallBack;
     }
 
-    public void setEnableWhiteList(Boolean enableWhiteList) {
-        this.enableWhiteList = enableWhiteList;
+    public boolean isEnableQpsCount() {
+        return enableQpsCount;
     }
 
-    public Boolean isEnableBlackList() {
-        return enableBlackList;
+    public void setEnableQpsCount(boolean enableQpsCount) {
+        this.enableQpsCount = enableQpsCount;
     }
 
-    public void setEnableBlackList(Boolean enableBlackList) {
-        this.enableBlackList = enableBlackList;
+    public int getCountDuring() {
+        return countDuring;
     }
 
-    public void setBlackRule(String blackRule) {
-        this.blackRule = blackRule;
+    public void setCountDuring(int countDuring) {
+        this.countDuring = countDuring;
     }
 
-    public void setWhiteRule(String whiteRule) {
-        this.whiteRule = whiteRule;
+    public TimeUnit getCountDuringUnit() {
+        return countDuringUnit;
     }
 
-    public String getRemark() {
-        return remark;
+    public void setCountDuringUnit(TimeUnit countDuringUnit) {
+        this.countDuringUnit = countDuringUnit;
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getBlackRule() {
-        return blackRule;
-    }
-
-    public String getWhiteRule() {
-        return whiteRule;
-    }
-
-    public Integer getCurrentMode() {
-        return currentMode;
-    }
-
-    public FunnelRateConfig getFunnelRateConfig() {
-        return funnelRateConfig;
-    }
-
-    public TokenRateConfig getTokenRateConfig() {
-        return tokenRateConfig;
-    }
-
-    public WindowRateConfig getWindowRateConfig() {
-        return windowRateConfig;
-    }
-
 
     public List<String> getFunnelKeyName(String methodKey) {
         return Collections.singletonList(CommonUtil.getLimiterName(id, methodKey, LimiterConstants.FUNNEL));
@@ -211,32 +271,7 @@ public class LimiteGroupConfig {
         return Collections.singletonList(CommonUtil.getLimiterName(id, methodKey, LimiterConstants.WINDOW));
     }
 
-    //change ipRule
-    public void changeWriteRule(String whiteRule) {
-        this.whiteRule = whiteRule;
-    }
 
-    public void changeBlackRule(String blackRule) {
-        this.blackRule = blackRule;
-    }
-
-    //change setCurrentMode
-    public void setCurrentMode(Integer currentMode) {
-        this.currentMode = currentMode;
-    }
-    //change config
-
-    public void setFunnelConfig(FunnelRateConfig funnel) {
-        this.funnelRateConfig = funnel;
-    }
-
-    public void setTokenRateConfig(TokenRateConfig tokenRateConfig) {
-        this.tokenRateConfig = tokenRateConfig;
-    }
-
-    public void setWindowRateConfig(WindowRateConfig windowRateConfig) {
-        this.windowRateConfig = windowRateConfig;
-    }
 
     public void destory() {
         this.funnelRateConfig = null;
@@ -263,8 +298,9 @@ public class LimiteGroupConfig {
         private String enableURLPrefix;
         private String unableURLPrefix;
         private Boolean enableCount;
-        private Long countDuring;
+        private Integer countDuring;
         private TimeUnit countDuringUnit;
+        private Integer bucketSize;
         private String urlFallBack;
 
         public Builder id(String id) {
@@ -342,15 +378,16 @@ public class LimiteGroupConfig {
             return this;
         }
 
-        public Builder countDuring(Long countDuring) {
+        public Builder countDuring(Integer countDuring,TimeUnit timeUnit) {
             this.countDuring = countDuring;
+            this.countDuringUnit=timeUnit;
+            return this;
+        }
+        public Builder bucketSize(Integer bucketSize){
+            this.bucketSize=bucketSize;
             return this;
         }
 
-        public Builder countDuringUnit(TimeUnit countDuringUnit) {
-            this.countDuringUnit = countDuringUnit;
-            return this;
-        }
 
         public LimiteGroupConfig build() {
             return new LimiteGroupConfig(this);

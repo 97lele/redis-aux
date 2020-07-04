@@ -1,10 +1,9 @@
 package com.opensource.redisaux.limiter.core.group.handler;
 
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 import com.opensource.redisaux.limiter.core.group.GroupHandler;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * @author lulu

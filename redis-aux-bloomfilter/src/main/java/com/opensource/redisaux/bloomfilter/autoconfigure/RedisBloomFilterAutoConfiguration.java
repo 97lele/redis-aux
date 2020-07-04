@@ -7,7 +7,7 @@ import com.opensource.redisaux.bloomfilter.core.FunnelEnum;
 import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilter;
 import com.opensource.redisaux.bloomfilter.core.filter.RedisBloomFilterItem;
 import com.opensource.redisaux.bloomfilter.support.expire.CheckTask;
-import com.opensource.redisaux.common.BloomFilterConstants;
+import com.opensource.redisaux.common.consts.BloomFilterConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;

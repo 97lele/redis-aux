@@ -1,4 +1,4 @@
-package com.opensource.redisaux.common;
+package com.opensource.redisaux.common.utils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;

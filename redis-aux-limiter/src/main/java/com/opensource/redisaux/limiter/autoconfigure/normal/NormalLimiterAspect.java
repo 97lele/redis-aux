@@ -1,8 +1,8 @@
 package com.opensource.redisaux.limiter.autoconfigure.normal;
 
-import com.opensource.redisaux.common.CommonUtil;
-import com.opensource.redisaux.common.LimiterConstants;
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.utils.CommonUtil;
+import com.opensource.redisaux.common.consts.LimiterConstants;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 import com.opensource.redisaux.limiter.annonations.normal.LimiterType;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import io.lettuce.core.RedisException;

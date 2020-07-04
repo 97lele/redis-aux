@@ -4,9 +4,9 @@ package com.opensource.redisaux.bloomfilter.support;
 import com.opensource.redisaux.bloomfilter.annonations.BloomFilterPrefix;
 import com.opensource.redisaux.bloomfilter.annonations.BloomFilterProperty;
 import com.opensource.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistar;
-import com.opensource.redisaux.common.BloomFilterConstants;
-import com.opensource.redisaux.common.CommonUtil;
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.consts.BloomFilterConstants;
+import com.opensource.redisaux.common.utils.CommonUtil;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.InvocationTargetException;

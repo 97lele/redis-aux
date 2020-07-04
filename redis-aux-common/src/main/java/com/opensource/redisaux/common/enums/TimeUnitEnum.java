@@ -1,4 +1,4 @@
-package com.opensource.redisaux.common;
+package com.opensource.redisaux.common.enums;
 
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +17,15 @@ public enum  TimeUnitEnum {
     TimeUnitEnum(TimeUnit timeUnit,Integer mode){
         this.mode=mode;
         this.timeUnit=timeUnit;
+    }
+
+    public static Integer getMode(TimeUnit unit){
+        for (TimeUnitEnum value : values()) {
+            if(value.timeUnit.equals(unit)){
+                return value.mode;
+            }
+        }
+        return -1;
     }
     public static TimeUnit getTimeUnit(Integer mode){
         for (TimeUnitEnum value : values()) {

@@ -1,6 +1,6 @@
 package com.opensource.redisaux.limiter.core.group.handler;
 
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 import com.opensource.redisaux.limiter.core.BaseRateLimiter;
 import com.opensource.redisaux.limiter.core.group.GroupHandler;
 import com.opensource.redisaux.limiter.core.group.config.LimiteGroupConfig;

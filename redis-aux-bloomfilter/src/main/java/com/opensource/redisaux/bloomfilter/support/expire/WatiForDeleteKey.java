@@ -1,7 +1,7 @@
 package com.opensource.redisaux.bloomfilter.support.expire;
 
 
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 
 /**
  * @author lulu

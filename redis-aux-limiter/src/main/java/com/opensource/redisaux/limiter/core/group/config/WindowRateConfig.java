@@ -1,6 +1,6 @@
 package com.opensource.redisaux.limiter.core.group.config;
 
-import com.opensource.redisaux.common.LimiterConstants;
+import com.opensource.redisaux.common.consts.LimiterConstants;
 
 import java.util.concurrent.TimeUnit;
 

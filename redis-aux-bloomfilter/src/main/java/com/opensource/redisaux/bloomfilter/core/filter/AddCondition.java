@@ -1,7 +1,7 @@
 package com.opensource.redisaux.bloomfilter.core.filter;
 
 
-import com.opensource.redisaux.common.RedisAuxException;
+import com.opensource.redisaux.common.exceptions.RedisAuxException;
 
 import java.util.concurrent.TimeUnit;
 
