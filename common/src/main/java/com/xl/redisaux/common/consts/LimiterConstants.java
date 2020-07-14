@@ -6,7 +6,7 @@ package com.xl.redisaux.common.consts;
  */
 public final class LimiterConstants {
     public final static String LIMITER = "limiter";
-    public final static String SCAPATH = "com.opensource.redisaux.limiter.autoconfigure";
+    public final static String SCAPATH = "com.xl.redisaux.limiter.autoconfigure";
     public final static int WINDOW_LIMITER = 1;
     public final static int TOKEN_LIMITER = 2;
     public final static int FUNNEL_LIMITER = 3;
