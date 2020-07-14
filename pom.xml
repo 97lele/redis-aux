@@ -2,14 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.opensource</groupId>
+    <groupId>com.xl</groupId>
     <artifactId>redis-aux</artifactId>
     <packaging>pom</packaging>
     <version>0.3.4</version>
     <modules>
-        <module>redis-aux-common</module>
-        <module>redis-aux-bloomfilter</module>
-        <module>redis-aux-limiter</module>
+        <module>common</module>
+        <module>bloomfilter</module>
+        <module>limiter</module>
     </modules>
     <name>redis-aux</name>
     <parent>
@@ -35,17 +35,17 @@
                 <version>28.0-jre</version>
             </dependency>
             <dependency>
-                <groupId>com.opensource</groupId>
+                <groupId>com.xl</groupId>
                 <artifactId>redis-aux-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opensource</groupId>
+                <groupId>com.xl</groupId>
                 <artifactId>redis-aux-limiter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.opensource</groupId>
+                <groupId>com.xl</groupId>
                 <artifactId>redis-aux-bloomfilter</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -53,6 +53,16 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>4.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>4.1.42.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>4.4</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
