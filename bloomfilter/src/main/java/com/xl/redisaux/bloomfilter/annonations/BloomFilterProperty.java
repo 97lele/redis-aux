@@ -19,6 +19,5 @@ public @interface BloomFilterProperty {
 
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 
-
     boolean local() default false;
 }

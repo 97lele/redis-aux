@@ -16,6 +16,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Import({RedisLimiterRegistar.class})
 public @interface EnableLimiter {
+    //是否开启限流组
     boolean enableGroup() default false;
-    boolean delayConnect() default true;
 }

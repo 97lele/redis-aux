@@ -5,7 +5,7 @@
     <groupId>com.xl</groupId>
     <artifactId>redis-aux</artifactId>
     <packaging>pom</packaging>
-    <version>0.3.4</version>
+    <version>0.3.8</version>
     <modules>
         <module>common</module>
         <module>bloomfilter</module>
@@ -19,7 +19,7 @@
     </parent>
     <properties>
         <java.version>1.8</java.version>
-        <project.version>0.3.4</project.version>
+        <project.version>0.3.8</project.version>
     </properties>
 
     <dependencyManagement>
