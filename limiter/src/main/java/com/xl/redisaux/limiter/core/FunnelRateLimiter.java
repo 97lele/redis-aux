@@ -35,7 +35,7 @@ public class FunnelRateLimiter implements BaseRateLimiter {
         double rate = funnelLimiter.funnelRate();
         String methodName = funnelLimiter.fallback();
         boolean passArgs = funnelLimiter.passArgs();
-        List<String> keyList = getKey(methodKey, methodName, passArgs);
+        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
         return handleParam(keyList, capacity, need, rate, timeUnit);
     }
 

@@ -36,7 +36,7 @@ public class TokenRateLimiter implements BaseRateLimiter {
         double rate = tokenLimiter.tokenRate();
         String methodName = tokenLimiter.fallback();
         boolean passArgs = tokenLimiter.passArgs();
-        List<String> keyList = getKey(methodKey, methodName, passArgs);
+        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
         return handleParam(keyList, capacity, need, rate, rateUnit, tokenLimiter.initToken());
 
     }
