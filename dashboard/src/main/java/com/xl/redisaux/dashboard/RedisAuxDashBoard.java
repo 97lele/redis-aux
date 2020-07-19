@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
 public class RedisAuxDashBoard {
     public static void main(String[] args) {
         String port = System.getProperty(TransportConfig.CONSOLE_PORT);
-        HeartBeatServer server=new HeartBeatServer(HostNameUtil.getHostName(), port==null?TransportConfig.DEFAULT_RECEIVE_HEART_PORT:Integer.valueOf(port));
+        HeartBeatServer server=new HeartBeatServer(HostNameUtil.getIp(), port==null?TransportConfig.DEFAULT_RECEIVE_HEART_PORT:Integer.valueOf(port));
         server.start();
         SpringApplication.run(RedisAuxDashBoard.class, args);
 

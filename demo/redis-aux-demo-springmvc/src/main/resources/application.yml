@@ -1,6 +1,8 @@
 server:
-  port: 8081
+  port: 8082
 redisaux:
+  console:
+    host: 10.0.75.1
   heartbeat:
     connect:
       timeout: 10000

@@ -25,7 +25,7 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        System.out.println(msg.toString());
+//        System.out.println(msg.toString());
         String[] split = msg.toString().split("-");
         String name = NodeVO.getName(split[0], split[1]);
         NodeVO vo = new NodeVO(split);
@@ -33,10 +33,15 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+//        System.out.println("有人过来了:"+ctx.channel().remoteAddress().toString());
+    }
+
+    @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         SocketAddress address = ctx.channel().remoteAddress();
         String s = address.toString();
-        System.out.println(s);
+//        System.out.println(s);
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent state = (IdleStateEvent) evt;
             //在一定时间内读写空闲才会关闭链接

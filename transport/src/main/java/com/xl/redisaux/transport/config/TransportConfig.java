@@ -15,7 +15,7 @@ public final class TransportConfig {
 
     public static final String HEARTBEAT_CLIENT_IP = "redisaux.client.ip";
     //控制台地址host
-    public static final String CONSOLE_HOST = "redisaux.console.host";
+    public static final String CONSOLE_IP = "redisaux.console.host";
 
     public static final String CONSOLE_PORT="redisaux.console.port";
 

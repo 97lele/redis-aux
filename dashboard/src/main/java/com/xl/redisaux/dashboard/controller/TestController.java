@@ -25,18 +25,20 @@ public class TestController {
     SendRequest sendRequest;
 
     @GetMapping("/getNodes")
-    public Collection<NodeVO> nodeVOS(){
+    public Collection<NodeVO> nodeVOS() {
         return HeartBeatServerHandler.nodeVOMap.values();
     }
-    @PostMapping("/sendCommand/{ip}/{port}/{path}")
-    public void send(@PathVariable("ip")String ip,@PathVariable("port")Integer port,@PathVariable("path")String path){
+
+    @GetMapping("/sendCommand/{ip}/{port}/{path}")
+    public Object send(@PathVariable("ip") String ip, @PathVariable("port") Integer port, @PathVariable("path") String path) {
         CompletableFuture<String> future = sendRequest.executeCommand(ip, port, path, null, false);
         try {
-            System.out.println(future.get());
+            return future.get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
+        return null;
     }
 }

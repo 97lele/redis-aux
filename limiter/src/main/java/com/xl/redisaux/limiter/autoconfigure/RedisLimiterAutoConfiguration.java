@@ -37,7 +37,7 @@ import java.util.Map;
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @ConditionalOnBean(RedisTemplate.class)
-public class RedisLimiterAutoConfiguration implements BeanDefinitionRegistryPostProcessor {
+public class RedisLimiterAutoConfiguration {
 
     @Autowired
     @Qualifier(LimiterConstants.LIMITER)
@@ -124,34 +124,30 @@ public class RedisLimiterAutoConfiguration implements BeanDefinitionRegistryPost
     }
 
 
-    /**
-     * 手动注册bean
-     *
-     * @param beanDefinitionRegistry
-     * @throws BeansException
-     */
-    @Override
-    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
+    @Bean
+    public NormalLimiterAspect limiterAspect() {
         rateLimiterMap.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
         rateLimiterMap.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
         rateLimiterMap.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
-        if (RedisLimiterRegistar.enableGroup.get()) {
-            registerBean(beanDefinitionRegistry, LimiterConstants.GROUP_LIMITER_ASPECT, GroupLimiterAspect.class);
+        return new NormalLimiterAspect();
+    }
+
+    @Bean
+    public GroupLimiterAspect groupLimiterAspect(){
+        if(RedisLimiterRegistar.enableGroup.get()){
+            return new GroupLimiterAspect();
+        }else{
+            return null;
         }
-        registerBean(beanDefinitionRegistry, LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class);
-        if (RedisLimiterRegistar.connectConsole.get()) {
-            registerBean(beanDefinitionRegistry, LimiterConstants.CLIENTCONFIG, ClientConfig.class);
+    }
+    @Bean
+    public ClientConfig clientConfig(){
+        if(RedisLimiterRegistar.connectConsole.get()){
+            return new ClientConfig();
+        }else{
+            return null;
         }
     }
 
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
-
-    }
-
-    private void registerBean(BeanDefinitionRegistry registry, String name, Class<?> beanClass) {
-        RootBeanDefinition bean = new RootBeanDefinition(beanClass);
-        registry.registerBeanDefinition(name, bean);
-    }
 
 }

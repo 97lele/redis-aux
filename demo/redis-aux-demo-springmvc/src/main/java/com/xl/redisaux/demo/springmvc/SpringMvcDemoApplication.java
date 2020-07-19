@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Date 2020/7/19 15:58
  */
 @SpringBootApplication
-@EnableLimiter
+@EnableLimiter(enableGroup = true,connectConsole = true)
 public class SpringMvcDemoApplication {
     public static void main(String args[]){
         SpringApplication.run(SpringMvcDemoApplication.class, args);

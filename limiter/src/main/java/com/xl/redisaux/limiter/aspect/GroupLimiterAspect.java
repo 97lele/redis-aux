@@ -4,6 +4,7 @@ import com.xl.redisaux.common.utils.CommonUtil;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.common.exceptions.RedisAuxException;
+import com.xl.redisaux.common.utils.NamedThreadFactory;
 import com.xl.redisaux.limiter.annonations.LimiteExclude;
 import com.xl.redisaux.limiter.annonations.LimiteGroup;
 import com.xl.redisaux.limiter.autoconfigure.LimiterGroupService;
@@ -19,12 +20,13 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author lulu
@@ -36,6 +38,7 @@ public class GroupLimiterAspect implements LimiterAspect{
     @Autowired
     private LimiterGroupService service;
 
+    private ExecutorService executor= Executors.newSingleThreadExecutor(new NamedThreadFactory("client-heartBeat-run",true));
 
     @Override
     @Pointcut("@within(com.xl.redisaux.limiter.annonations.LimiteGroup)||@annotation(com.xl.redisaux.limiter.annonations.LimiteGroup)")
@@ -48,12 +51,15 @@ public class GroupLimiterAspect implements LimiterAspect{
     public Object methodLimit(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         if (RedisLimiterRegistar.connectConsole.get() && !LimiterAspect.HAS_REQUEST.get()) {
             LimiterAspect.HAS_REQUEST.set(true);
-            TcpHeartBeatClient client=new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_HOST),TransportConfig.get(TransportConfig.CONSOLE_PORT,Integer::valueOf));
-            try {
-                client.start();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            TcpHeartBeatClient client=new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_IP),TransportConfig.get(TransportConfig.CONSOLE_PORT,Integer::valueOf));
+            executor.submit(()->{
+                try {
+                    client.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
         }
         MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
         //获取执行的方法

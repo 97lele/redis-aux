@@ -2,10 +2,8 @@ package com.xl.redisaux.limiter.config;
 
 import com.xl.redisaux.common.utils.HostNameUtil;
 import com.xl.redisaux.transport.config.TransportConfig;
-import com.xl.redisaux.transport.server.HeartBeatServer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
 import static com.xl.redisaux.transport.config.TransportConfig.*;
@@ -30,7 +28,7 @@ public class ClientConfig implements InitializingBean {
         TransportConfig.set(HEARTBEAT_CLIENT_IP,localIp==null?HostNameUtil.getIp():localIp);
         String localHostName = environment.getProperty(HOST_NAME);
         TransportConfig.set(HOST_NAME,localHostName==null? HostNameUtil.getHostName():localHostName);
-        TransportConfig.set(CONSOLE_HOST,environment.getProperty(HEARTBEAT_INTERVAL_MS));
+        TransportConfig.set(CONSOLE_IP,environment.getProperty(CONSOLE_IP));
         String consolePort = environment.getProperty(CONSOLE_PORT);
         TransportConfig.set(CONSOLE_PORT,consolePort==null?DEFAULT_RECEIVE_HEART_PORT+"":consolePort);
     }

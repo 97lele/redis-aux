@@ -33,7 +33,7 @@ public class TcpHeartBeatClient implements HeartBeatSender {
     private final AtomicInteger currentState;
     private final String host;
     private final int port;
-    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(2,
+    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1,
             new DefaultThreadFactory("redis-aux-transport-client-scheduler", true));
 
     public TcpHeartBeatClient(String host, int port) {
@@ -42,6 +42,7 @@ public class TcpHeartBeatClient implements HeartBeatSender {
         }
         this.host = host;
         this.port = port;
+        System.out.println("host:"+host+",port:"+port);
         this.currentState = new AtomicInteger(ClientStatus.CLIENT_FIRST_INIT);
     }
 
@@ -78,7 +79,7 @@ public class TcpHeartBeatClient implements HeartBeatSender {
     @Override
     public void sendHeartbeat() throws Exception {
         String data = genData();
-        System.out.println(data);
+//        System.out.println(data);
         channel.writeAndFlush(data);
     }
 
@@ -105,14 +106,11 @@ public class TcpHeartBeatClient implements HeartBeatSender {
     };
 
     public void start() throws Exception {
-        SCHEDULER.schedule(()->{
-            if (currentState.get() == ClientStatus.CLIENT_FIRST_INIT) {
-                currentState.compareAndSet(ClientStatus.CLIENT_FIRST_INIT, ClientStatus.CLIENT_STATUS_OFF);
-            }
-            shouldRetry.set(true);
-            connect(initClientBootstrap());
-        },0,TimeUnit.SECONDS);
-
+        if (currentState.get() == ClientStatus.CLIENT_FIRST_INIT) {
+            currentState.compareAndSet(ClientStatus.CLIENT_FIRST_INIT, ClientStatus.CLIENT_STATUS_OFF);
+        }
+        shouldRetry.set(true);
+        connect(initClientBootstrap());
     }
 
     private void cleanUp() {
@@ -151,8 +149,10 @@ public class TcpHeartBeatClient implements HeartBeatSender {
                             failConnectedTime.incrementAndGet();
                             channel = null;
                         } else {
+                            System.out.printf("链接成功!目标:%s:%s\n",host,port);
                             failConnectedTime.set(0);
                             channel = future.channel();
+                            System.out.println(TransportConfig.get(TransportConfig.HEARTBEAT_INTERVAL_MS));
                             SCHEDULER.scheduleAtFixedRate(new Runnable() {
                                 @Override
                                 public void run() {

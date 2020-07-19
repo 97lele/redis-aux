@@ -69,8 +69,12 @@ public class SendRequest {
             return future;
         }
         StringBuilder urlBuilder = new StringBuilder();
+        String[] split = api.split("@");
         urlBuilder.append("http://");
-        urlBuilder.append(ip).append(':').append(port).append('/').append(api);
+        urlBuilder.append(ip).append(':').append(port);
+        for (String s : split) {
+            urlBuilder.append('/').append(s);
+        }
         if (params == null) {
             params = Collections.emptyMap();
         }

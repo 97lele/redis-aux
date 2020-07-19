@@ -11,6 +11,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
+import java.net.InetAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,14 +26,15 @@ public class HeartBeatServer {
     private final String host;
     private final int port;
     private static final ExecutorService SERVER = Executors.newFixedThreadPool(1,
-            new DefaultThreadFactory("redis-aux-transport-server-scheduler",true));
+            new DefaultThreadFactory("redis-aux-transport-server-scheduler", true));
+
     public HeartBeatServer(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
     public void start() {
-        SERVER.submit(()->{
+        SERVER.submit(() -> {
             NioEventLoopGroup boss = new NioEventLoopGroup(1);
             NioEventLoopGroup worker = new NioEventLoopGroup();
             ServerBootstrap b = new ServerBootstrap();
@@ -42,7 +44,6 @@ public class HeartBeatServer {
                     .option(ChannelOption.SO_BACKLOG, 128)
                     //启用心跳保活
                     .childOption(ChannelOption.SO_KEEPALIVE, true)
-
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
@@ -56,6 +57,7 @@ public class HeartBeatServer {
 
             try {
                 ChannelFuture future = b.bind(host, port).sync();
+//                System.out.println("已就绪，等待客户端心跳,host:" + host + ",port:" + port);
                 future.channel().closeFuture().sync();
 
             } catch (InterruptedException e) {
