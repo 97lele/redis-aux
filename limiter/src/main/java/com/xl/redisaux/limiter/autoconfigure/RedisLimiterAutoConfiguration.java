@@ -1,0 +1,157 @@
+package com.xl.redisaux.limiter.autoconfigure;
+
+import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.limiter.aspect.GroupLimiterAspect;
+import com.xl.redisaux.limiter.aspect.NormalLimiterAspect;
+import com.xl.redisaux.limiter.config.ClientConfig;
+import com.xl.redisaux.limiter.core.FunnelRateLimiter;
+import com.xl.redisaux.limiter.core.BaseRateLimiter;
+import com.xl.redisaux.limiter.core.TokenRateLimiter;
+import com.xl.redisaux.limiter.core.WindowRateLimiter;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author: lele
+ * @date: 2020/1/2 下午5:12
+ */
+@SuppressWarnings("unchecked")
+@Configuration
+@AutoConfigureAfter(RedisAutoConfiguration.class)
+@ConditionalOnBean(RedisTemplate.class)
+public class RedisLimiterAutoConfiguration implements BeanDefinitionRegistryPostProcessor {
+
+    @Autowired
+    @Qualifier(LimiterConstants.LIMITER)
+    private RedisTemplate redisTemplate;
+
+    public static Map<Integer, BaseRateLimiter> rateLimiterMap = new HashMap();
+
+
+    /**
+     * 滑动窗口的lua脚本，步骤：
+     * 1.记录当前时间戳
+     * 2.把小于（当前时间戳-窗口大小得到的时间戳）的key删掉
+     * 3.返回该窗口内的成员个数
+     *
+     * @return
+     */
+    @Bean
+    public DefaultRedisScript windowLimitScript() {
+        DefaultRedisScript script = new DefaultRedisScript();
+        script.setResultType(Boolean.class);
+        script.setScriptText("redis.call('zadd',KEYS[1],ARGV[1],ARGV[1]) redis.call('zremrangebyscore',KEYS[1],0,ARGV[2]) return redis.call('zcard',KEYS[1]) <= tonumber(ARGV[3])");
+        return script;
+    }
+
+    /**
+     * 具体思想看lua脚本注释
+     *
+     * @return
+     */
+    @Bean
+    public DefaultRedisScript tokenLimitScript() {
+        DefaultRedisScript script = new DefaultRedisScript();
+        script.setResultType(Long.class);
+        script.setScriptText(tokenRateStr());
+        return script;
+    }
+
+    /**
+     * 具体思想看lua脚本注释
+     *
+     * @return
+     */
+    @Bean
+    public DefaultRedisScript funnelLimitScript() {
+        DefaultRedisScript script = new DefaultRedisScript();
+        script.setResultType(Boolean.class);
+        script.setScriptText(funnelRateStr());
+        return script;
+    }
+
+
+    private String funnelRateStr() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'funnelRate', 'requestNeed', 'water', 'lastTs')\n")
+                .append("local capacity = limitInfo[1]\n").append("local funnelRate = limitInfo[2]\n")
+                .append("local requestNeed = limitInfo[3]\n").append("local water = limitInfo[4]\n")
+                .append("local lastTs = limitInfo[5]\n").append("if capacity == false then\n")
+                .append("    capacity = tonumber(ARGV[1])\n").append("    funnelRate = tonumber(ARGV[2])\n")
+                .append("    requestNeed = tonumber(ARGV[3])\n").append("    water = 0\n")
+                .append("    lastTs = tonumber(ARGV[4])\n").append("    redis.call('hmset', KEYS[1], 'capacity', capacity, 'funnelRate', funnelRate, 'requestNeed', requestNeed, 'water', water, 'lastTs', lastTs)\n")
+                .append("    return true\n").append("else\n").append("    local nowTs = tonumber(ARGV[4])\n")
+                .append("    local waterPass = tonumber((nowTs - lastTs) * funnelRate)\n").append("    water = math.max(0, water - waterPass)\n")
+                .append("    lastTs = nowTs\n").append("    requestNeed = tonumber(requestNeed)\n").append("    if capacity - water >= requestNeed then\n")
+                .append("        water = water + requestNeed\n").append("        redis.call('hmset', KEYS[1], 'water', water, 'lastTs', lastTs)\n")
+                .append("        return true\n    end\n    return false\nend");
+        return builder.toString();
+    }
+
+    private String tokenRateStr() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("local limitInfo = redis.call('hmget', KEYS[1], 'capacity', 'funnelRate', 'leftToken', 'lastTs')\n")
+                .append("local capacity = limitInfo[1]\n").append("local tokenRate = limitInfo[2]\n")
+                .append("local leftToken = limitInfo[3]\n").append("local lastTs = limitInfo[4]\n")
+                .append("if capacity == false then\n").append("    capacity = tonumber(ARGV[1])\n")
+                .append("    tokenRate = tonumber(ARGV[2])\n").append("    leftToken = tonumber(ARGV[5])\n")
+                .append("    lastTs = tonumber(ARGV[4])\n").append("    redis.call('hmset', KEYS[1], 'capacity', capacity, 'funnelRate', tokenRate, 'leftToken', leftToken, 'lastTs', lastTs)\n")
+                .append("    return -1\nelse\n").append("    local nowTs = tonumber(ARGV[4])\n")
+                .append("    local genTokenNum = tonumber((nowTs - lastTs) * tokenRate)\n").append("    leftToken = genTokenNum + leftToken\n")
+                .append("    leftToken = math.min(capacity, leftToken)\n    lastTs = nowTs\n    local requestNeed = tonumber(ARGV[3])\n")
+                .append("    if leftToken >= requestNeed then\n        leftToken = leftToken - requestNeed\n")
+                .append("        redis.call('hmset', KEYS[1], 'leftToken', leftToken, 'lastTs', lastTs)\n")
+                .append("        return -1\n    end\n    return (requestNeed - leftToken) / tokenRate\nend");
+        return builder.toString();
+    }
+
+
+    /**
+     * 手动注册bean
+     *
+     * @param beanDefinitionRegistry
+     * @throws BeansException
+     */
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
+        rateLimiterMap.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
+        rateLimiterMap.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
+        rateLimiterMap.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
+        if (RedisLimiterRegistar.enableGroup.get()) {
+            registerBean(beanDefinitionRegistry, LimiterConstants.GROUP_LIMITER_ASPECT, GroupLimiterAspect.class);
+        }
+        registerBean(beanDefinitionRegistry, LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class);
+        if (RedisLimiterRegistar.connectConsole.get()) {
+            registerBean(beanDefinitionRegistry, LimiterConstants.CLIENTCONFIG, ClientConfig.class);
+        }
+    }
+
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
+
+    }
+
+    private void registerBean(BeanDefinitionRegistry registry, String name, Class<?> beanClass) {
+        RootBeanDefinition bean = new RootBeanDefinition(beanClass);
+        registry.registerBeanDefinition(name, bean);
+    }
+
+}

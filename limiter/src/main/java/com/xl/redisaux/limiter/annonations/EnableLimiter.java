@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.annonations;
 
-import com.xl.redisaux.limiter.autoconfigure.normal.RedisLimiterRegistar;
+import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -18,4 +18,6 @@ import java.lang.annotation.Target;
 public @interface EnableLimiter {
     //是否开启限流组
     boolean enableGroup() default false;
+    //是否与控制台连接
+    boolean connectConsole() default false;
 }

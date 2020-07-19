@@ -1,8 +1,8 @@
 package com.xl.redisaux.limiter.core;
 
-import com.xl.redisaux.limiter.annonations.normal.FunnelLimiter;
-import com.xl.redisaux.limiter.core.group.config.FunnelRateConfig;
-import com.xl.redisaux.limiter.core.group.config.LimiteGroupConfig;
+import com.xl.redisaux.limiter.annonations.FunnelLimiter;
+import com.xl.redisaux.limiter.config.FunnelRateConfig;
+import com.xl.redisaux.limiter.config.LimiteGroupConfig;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 

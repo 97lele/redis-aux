@@ -1,8 +1,8 @@
 package com.xl.redisaux.limiter.core;
 
-import com.xl.redisaux.limiter.annonations.normal.TokenLimiter;
-import com.xl.redisaux.limiter.core.group.config.LimiteGroupConfig;
-import com.xl.redisaux.limiter.core.group.config.TokenRateConfig;
+import com.xl.redisaux.limiter.annonations.TokenLimiter;
+import com.xl.redisaux.limiter.config.LimiteGroupConfig;
+import com.xl.redisaux.limiter.config.TokenRateConfig;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 

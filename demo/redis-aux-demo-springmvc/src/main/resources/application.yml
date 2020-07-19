@@ -1,0 +1,11 @@
+server:
+  port: 8081
+redisaux:
+  heartbeat:
+    connect:
+      timeout: 10000
+    interval:
+      ms: 10000
+spring:
+  application:
+    name: mvcTest

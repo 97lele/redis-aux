@@ -2,10 +2,10 @@ package com.xl.redisaux.limiter.autoconfigure;
 
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
-import com.xl.redisaux.limiter.core.group.config.FunnelRateConfig;
-import com.xl.redisaux.limiter.core.group.config.LimiteGroupConfig;
-import com.xl.redisaux.limiter.core.group.config.TokenRateConfig;
-import com.xl.redisaux.limiter.core.group.config.WindowRateConfig;
+import com.xl.redisaux.limiter.config.FunnelRateConfig;
+import com.xl.redisaux.limiter.config.LimiteGroupConfig;
+import com.xl.redisaux.limiter.config.TokenRateConfig;
+import com.xl.redisaux.limiter.config.WindowRateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

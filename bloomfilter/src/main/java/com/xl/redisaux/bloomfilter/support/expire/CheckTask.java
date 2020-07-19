@@ -1,15 +1,13 @@
 package com.xl.redisaux.bloomfilter.support.expire;
 
 import com.xl.redisaux.common.consts.BloomFilterConstants;
+import com.xl.redisaux.common.utils.NamedThreadFactory;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @SuppressWarnings("unchecked")
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
@@ -20,8 +18,9 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
 
     public CheckTask() {
         super("checkTask");
+        this.setDaemon(true);
         this.priorityQueue = new PriorityBlockingQueue();
-        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue(1024), new ThreadPoolExecutor.CallerRunsPolicy());
+        executors = new ThreadPoolExecutor(4, 4, 0, TimeUnit.SECONDS, new ArrayBlockingQueue(1024), new NamedThreadFactory("checkTask",true), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Override

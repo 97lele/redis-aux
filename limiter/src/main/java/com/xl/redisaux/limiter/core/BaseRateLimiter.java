@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core;
 
-import com.xl.redisaux.limiter.core.group.config.LimiteGroupConfig;
+import com.xl.redisaux.limiter.config.LimiteGroupConfig;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
