@@ -7,7 +7,7 @@ import com.xl.redisaux.common.exceptions.RedisAuxException;
 import com.xl.redisaux.common.utils.NamedThreadFactory;
 import com.xl.redisaux.limiter.annonations.LimiteExclude;
 import com.xl.redisaux.limiter.annonations.LimiteGroup;
-import com.xl.redisaux.limiter.autoconfigure.LimiterGroupService;
+import com.xl.redisaux.limiter.component.LimiterGroupService;
 import com.xl.redisaux.limiter.autoconfigure.RedisLimiterAutoConfiguration;
 import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
@@ -20,11 +20,14 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
+import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,12 +36,13 @@ import java.util.concurrent.Executors;
  * @Date 2020/2/17 20:13
  */
 @Aspect
-public class GroupLimiterAspect implements LimiterAspect{
+public class GroupLimiterAspect implements LimiterAspect {
 
     @Autowired
     private LimiterGroupService service;
 
-    private ExecutorService executor= Executors.newSingleThreadExecutor(new NamedThreadFactory("client-heartBeat-run",true));
+
+    private ExecutorService executor = Executors.newSingleThreadExecutor(new NamedThreadFactory("client-heartBeat-run", true));
 
     @Override
     @Pointcut("@within(com.xl.redisaux.limiter.annonations.LimiteGroup)||@annotation(com.xl.redisaux.limiter.annonations.LimiteGroup)")
@@ -49,18 +53,7 @@ public class GroupLimiterAspect implements LimiterAspect{
     @Override
     @Around("limitPoinCut()")
     public Object methodLimit(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        if (RedisLimiterRegistar.connectConsole.get() && !LimiterAspect.HAS_REQUEST.get()) {
-            LimiterAspect.HAS_REQUEST.set(true);
-            TcpHeartBeatClient client=new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_IP),TransportConfig.get(TransportConfig.CONSOLE_PORT,Integer::valueOf));
-            executor.submit(()->{
-                try {
-                    client.start();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-        }
+        checkBeforeSendHeartBeat();
         MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
         //获取执行的方法
         Method method = signature.getMethod();
@@ -69,8 +62,7 @@ public class GroupLimiterAspect implements LimiterAspect{
             return proceedingJoinPoint.proceed();
         }
         Class<?> beanClass = proceedingJoinPoint.getTarget().getClass();
-        String targetName = beanClass.getName();
-        String methodKey = CommonUtil.getMethodKey(targetName, method);
+        String methodKey = CommonUtil.getMethodKey(beanClass.getName(), method);
         //获取所在类名
         LimiteGroupConfig limitGroupConfig = null;
         LimiteGroup annonation = null;
@@ -85,34 +77,30 @@ public class GroupLimiterAspect implements LimiterAspect{
         if (limitGroupConfig == null) {
             return proceedingJoinPoint.proceed();
         }
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        String ipAddr = limitGroupConfig.isEnableBlackList() || limitGroupConfig.isEnableWhiteList() ? IpCheckUtil.getIpAddr(request) : null;
-        String requestURI = request.getRequestURI();
+        //获取ip地址和访问url
+        Pair<String, String> ipAndAddr = getIpAndRequestURI(limitGroupConfig);
+        //获取限流器
         BaseRateLimiter baseRateLimiter = RedisLimiterAutoConfiguration.rateLimiterMap.get(limitGroupConfig.getCurrentMode());
-        LimiteGroupConfig point = limitGroupConfig;
         //逻辑链处理
-        Integer handle = service.handle(point, ipAddr, requestURI, baseRateLimiter, methodKey);
-
-        if (handle != LimiterConstants.PASS) {
-            //是否计数
-            if (limitGroupConfig.isEnableQpsCount()) {
-                service.updateCount(false, point);
-            }
+        Integer handleResult = service.handle(limitGroupConfig, ipAndAddr.getFirst(), ipAndAddr.getSecond(), baseRateLimiter, methodKey);
+        //是否计数
+        boolean enableQpsCount = limitGroupConfig.isEnableQpsCount();
+        boolean pass = handleResult == LimiterConstants.PASS;
+        updateCount(enableQpsCount, pass, limitGroupConfig);
+        if (!pass) {
             String methodStr = annonation.fallback();
-            if (handle == LimiterConstants.WRONGPREFIX && limitGroupConfig.getUrlFallBack() != null) {
+            if (handleResult == LimiterConstants.WRONGPREFIX && limitGroupConfig.getUrlFallBack() != null) {
                 methodStr = limitGroupConfig.getUrlFallBack();
             }
-            if (handle == LimiterConstants.INBLACKLIST && limitGroupConfig.getBlackRuleFallback() != null) {
+            if (handleResult == LimiterConstants.INBLACKLIST && limitGroupConfig.getBlackRuleFallback() != null) {
                 methodStr = limitGroupConfig.getBlackRuleFallback();
             }
-            return this.executeFallBack(annonation.passArgs(), methodStr, beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), bean);
-        } else {
-            if (limitGroupConfig.isEnableQpsCount()) {
-                service.updateCount(true, point);
+            if(StringUtils.isEmpty(methodStr)){
+                throw new RedisAuxException("no suitable fallback method found in class: "+beanClass.getCanonicalName());
             }
-            return proceedingJoinPoint.proceed();
+            return this.executeFallBack(annonation.passArgs(), methodStr, beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), bean);
         }
+        return proceedingJoinPoint.proceed();
 
 
     }
@@ -125,5 +113,33 @@ public class GroupLimiterAspect implements LimiterAspect{
         Method fallBackMethod = passArgs ? clazz.getMethod(methodStr, paramType) : clazz.getMethod(methodStr);
         fallBackMethod.setAccessible(true);
         return passArgs ? fallBackMethod.invoke(bean, params) : fallBackMethod.invoke(bean);
+    }
+
+    private void checkBeforeSendHeartBeat() {
+        if (RedisLimiterRegistar.connectConsole.get() && !LimiterAspect.HAS_REQUEST.get()) {
+            LimiterAspect.HAS_REQUEST.set(true);
+            TcpHeartBeatClient client = new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_IP), TransportConfig.get(TransportConfig.CONSOLE_PORT, Integer::valueOf));
+            executor.submit(() -> {
+                try {
+                    client.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+        }
+    }
+
+    private void updateCount(boolean update, boolean success, LimiteGroupConfig config) {
+        if (update) {
+            service.updateCount(success, config);
+        }
+    }
+    private Pair<String,String> getIpAndRequestURI(LimiteGroupConfig limitGroupConfig){
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();
+        String ipAddr = limitGroupConfig.isEnableBlackList() || limitGroupConfig.isEnableWhiteList() ? IpCheckUtil.getIpAddr(request) : "";
+        String requestURI = request.getRequestURI();
+        return  Pair.of(ipAddr, requestURI);
     }
 }

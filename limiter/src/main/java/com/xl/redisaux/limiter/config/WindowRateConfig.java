@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.config;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -19,6 +20,22 @@ public class WindowRateConfig {
 
     public WindowRateConfig() {
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WindowRateConfig that = (WindowRateConfig) o;
+        return type == that.type &&
+                Objects.equals(passCount, that.passCount) &&
+                duringUnit == that.duringUnit &&
+                Objects.equals(during, that.during);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, passCount, duringUnit, during);
     }
 
     public WindowRateConfig(Builder builder) {
@@ -93,4 +110,5 @@ public class WindowRateConfig {
             return new WindowRateConfig(this);
         }
     }
+
 }

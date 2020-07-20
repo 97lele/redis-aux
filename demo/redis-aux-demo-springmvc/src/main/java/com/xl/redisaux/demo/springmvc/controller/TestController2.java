@@ -1,6 +1,6 @@
 package com.xl.redisaux.demo.springmvc.controller;
 
-import com.xl.redisaux.demo.springmvc.vo.Result;
+import com.xl.redisaux.common.vo.Result;
 import com.xl.redisaux.limiter.annonations.FunnelLimiter;
 import com.xl.redisaux.limiter.annonations.TokenLimiter;
 import com.xl.redisaux.limiter.annonations.WindowLimiter;

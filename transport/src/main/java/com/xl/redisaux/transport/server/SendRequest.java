@@ -18,6 +18,8 @@ import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.util.StringUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -32,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2020/7/19 13:54
  */
 public class SendRequest {
+    //基于nio的异步请求
     private CloseableHttpAsyncClient httpClient;
     private static final Charset DEFAULT_CHARSET = CharsetUtil.UTF_8;
 
@@ -62,19 +65,19 @@ public class SendRequest {
         return httpPost;
     }
 
-    public CompletableFuture<String> executeCommand(String ip, int port, String api, Map<String, String> params, boolean useHttpPost) {
+    public CompletableFuture<String> executeCommand(String ip, int port, String prefix,String api, Map<String, String> params, boolean useHttpPost) {
         CompletableFuture<String> future = new CompletableFuture<>();
         if (ip.isEmpty() || api.isEmpty()) {
             future.completeExceptionally(new IllegalArgumentException("Bad URL or command name"));
             return future;
         }
         StringBuilder urlBuilder = new StringBuilder();
-        String[] split = api.split("@");
         urlBuilder.append("http://");
-        urlBuilder.append(ip).append(':').append(port);
-        for (String s : split) {
-            urlBuilder.append('/').append(s);
+        StringBuilder url = urlBuilder.append(ip).append(':').append(port);
+        if(!StringUtils.isEmpty(prefix)){
+            url.append('/').append(prefix);
         }
+        url.append('/').append(api);
         if (params == null) {
             params = Collections.emptyMap();
         }

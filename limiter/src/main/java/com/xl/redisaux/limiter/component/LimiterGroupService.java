@@ -1,4 +1,4 @@
-package com.xl.redisaux.limiter.autoconfigure;
+package com.xl.redisaux.limiter.component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,15 +8,15 @@ import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.common.exceptions.RedisAuxException;
 import com.xl.redisaux.common.utils.qps.QpsCounter;
 import com.xl.redisaux.common.utils.qps.WindowQpsCounter;
-import com.xl.redisaux.limiter.core.BaseRateLimiter;
+import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
 import com.xl.redisaux.limiter.config.LimiteGroupConfig;
+import com.xl.redisaux.limiter.core.BaseRateLimiter;
 import com.xl.redisaux.limiter.core.handler.GroupHandler;
 import com.xl.redisaux.limiter.core.handler.GroupHandlerList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lulu
  * @Date 2020/2/15 21:15
  */
-@Component
+
 public class LimiterGroupService {
 
 
@@ -37,13 +37,15 @@ public class LimiterGroupService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private GroupHandlerList groupHandlers;
+    private final GroupHandlerList groupHandlers;
 
-    private DefaultRedisScript getGroupScript;
+    private final DefaultRedisScript getGroupScript;
 
-    private DefaultRedisScript delGroupScript;
+    private final DefaultRedisScript delGroupScript;
 
-    private Map<String, QpsCounter> qpsCounterMap;
+    private final Map<String, QpsCounter> qpsCounterMap;
+    private  ConcurrentHashMap<String, String> groupIdMap;
+
 
     public LimiterGroupService() {
         groupHandlers = new GroupHandlerList();
@@ -53,6 +55,7 @@ public class LimiterGroupService {
         delGroupScript = new DefaultRedisScript();
         delGroupScript.setScriptText(delGroupScript());
         qpsCounterMap = new ConcurrentHashMap<>();
+        groupIdMap = RedisLimiterRegistar.connectConsole.get()?new ConcurrentHashMap():null;
     }
 
     /**
@@ -111,7 +114,7 @@ public class LimiterGroupService {
         String id = config.getId();
         QpsCounter qpsCounter = qpsCounterMap.get(id);
         if (qpsCounter == null) {
-            qpsCounter = new WindowQpsCounter(config.getBucketSize(),config.getCountDuring(),config.getCountDuringUnit());
+            qpsCounter = new WindowQpsCounter(config.getBucketSize(), config.getCountDuring(), config.getCountDuringUnit());
         }
         qpsCounter.pass(success);
         qpsCounterMap.put(id, qpsCounter);
@@ -150,6 +153,7 @@ public class LimiterGroupService {
     }
 
     public LimiteGroupConfig getLimiterConfig(String groupId) {
+        addGroupIdWhenExecute(groupId);
         LimiteGroupConfig group = BaseRateLimiter.rateLimitGroupConfigMap.get(groupId);
         if (group == null) {
             reload(groupId);
@@ -197,6 +201,15 @@ public class LimiterGroupService {
 
     }
 
+    private void addGroupIdWhenExecute(String groupId) {
+        if(RedisLimiterRegistar.connectConsole.get()){
+            this.groupIdMap.put(groupId, "");
+        }
+    }
+    public Set<String> getGroupIds(){
+        return groupIdMap==null?new HashSet():groupIdMap.keySet();
+    }
+
     /**
      * 添加拦截器
      *
@@ -211,6 +224,7 @@ public class LimiterGroupService {
         this.groupHandlers.remove(groupHandler);
         return this;
     }
+
 
     public int handle(LimiteGroupConfig limitGroupConfig, String ip,
                       String url, BaseRateLimiter baseRateLimiter,

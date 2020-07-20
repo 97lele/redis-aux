@@ -1,7 +1,7 @@
 package com.xl.redisaux.demo.springmvc.config;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
-import com.xl.redisaux.limiter.autoconfigure.LimiterGroupService;
+import com.xl.redisaux.limiter.component.LimiterGroupService;
 import com.xl.redisaux.limiter.config.FunnelRateConfig;
 import com.xl.redisaux.limiter.config.LimiteGroupConfig;
 import com.xl.redisaux.limiter.config.TokenRateConfig;

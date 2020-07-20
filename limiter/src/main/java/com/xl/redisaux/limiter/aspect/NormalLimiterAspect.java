@@ -55,10 +55,9 @@ public class NormalLimiterAspect implements LimiterAspect{
         MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
         Class<?> beanClass = proceedingJoinPoint.getTarget().getClass();
         //获取所在类名
-        String targetName = beanClass.getName();
         //获取执行的方法
         Method method = signature.getMethod();
-        String methodKey = CommonUtil.getMethodKey(targetName, method);
+        String methodKey = CommonUtil.getMethodKey(beanClass.getName(), method);
         //该注解用于获取对应限流器
         LimiterType baseLimiter = null;
         Annotation target = null;

@@ -35,8 +35,8 @@ public class LimiteGroupConfig {
         this.countDuring = builder.countDuring == null ? 1 : builder.countDuring;
         this.enableQpsCount = builder.enableCount == null ? false : builder.enableCount;
         this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.MINUTES : builder.countDuringUnit;
-        this.urlFallBack = builder.urlFallBack==null?"":builder.urlFallBack;
-        this.bucketSize=builder.bucketSize==null?10:builder.bucketSize;
+        this.urlFallBack = builder.urlFallBack == null ? "" : builder.urlFallBack;
+        this.bucketSize = builder.bucketSize == null ? 10 : builder.bucketSize;
 
     }
 
@@ -159,32 +159,49 @@ public class LimiteGroupConfig {
         return currentMode.intValue();
     }
 
-    public void setCurrentMode(Integer currentMode) {
-        this.currentMode.set(currentMode);
+    public boolean setCurrentMode(Integer currentMode) {
+        boolean equals = this.currentMode.equals(currentMode);
+        if(!equals){
+            this.currentMode.set(currentMode);
+        }
+        return !equals;
     }
 
     public FunnelRateConfig getFunnelRateConfig() {
         return funnelRateConfig;
     }
 
-    public void setFunnelRateConfig(FunnelRateConfig funnelRateConfig) {
-        this.funnelRateConfig = funnelRateConfig;
+    public boolean setFunnelRateConfig(FunnelRateConfig funnelRateConfig) {
+        boolean b = !this.funnelRateConfig.equals(funnelRateConfig);
+        if (b) {
+            this.funnelRateConfig = funnelRateConfig;
+        }
+        return b;
     }
 
     public TokenRateConfig getTokenRateConfig() {
         return tokenRateConfig;
     }
 
-    public void setTokenRateConfig(TokenRateConfig tokenRateConfig) {
-        this.tokenRateConfig = tokenRateConfig;
+    public boolean setTokenRateConfig(TokenRateConfig tokenRateConfig) {
+        boolean b = !this.tokenRateConfig.equals(tokenRateConfig);
+        if (b) {
+            this.tokenRateConfig = tokenRateConfig;
+        }
+        return b;
     }
 
     public WindowRateConfig getWindowRateConfig() {
         return windowRateConfig;
     }
 
-    public void setWindowRateConfig(WindowRateConfig windowRateConfig) {
-        this.windowRateConfig = windowRateConfig;
+    public boolean setWindowRateConfig(
+            WindowRateConfig windowRateConfig) {
+        boolean b = !this.windowRateConfig.equals(windowRateConfig);
+        if (b) {
+            this.windowRateConfig = windowRateConfig;
+        }
+        return b;
     }
 
     public boolean isEnableBlackList() {
@@ -271,7 +288,6 @@ public class LimiteGroupConfig {
 
         return Collections.singletonList(CommonUtil.getLimiterName(id, methodKey, LimiterConstants.WINDOW));
     }
-
 
 
     public void destory() {
@@ -379,13 +395,14 @@ public class LimiteGroupConfig {
             return this;
         }
 
-        public Builder countDuring(Integer countDuring,TimeUnit timeUnit) {
+        public Builder countDuring(Integer countDuring, TimeUnit timeUnit) {
             this.countDuring = countDuring;
-            this.countDuringUnit=timeUnit;
+            this.countDuringUnit = timeUnit;
             return this;
         }
-        public Builder bucketSize(Integer bucketSize){
-            this.bucketSize=bucketSize;
+
+        public Builder bucketSize(Integer bucketSize) {
+            this.bucketSize = bucketSize;
             return this;
         }
 

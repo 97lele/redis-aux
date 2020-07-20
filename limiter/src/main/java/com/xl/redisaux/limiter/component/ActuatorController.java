@@ -1,4 +1,4 @@
-package com.xl.redisaux.limiter.autoconfigure;
+package com.xl.redisaux.limiter.component;
 
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author lulu
@@ -52,13 +53,18 @@ public class ActuatorController {
                                            @RequestParam("unableUrl") String unableUrl
                                            ) {
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        boolean change=false;
         if (enableUrl != null) {
+            change=true;
             limiter.setEnableURLPrefix(enableUrl);
         }
         if (unableUrl != null) {
+            change=true;
             limiter.setUnableURLPrefix(unableUrl);
         }
-        limiterGroupService.save(limiter, true, false);
+        if(change){
+            limiterGroupService.save(limiter, true, false);
+        }
         return limiter;
     }
 
@@ -69,10 +75,9 @@ public class ActuatorController {
             , @RequestParam("removeOther") Boolean removeOther
     ) {
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
-        if (mode < 4 && mode > 0) {
-            limiter.setCurrentMode(mode);
+        if (mode < 4 && mode > 0&& limiter.setCurrentMode(mode)) {
+            limiterGroupService.save(limiter, true, removeOther);
         }
-        limiterGroupService.save(limiter, true, removeOther);
         return limiter;
     }
 
@@ -89,8 +94,9 @@ public class ActuatorController {
                 .funnelRate(funnelRate).requestNeed(requestNeed)
                 .funnelRateUnit(TimeUnitEnum.getTimeUnit(funnelRateUnit)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
-        limiter.setFunnelRateConfig(config);
-        limiterGroupService.save(limiter, true, false);
+        if(limiter.setFunnelRateConfig(config)){
+            limiterGroupService.save(limiter, true, false);
+        }
         return limiter;
     }
 
@@ -102,8 +108,9 @@ public class ActuatorController {
     ) {
         WindowRateConfig config = WindowRateConfig.of().passCount(passCount).during(during).duringUnit(TimeUnitEnum.getTimeUnit(mode)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
-        limiter.setWindowRateConfig(config);
-        limiterGroupService.save(limiter, true, false);
+        if(limiter.setWindowRateConfig(config)){
+            limiterGroupService.save(limiter, true, false);
+        }
         return limiter;
     }
 
@@ -118,15 +125,20 @@ public class ActuatorController {
         TokenRateConfig config = TokenRateConfig.of().capacity(capacity).initToken(initToken).tokenRate(tokenRate)
                 .requestNeed(requestNeed).tokenRateUnit(TimeUnitEnum.getTimeUnit(mode)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
-        limiter.setTokenRateConfig(config);
-        limiterGroupService.save(limiter, true, false);
+        if(limiter.setTokenRateConfig(config)){
+            limiterGroupService.save(limiter, true, false);
+        }
         return limiter;
     }
 
-    @GetMapping("/redis-aux/getCount/{groupId}")
-    public Map<String, String> changeCountConfig(@PathVariable("groupId") String groupId
+    @GetMapping("/redis-aux/getCount")
+    public Map<String, String> changeCountConfig(@RequestParam("groupId") String groupId
     ) {
         return limiterGroupService.getCount(groupId);
+    }
+    @GetMapping("/redis-aux/getGroupIds")
+    public Set<String> getGroupIds(){
+        return limiterGroupService.getGroupIds();
     }
 
 }

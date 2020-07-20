@@ -132,22 +132,5 @@ public class RedisLimiterAutoConfiguration {
         return new NormalLimiterAspect();
     }
 
-    @Bean
-    public GroupLimiterAspect groupLimiterAspect(){
-        if(RedisLimiterRegistar.enableGroup.get()){
-            return new GroupLimiterAspect();
-        }else{
-            return null;
-        }
-    }
-    @Bean
-    public ClientConfig clientConfig(){
-        if(RedisLimiterRegistar.connectConsole.get()){
-            return new ClientConfig();
-        }else{
-            return null;
-        }
-    }
-
 
 }

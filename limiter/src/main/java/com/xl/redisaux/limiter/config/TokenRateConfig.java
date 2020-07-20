@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.config;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +33,24 @@ public class TokenRateConfig {
 
     public TokenRateConfig() {
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TokenRateConfig that = (TokenRateConfig) o;
+        return type == that.type &&
+                Objects.equals(capacity, that.capacity) &&
+                Objects.equals(tokenRate, that.tokenRate) &&
+                Objects.equals(requestNeed, that.requestNeed) &&
+                tokenRateUnit == that.tokenRateUnit &&
+                Objects.equals(initToken, that.initToken);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, capacity, tokenRate, requestNeed, tokenRateUnit, initToken);
     }
 
     public TokenRateConfig(Builder builder) {

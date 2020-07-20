@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.config;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,6 +33,24 @@ public class FunnelRateConfig {
     public FunnelRateConfig(){
 
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FunnelRateConfig that = (FunnelRateConfig) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(capacity, that.capacity) &&
+                Objects.equals(funnelRate, that.funnelRate) &&
+                Objects.equals(requestNeed, that.requestNeed) &&
+                funnelRateUnit == that.funnelRateUnit;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, capacity, funnelRate, requestNeed, funnelRateUnit);
+    }
+
     public FunnelRateConfig(Builder builder){
         this.capacity =builder.capacity;
         this.funnelRate =builder.funnelRate;
