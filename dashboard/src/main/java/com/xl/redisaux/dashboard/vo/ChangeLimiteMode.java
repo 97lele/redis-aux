@@ -1,10 +1,10 @@
-package com.xl.redisaux.dashboard.entity;
+package com.xl.redisaux.dashboard.vo;
 
 /**
  * @Author tanjl11
  * @create 2020/7/20 21:25
  */
-public class ChangeLimiteMode extends BaseEntity {
+public class ChangeLimiteMode extends BaseVO {
     public Integer mode;
     public Boolean removeOther;
 

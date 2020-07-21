@@ -1,10 +1,10 @@
-package com.xl.redisaux.dashboard.entity;
+package com.xl.redisaux.dashboard.vo;
 
 /**
  * @Author tanjl11
  * @create 2020/7/20 21:39
  */
-public class ChangeWindowConfig extends BaseEntity {
+public class ChangeWindowConfig extends BaseVO {
     public Long passCount;
     public Long during;
     public Integer duringUnit;

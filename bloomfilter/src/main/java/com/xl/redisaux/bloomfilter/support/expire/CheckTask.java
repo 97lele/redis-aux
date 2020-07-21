@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unchecked")
+/**
+ * 检查过期时间任务
+ */
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
     private List<KeyExpireListener> listeners = new ArrayList();
     private PriorityBlockingQueue<WatiForDeleteKey> priorityQueue;
     private volatile Boolean run = true;
+    //用于提交过期任务
     private ThreadPoolExecutor executors;
 
     public CheckTask() {

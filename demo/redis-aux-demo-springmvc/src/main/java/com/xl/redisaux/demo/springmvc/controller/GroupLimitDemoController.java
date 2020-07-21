@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @LimiteGroup(groupId = "1", fallback = "test")
-public class TestController {
+public class GroupLimitDemoController {
 
     @GetMapping("/ok")
     public String ok() {

@@ -6,6 +6,7 @@ import com.xl.redisaux.limiter.core.BaseRateLimiter;
 /**
  * @author lulu
  * @Date 2020/2/17 10:05
+ * 拦截器接口
  */
 
 public interface GroupHandler {

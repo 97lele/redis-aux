@@ -35,6 +35,7 @@ public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
                 .getAnnotationAttributes(EnableBloomFilter.class.getCanonicalName());
         transaction = (Boolean) attributes.get("transaction");
         String[] scanPaths = (String[]) attributes.get(BloomFilterConstants.SCAPATH);
+        //扫描并存储注解上的信息
         if (!scanPaths[0].trim().equals("")) {
             bloomFilterFieldMap = new HashMap();
             ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
@@ -51,15 +52,13 @@ public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
                     if (clazz.isAnnotationPresent(BloomFilterPrefix.class)) {
                         final Map<String, BloomFilterProperty> map = new HashMap();
                         final String prefix = clazz.getAnnotation(BloomFilterPrefix.class).prefix();
-                        ReflectionUtils.doWithFields(clazz, new ReflectionUtils.FieldCallback() {
-                            @Override
-                            public void doWith(Field field) throws IllegalArgumentException, IllegalAccessException {
-                                field.setAccessible(Boolean.TRUE);
-                                if (field.isAnnotationPresent(BloomFilterProperty.class)) {
-                                    String key = field.getName();
-                                    String keyName = CommonUtil.getKeyName(prefix, key);
-                                    map.put(keyName, field.getAnnotation(BloomFilterProperty.class));
-                                }
+                        //查看clazz是否有对应的注解，并生成键名和对应的注解
+                        ReflectionUtils.doWithFields(clazz, field -> {
+                            field.setAccessible(Boolean.TRUE);
+                            if (field.isAnnotationPresent(BloomFilterProperty.class)) {
+                                String key = field.getName();
+                                String keyName = CommonUtil.getKeyName(prefix, key);
+                                map.put(keyName, field.getAnnotation(BloomFilterProperty.class));
                             }
                         });
                         bloomFilterFieldMap.put(prefix, map);

@@ -3,17 +3,13 @@ package com.xl.redisaux.dashboard.controller;
 import com.xl.redisaux.common.exceptions.RedisAuxException;
 import com.xl.redisaux.common.vo.Result;
 import com.xl.redisaux.dashboard.consts.PathConsts;
-import com.xl.redisaux.dashboard.entity.*;
+import com.xl.redisaux.dashboard.vo.*;
 import com.xl.redisaux.transport.server.HeartBeatServerHandler;
 import com.xl.redisaux.transport.server.SendRequest;
 import com.xl.redisaux.transport.vo.NodeVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.ReflectUtils;
-import org.springframework.context.annotation.Bean;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -132,15 +128,15 @@ public class ManagerRuleController {
         return Result.success(windowConfig.groupId);
     }
     @PostMapping("/sendCommond/getGroupIds")
-    public Result<String> getGroupIds(@RequestBody BaseEntity baseEntity) throws ExecutionException, InterruptedException {
-        CompletableFuture<String> stringCompletableFuture = sendRequest.executeCommand(baseEntity.ip, baseEntity.port, PathConsts.prefix,PathConsts.GETGROUPIDS, null, false);
+    public Result<String> getGroupIds(@RequestBody BaseVO baseVO) throws ExecutionException, InterruptedException {
+        CompletableFuture<String> stringCompletableFuture = sendRequest.executeCommand(baseVO.ip, baseVO.port, PathConsts.prefix,PathConsts.GETGROUPIDS, null, false);
         return Result.success(stringCompletableFuture.get());
     }
     @PostMapping("/sendCommond/getCount")
-    public Result<String> getCount(@RequestBody BaseEntity baseEntity) throws ExecutionException, InterruptedException {
+    public Result<String> getCount(@RequestBody BaseVO baseVO) throws ExecutionException, InterruptedException {
         Map<String,String> map=new HashMap<>();
-        map.put("groupId",baseEntity.groupId);
-        CompletableFuture<String> stringCompletableFuture = sendRequest.executeCommand(baseEntity.ip, baseEntity.port,PathConsts.prefix, PathConsts.GETCOUNT, map, false);
+        map.put("groupId", baseVO.groupId);
+        CompletableFuture<String> stringCompletableFuture = sendRequest.executeCommand(baseVO.ip, baseVO.port,PathConsts.prefix, PathConsts.GETCOUNT, map, false);
         return Result.success(stringCompletableFuture.get());
     }
 

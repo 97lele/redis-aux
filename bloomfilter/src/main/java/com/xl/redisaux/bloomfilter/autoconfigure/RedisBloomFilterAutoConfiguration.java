@@ -40,7 +40,10 @@ class RedisBloomFilterAutoConfiguration {
     private RedisTemplate redisTemplate;
 
 
-
+    /**
+     * 注册RedisBloomFilter类
+     * @return
+     */
     @Bean
     @ConditionalOnMissingBean(RedisBloomFilter.class)
     public RedisBloomFilter redisBloomFilter() {

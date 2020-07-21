@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author lulu
  * @Date 2020/7/18 20:10
  * 服务端负责接受心跳数据
+ * TODO 心跳情况监控
  */
 public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
     public static Map<String, NodeVO> nodeVOMap = new ConcurrentHashMap<>();

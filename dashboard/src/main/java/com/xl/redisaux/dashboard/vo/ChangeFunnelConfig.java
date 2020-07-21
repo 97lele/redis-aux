@@ -1,10 +1,10 @@
-package com.xl.redisaux.dashboard.entity;
+package com.xl.redisaux.dashboard.vo;
 
 /**
  * @Author tanjl11
  * @create 2020/7/20 21:38
  */
-public class ChangeFunnelConfig extends BaseEntity {
+public class ChangeFunnelConfig extends BaseVO {
     public Double requestNeed;
     public Double capacity;
     public Double funnelRate;

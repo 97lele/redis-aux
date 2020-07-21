@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author: lele
  * @date: 2019/12/20 上午11:35
+ * 每个item对应不同的键类型
  */
 @SuppressWarnings("unchecked")
 public class RedisBloomFilter {

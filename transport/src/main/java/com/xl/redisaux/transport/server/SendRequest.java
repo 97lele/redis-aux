@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author lulu
  * @Date 2020/7/19 13:54
+ * TODO 改为netty实现
  */
 public class SendRequest {
     //基于nio的异步请求

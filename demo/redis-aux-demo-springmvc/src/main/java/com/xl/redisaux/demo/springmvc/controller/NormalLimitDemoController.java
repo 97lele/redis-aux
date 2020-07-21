@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-public class TestController2 {
+public class NormalLimitDemoController {
  
     @GetMapping("ha")
     @WindowLimiter(during = 10,passCount = 5)
@@ -26,7 +26,7 @@ public class TestController2 {
     }
     //默认为秒，该配置为每秒生成0.5个令牌
     @GetMapping("ha3")
-    @TokenLimiter(capacity = 5,tokenRate = 0.5,requestNeed = 1)
+    @TokenLimiter(capacity = 5,tokenRate = 0.5)
     public String test3() {
         return "hihi3";
     }

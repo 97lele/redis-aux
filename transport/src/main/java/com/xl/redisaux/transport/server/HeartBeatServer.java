@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * @author lulu
  * @Date 2020/7/18 20:43
+ * netty心跳server
  */
 public class HeartBeatServer {
 

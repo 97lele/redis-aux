@@ -23,7 +23,9 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings("unchecked")
 public class GetBloomFilterField {
-
+    /**
+     * serializedLambda支持序列化，用于获取lambda表达式的相关属性
+     */
     private static Map<Class, SerializedLambda> map = new ConcurrentHashMap();
     private static Map<String, BloomFilterInfo> bloomFilterInfoMap = new ConcurrentHashMap();
 
@@ -31,6 +33,7 @@ public class GetBloomFilterField {
         SerializedLambda lambda = map.get(sFunction.getClass());
         if (lambda == null) {
             try {
+                //writeReplace方法用于获取SerializedLamda对象
                 Method writeReplace = sFunction.getClass().getDeclaredMethod(BloomFilterConstants.LAMBDAMETHODNAME);
                 writeReplace.setAccessible(true);
                 lambda = (SerializedLambda) writeReplace.invoke(sFunction);
@@ -43,9 +46,12 @@ public class GetBloomFilterField {
             }
             map.put(sFunction.getClass(), lambda);
         }
+        //获取属性名
         String fieldName = getFieldName(lambda);
         String capturingClass = lambda.getImplClass();
+        //获取键名
         String infoKey = CommonUtil.getKeyName(fieldName, capturingClass);
+        //获取包装类信息
         BloomFilterInfo res = bloomFilterInfoMap.get(infoKey);
         if (res == null) {
             capturingClass = capturingClass.replace("/", ".");

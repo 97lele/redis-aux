@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * @author lulu
  * @Date 2020/7/1 17:49
+ * 前缀树封装类
  */
 public class IpRuleHolder {
     private volatile PatriciaTrie<Set<String>> ipTrie;
@@ -20,12 +21,12 @@ public class IpRuleHolder {
     }
 
     public void setRule(String rule) {
-        this.rule = new String(rule);
+        this.rule = rule;
     }
 
     public void addRule(String rule, String id) {
         if (ipTrie == null) {
-            init(rule, id);
+            init(rule);
         }
         lock.writeLock().lock();
         Set<String> rules = IpCheckUtil.parseRule(rule);
@@ -42,10 +43,10 @@ public class IpRuleHolder {
     }
 
 
-    public synchronized void init(String rule, String id) {
+    private synchronized void init(String rule) {
         ipTrie = new PatriciaTrie();
         lock = new ReentrantReadWriteLock();
-        this.rule = new String(rule);
+        this.rule = rule;
     }
 
 
