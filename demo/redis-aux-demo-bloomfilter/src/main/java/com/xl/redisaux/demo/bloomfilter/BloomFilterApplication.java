@@ -6,6 +6,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 /**
  * @Author tanjl11
  * @create 2020/7/19 20:59
@@ -17,8 +21,8 @@ public class BloomFilterApplication {
         ConfigurableApplicationContext run = SpringApplication.run(BloomFilterApplication.class, args);
         BloomFilterTestService bean = run.getBean(BloomFilterTestService.class);
         bean.lambdaTest();
-        bean.simpleTest();
-        bean.timeOutTest();
+        bean.simpleTest(false);
+        bean.timeOutTest(true);
         run.stop();
 
     }

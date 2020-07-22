@@ -26,11 +26,12 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-//        System.out.println(msg.toString());
+        System.out.println(msg.toString());
         String[] split = msg.toString().split("-");
         String name = NodeVO.getName(split[0], split[1]);
         NodeVO vo = new NodeVO(split);
         nodeVOMap.put(name, vo);
+
     }
 
     @Override

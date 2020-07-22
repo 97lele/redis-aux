@@ -58,7 +58,7 @@ public class HeartBeatServer {
 
             try {
                 ChannelFuture future = b.bind(host, port).sync();
-//                System.out.println("已就绪，等待客户端心跳,host:" + host + ",port:" + port);
+                System.out.println("已就绪，等待客户端心跳,host:" + host + ",port:" + port);
                 future.channel().closeFuture().sync();
 
             } catch (InterruptedException e) {

@@ -10,7 +10,7 @@ import com.xl.redisaux.bloomfilter.annonations.EnableBloomFilter;
  */
 @BloomFilterPrefix
 public class TestEntity {
-    @BloomFilterProperty(exceptionInsert = 5,timeout = 30,local = false)
+    @BloomFilterProperty(exceptionInsert = 10,local = false)
     private String name;
 
     public String getName() {
