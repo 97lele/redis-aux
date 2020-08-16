@@ -6,7 +6,6 @@ package com.xl.redisaux.limiter.core.handler;
  * @Date 2020/2/17 11:06
  */
 public final class GroupHandlerFactory {
-    private GroupHandlerFactory(){};
     public static GroupHandler ipWhiteHandler() {
         return new IpWhiteHandler();
     }

@@ -7,7 +7,6 @@ import com.xl.redisaux.limiter.annonations.WindowLimiter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -21,7 +20,7 @@ public class NormalLimitDemoController {
     //每秒通过0.5个请求
     @GetMapping("ha2/{userName}")
     @FunnelLimiter(capacity = 5,funnelRate = 0.5,requestNeed = 1,fallback = "test",passArgs = true)
-    public Result<String> test2(@PathVariable("userName")String userName) throws NoSuchMethodException {
+    public Result<String> test2(@PathVariable("userName")String userName)  {
         return Result.success("ok");
     }
     //默认为秒，该配置为每秒生成0.5个令牌
@@ -36,8 +35,7 @@ public class NormalLimitDemoController {
     public String test4() {
         return "hihi4";
     }
- 
- 
+
     public Result<String> test(String userName){
         return Result.success("对不起:"+userName+",挤不进去太多人了");
     }

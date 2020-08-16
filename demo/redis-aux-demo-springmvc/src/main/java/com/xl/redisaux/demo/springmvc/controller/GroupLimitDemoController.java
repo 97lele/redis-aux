@@ -27,6 +27,7 @@ public class GroupLimitDemoController {
     @GetMapping("/user/t")
     @LimiteExclude
     public String usert() {
+        System.out.println("我被访问了");
         return "usert";
     }
 

@@ -1,4 +1,4 @@
-package com.xl.redisaux.dashboard.vo;
+package com.xl.redisaux.transport.vo;
 
 /**
  * @Author tanjl11

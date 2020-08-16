@@ -1,3 +1,4 @@
+/*
 package com.xl.redisaux.dashboard.controller;
 
 import com.xl.redisaux.common.exceptions.RedisAuxException;
@@ -15,10 +16,12 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+*/
 /**
  * @author lulu
  * @Date 2020/7/19 14:18
- */
+ *//*
+
 @RestController
 public class ManagerRuleController {
     @Autowired
@@ -163,3 +166,4 @@ public class ManagerRuleController {
     }
 
 }
+*/

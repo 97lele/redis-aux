@@ -1,37 +1,50 @@
 package com.xl.redisaux.transport.server;
 
+import com.xl.redisaux.transport.server.handler.DispatchHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 
 /**
  * @author lulu
  * @Date 2020/7/18 20:43
  * netty心跳server
  */
-public class HeartBeatServer {
+public class RedisAuxNettyServer {
+    private Logger log = LoggerFactory.getLogger(RedisAuxNettyServer.class);
 
     private final String host;
     private final int port;
-    private static final ExecutorService SERVER = Executors.newFixedThreadPool(1,
-            new DefaultThreadFactory("redis-aux-transport-server-scheduler", true));
+    private static final ExecutorService SERVER =
+            new ThreadPoolExecutor(1, 1, 0, TimeUnit.SECONDS, new ArrayBlockingQueue(1024), new DefaultThreadFactory("redis-aux-transport-server-scheduler", false), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    public HeartBeatServer(String host, int port) {
+    private DispatchHandler handler;
+
+    public RedisAuxNettyServer(String host, int port, String prefix, String handlePath) {
         this.host = host;
         this.port = port;
+        handler=DispatchHandler.getInstance();
+        try {
+            handler.init(prefix,handlePath);
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void start() {
@@ -49,16 +62,22 @@ public class HeartBeatServer {
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline()
+                                    .addLast(new HttpRequestDecoder())
+                                    .addLast(new HttpObjectAggregator(500*1024))
+                                    .addLast(new HttpResponseEncoder())
+                                    .addLast(new UserRequestNettyHandler(handler))
                                     .addLast(new StringDecoder(CharsetUtil.UTF_8)).addLast(new StringEncoder(CharsetUtil.UTF_8))
-                                    .addLast(new IdleStateHandler(0, 0, 30))
+                                    .addLast(new IdleStateHandler(10, 0, 0))
                                     .addLast(new HeartBeatServerHandler())
+                                    .addLast(new LineBasedFrameDecoder(1024))
+
                             ;
                         }
                     });
 
             try {
                 ChannelFuture future = b.bind(host, port).sync();
-                System.out.println("已就绪，等待客户端心跳,host:" + host + ",port:" + port);
+                log.info("已就绪，等待客户端心跳,host:{}, port:{}", host, port);
                 future.channel().closeFuture().sync();
 
             } catch (InterruptedException e) {

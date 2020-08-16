@@ -134,6 +134,7 @@ public class ActuatorController {
     @GetMapping("/redis-aux/getCount")
     public Map<String, String> changeCountConfig(@RequestParam("groupId") String groupId
     ) {
+        System.out.println("我被访问了");
         return limiterGroupService.getCount(groupId);
     }
     @GetMapping("/redis-aux/getGroupIds")

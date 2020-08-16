@@ -7,15 +7,16 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.internal.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.StringJoiner;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 心跳包客户端
  */
 public class TcpHeartBeatClient implements HeartBeatSender {
-
     private EventLoopGroup eventLoopGroup;
     private Channel channel;
     private final AtomicInteger failConnectedTime = new AtomicInteger(0);
@@ -33,8 +33,9 @@ public class TcpHeartBeatClient implements HeartBeatSender {
     private final AtomicInteger currentState;
     private final String host;
     private final int port;
-    private static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1,
-            new DefaultThreadFactory("redis-aux-transport-client-scheduler", true));
+    private static final ScheduledExecutorService SCHEDULER =
+            new ScheduledThreadPoolExecutor(1, new DefaultThreadFactory("redis-aux-transport-client-scheduler", true), new ThreadPoolExecutor.DiscardOldestPolicy());
+
 
     public TcpHeartBeatClient(String host, int port) {
         if (StringUtil.isNullOrEmpty(host) || port <= 0) {
@@ -42,7 +43,6 @@ public class TcpHeartBeatClient implements HeartBeatSender {
         }
         this.host = host;
         this.port = port;
-        System.out.println("host:"+host+",port:"+port);
         this.currentState = new AtomicInteger(ClientStatus.CLIENT_FIRST_INIT);
     }
 
@@ -51,7 +51,7 @@ public class TcpHeartBeatClient implements HeartBeatSender {
      *
      * @return
      */
-    private Bootstrap initClientBootstrap()  {
+    private Bootstrap initClientBootstrap() {
         Bootstrap b = new Bootstrap();
         eventLoopGroup = new NioEventLoopGroup();
         b.group(eventLoopGroup)
@@ -65,7 +65,9 @@ public class TcpHeartBeatClient implements HeartBeatSender {
                     @Override
                     protected void initChannel(NioSocketChannel nioSocketChannel) throws Exception {
                         nioSocketChannel.pipeline()
-                                .addLast(new StringEncoder()).addLast(new StringDecoder()).addLast(new HeartBeatClientHandler(currentState, retryTask));
+                                .addLast(new StringEncoder()).addLast(new StringDecoder())
+                                .addLast(new HeartBeatClientHandler(currentState, retryTask))
+                                .addLast(new LineBasedFrameDecoder(1024));
                     }
                 });
         return b;
@@ -79,8 +81,7 @@ public class TcpHeartBeatClient implements HeartBeatSender {
     @Override
     public void sendHeartbeat() throws Exception {
         String data = genData();
-//        System.out.println(data);
-        channel.writeAndFlush(data);
+        channel.writeAndFlush(data).addListener(ChannelFutureListener.CLOSE);
     }
 
 
@@ -149,10 +150,9 @@ public class TcpHeartBeatClient implements HeartBeatSender {
                             failConnectedTime.incrementAndGet();
                             channel = null;
                         } else {
-                            System.out.printf("链接成功!目标:%s:%s\n",host,port);
+                            System.out.printf("链接成功!目标:%s:%s\n", host, port);
                             failConnectedTime.set(0);
                             channel = future.channel();
-                            System.out.println(TransportConfig.get(TransportConfig.HEARTBEAT_INTERVAL_MS));
                             SCHEDULER.scheduleAtFixedRate(new Runnable() {
                                 @Override
                                 public void run() {
@@ -191,8 +191,12 @@ public class TcpHeartBeatClient implements HeartBeatSender {
         String hostName = TransportConfig.get(TransportConfig.HOST_NAME);
         String current = String.valueOf(System.currentTimeMillis());
         String appName = TransportConfig.get(TransportConfig.APPLICATION_NAME);
+        String lostMaxMs = TransportConfig.get(TransportConfig.HEARTBEAT_LOST_MAX_MS);
+        String lostMaxCount = TransportConfig.get(TransportConfig.HEARTBEAT_LOST_MAX_COUNT);
         StringJoiner joiner = new StringJoiner("-");
-        joiner.add(ip).add(port).add(hostName).add(current).add(appName);
+        joiner.add(ip).add(port)
+                .add(hostName).add(current).add(appName)
+                .add(lostMaxMs).add(lostMaxCount);
         return joiner.toString();
     }
 }
