@@ -3,6 +3,7 @@ package com.xl.redisaux.limiter.component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xl.redisaux.common.api.LimiteGroupConfig;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
 import com.xl.redisaux.common.utils.CommonUtil;
 import com.xl.redisaux.common.consts.LimiterConstants;
@@ -10,7 +11,6 @@ import com.xl.redisaux.common.exceptions.RedisAuxException;
 import com.xl.redisaux.common.utils.qps.QpsCounter;
 import com.xl.redisaux.common.utils.qps.WindowQpsCounter;
 import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 import com.xl.redisaux.limiter.core.handler.GroupHandler;
 import com.xl.redisaux.limiter.core.handler.GroupHandlerList;

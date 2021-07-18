@@ -1,11 +1,7 @@
 package com.xl.redisaux.limiter.aspect;
 
-import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
-import com.xl.redisaux.transport.client.TcpHeartBeatClient;
-import com.xl.redisaux.transport.config.TransportConfig;
 import org.aspectj.lang.ProceedingJoinPoint;
 
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**

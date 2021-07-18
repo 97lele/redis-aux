@@ -26,8 +26,9 @@ public class GroupLimiterRelateBeanRegistry implements BeanDefinitionRegistryPos
             registry(LimiterConstants.GROUP_LIMITER_ASPECT, GroupLimiterAspect.class, beanDefinitionRegistry);
             registry(LimiterConstants.LIMITGROUPSERVICE, LimiterGroupService.class, beanDefinitionRegistry);
         }
+        //注册server服务端
         if (RedisLimiterRegistar.connectConsole.get()) {
-            registry(LimiterConstants.CLIENTCONFIG, ClientConfig.class, beanDefinitionRegistry);
+
         }
 
 

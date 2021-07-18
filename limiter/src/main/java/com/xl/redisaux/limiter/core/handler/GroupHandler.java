@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core.handler;
 
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimiteGroupConfig;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 
 /**

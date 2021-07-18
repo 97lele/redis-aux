@@ -1,8 +1,5 @@
 package com.xl.redisaux.dashboard;
 
-import com.xl.redisaux.common.utils.HostNameUtil;
-import com.xl.redisaux.transport.config.TransportConfig;
-import com.xl.redisaux.transport.server.RedisAuxNettyServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -10,9 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author lulu
@@ -23,13 +18,14 @@ public class RedisAuxDashBoard {
     private static Logger log = LoggerFactory.getLogger(RedisAuxDashBoard.class);
 
     public static void main(String[] args) {
-        Map<String, String> propertiesMap = getProperties();
-        String port = propertiesMap.get(TransportConfig.CONSOLE_PORT);
-        String prefix = propertiesMap.get(TransportConfig.URL_PREFIX);
-        String handlerPath = propertiesMap.get(TransportConfig.HANDLER_PATH);
         SpringApplication.run(RedisAuxDashBoard.class, args);
-        RedisAuxNettyServer server = new RedisAuxNettyServer(HostNameUtil.getIp(), Integer.valueOf(port), prefix, handlerPath);
-        server.start();
+//        Map<String, String> propertiesMap = getProperties();
+//        String port = propertiesMap.get(TransportConfig.CONSOLE_PORT);
+//        String prefix = propertiesMap.get(TransportConfig.URL_PREFIX);
+//        String handlerPath = propertiesMap.get(TransportConfig.HANDLER_PATH);
+//
+//        RedisAuxNettyServer server = new RedisAuxNettyServer(HostNameUtil.getIp(), Integer.valueOf(port), prefix, handlerPath);
+//        server.start();
     }
 
     public static Map<String,String> getProperties() {

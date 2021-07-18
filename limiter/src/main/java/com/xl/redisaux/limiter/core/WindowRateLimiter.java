@@ -1,8 +1,8 @@
 package com.xl.redisaux.limiter.core;
 
+import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.limiter.annonations.WindowLimiter;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
-import com.xl.redisaux.limiter.config.WindowRateConfig;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 

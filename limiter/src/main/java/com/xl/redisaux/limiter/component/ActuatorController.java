@@ -1,11 +1,11 @@
 package com.xl.redisaux.limiter.component;
 
+import com.xl.redisaux.common.api.FunnelRateConfig;
+import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.TokenRateConfig;
+import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
-import com.xl.redisaux.limiter.config.FunnelRateConfig;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
-import com.xl.redisaux.limiter.config.TokenRateConfig;
-import com.xl.redisaux.limiter.config.WindowRateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -83,7 +83,7 @@ public class ActuatorController {
 
     //更改限流规则
     @PostMapping("/redis-aux/changeFunnelConfig")
-    public LimiteGroupConfig changeFunnelConfig(@RequestParam("groupId") String groupId,
+    public FunnelRateConfig changeFunnelConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam(value = "requestNeed", required = false) Double requestNeed,
                                                 @RequestParam("capacity") Double capacity,
                                                 @RequestParam("funnelRate") Double funnelRate,
@@ -97,11 +97,11 @@ public class ActuatorController {
         if(limiter.setFunnelRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }
-        return limiter;
+        return limiter.getFunnelRateConfig();
     }
 
     @PostMapping("/redis-aux/changeWindowConfig")
-    public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
+    public WindowRateConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("passCount") Long passCount,
                                                 @RequestParam(value = "during", required = false) Long during,
                                                 @RequestParam(value = "duringUnit", required = false) Integer mode
@@ -111,30 +111,29 @@ public class ActuatorController {
         if(limiter.setWindowRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }
-        return limiter;
+        return limiter.getWindowRateConfig();
     }
 
     @PostMapping("/redis-aux/changeTokenConfig")
-    public LimiteGroupConfig changeWindowConfig(@RequestParam("groupId") String groupId,
+    public TokenRateConfig changeWindowConfig(@RequestParam("groupId") String groupId,
                                                 @RequestParam("capacity") Double capacity,
                                                 @RequestParam(value = "initToken", required = false) Double initToken,
                                                 @RequestParam("tokenRate") Double tokenRate,
                                                 @RequestParam(value = "requestNeed", required = false) Double requestNeed,
-                                                @RequestParam(value = "duringUnit", required = false) Integer mode
+                                                @RequestParam(value = "duringUnit", required = false) Integer duringUnit
     ) {
         TokenRateConfig config = TokenRateConfig.of().capacity(capacity).initToken(initToken).tokenRate(tokenRate)
-                .requestNeed(requestNeed).tokenRateUnit(TimeUnitEnum.getTimeUnit(mode)).build();
+                .requestNeed(requestNeed).tokenRateUnit(TimeUnitEnum.getTimeUnit(duringUnit)).build();
         LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if(limiter.setTokenRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }
-        return limiter;
+        return limiter.getTokenRateConfig();
     }
 
     @GetMapping("/redis-aux/getCount")
     public Map<String, String> changeCountConfig(@RequestParam("groupId") String groupId
     ) {
-        System.out.println("我被访问了");
         return limiterGroupService.getCount(groupId);
     }
     @GetMapping("/redis-aux/getGroupIds")

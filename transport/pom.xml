@@ -8,9 +8,7 @@
         <version>0.4.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-
     <artifactId>redis-aux-transport</artifactId>
-
     <dependencies>
         <dependency>
             <groupId>io.netty</groupId>
@@ -20,11 +18,9 @@
             <groupId>com.xl</groupId>
             <artifactId>redis-aux-common</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
         </dependency>
-
     </dependencies>
 </project>

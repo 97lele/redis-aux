@@ -1,11 +1,11 @@
 package com.xl.redisaux.demo.springmvc.config;
 
+import com.xl.redisaux.common.api.FunnelRateConfig;
+import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.TokenRateConfig;
+import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
-import com.xl.redisaux.limiter.config.FunnelRateConfig;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
-import com.xl.redisaux.limiter.config.TokenRateConfig;
-import com.xl.redisaux.limiter.config.WindowRateConfig;
 import com.xl.redisaux.limiter.core.handler.GroupHandlerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;

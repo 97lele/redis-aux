@@ -1,10 +1,10 @@
 package com.xl.redisaux.limiter.core.handler;
 
+import com.xl.redisaux.common.api.LimiteGroupConfig;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.utils.IpRuleHolder;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
 
 /**
  * @author lulu

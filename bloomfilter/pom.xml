@@ -23,7 +23,6 @@
             <groupId>com.xl</groupId>
             <artifactId>redis-aux-common</artifactId>
         </dependency>
-
     </dependencies>
 
 </project>

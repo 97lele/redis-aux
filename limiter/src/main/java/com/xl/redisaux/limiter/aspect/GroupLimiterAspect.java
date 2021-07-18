@@ -1,5 +1,6 @@
 package com.xl.redisaux.limiter.aspect;
 
+import com.xl.redisaux.common.api.LimiteGroupConfig;
 import com.xl.redisaux.common.utils.CommonUtil;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.consts.LimiterConstants;
@@ -9,11 +10,7 @@ import com.xl.redisaux.limiter.annonations.LimiteExclude;
 import com.xl.redisaux.limiter.annonations.LimiteGroup;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
 import com.xl.redisaux.limiter.autoconfigure.RedisLimiterAutoConfiguration;
-import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
-import com.xl.redisaux.limiter.config.LimiteGroupConfig;
-import com.xl.redisaux.transport.client.TcpHeartBeatClient;
-import com.xl.redisaux.transport.config.TransportConfig;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -53,7 +50,7 @@ public class GroupLimiterAspect implements LimiterAspect {
     @Override
     @Around("limitPoinCut()")
     public Object methodLimit(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        checkBeforeSendHeartBeat();
+//        checkBeforeSendHeartBeat();
         MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
         //获取执行的方法
         Method method = signature.getMethod();
@@ -115,20 +112,20 @@ public class GroupLimiterAspect implements LimiterAspect {
         return passArgs ? fallBackMethod.invoke(bean, params) : fallBackMethod.invoke(bean);
     }
 
-    private void checkBeforeSendHeartBeat() {
-        if (RedisLimiterRegistar.connectConsole.get() && !LimiterAspect.HAS_REQUEST.get()) {
-            LimiterAspect.HAS_REQUEST.set(true);
-            TcpHeartBeatClient client = new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_IP), TransportConfig.get(TransportConfig.CONSOLE_PORT, Integer::valueOf));
-            executor.submit(() -> {
-                try {
-                    client.start();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-        }
-    }
+//    private void checkBeforeSendHeartBeat() {
+//        if (RedisLimiterRegistar.connectConsole.get() && !LimiterAspect.HAS_REQUEST.get()) {
+//            LimiterAspect.HAS_REQUEST.set(true);
+//            TcpHeartBeatClient client = new TcpHeartBeatClient(TransportConfig.get(TransportConfig.CONSOLE_IP), TransportConfig.get(TransportConfig.CONSOLE_PORT, Integer::valueOf));
+//            executor.submit(() -> {
+//                try {
+//                    client.start();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            });
+//
+//        }
+//    }
 
     private void updateCount(boolean update, boolean success, LimiteGroupConfig config) {
         if (update) {
