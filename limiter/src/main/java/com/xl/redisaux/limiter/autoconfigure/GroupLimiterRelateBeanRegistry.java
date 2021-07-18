@@ -2,7 +2,6 @@ package com.xl.redisaux.limiter.autoconfigure;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.aspect.GroupLimiterAspect;
-import com.xl.redisaux.limiter.config.ClientConfig;
 import com.xl.redisaux.limiter.component.ActuatorController;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
 import org.springframework.beans.BeansException;
