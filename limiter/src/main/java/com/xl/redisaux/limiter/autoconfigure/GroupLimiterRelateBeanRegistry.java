@@ -3,6 +3,7 @@ package com.xl.redisaux.limiter.autoconfigure;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.aspect.GroupLimiterAspect;
 import com.xl.redisaux.limiter.component.ActuatorController;
+import com.xl.redisaux.limiter.component.DashBoardRequestHandler;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -27,7 +28,7 @@ public class GroupLimiterRelateBeanRegistry implements BeanDefinitionRegistryPos
         }
         //注册server服务端
         if (RedisLimiterRegistar.connectConsole.get()) {
-
+            registry("dashboardRequestHandler", DashBoardRequestHandler.class,beanDefinitionRegistry);
         }
 
 

@@ -11,8 +11,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 
-//@EnableLimiter
-//@EnableLimiter(enableGroup = true)
 @EnableLimiter(enableGroup = true,connectConsole = true)
 public class SpringMvcDemoApplication {
     public static void main(String args[]){

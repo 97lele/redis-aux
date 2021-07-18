@@ -73,11 +73,11 @@ public class ClientRemoteService {
         return this;
     }
 
-    public ClientRemoteService port(int port){
+    protected ClientRemoteService port(int port){
         this.port=port;
         return this;
     }
-    public ClientRemoteService ip(String ip){
+    protected ClientRemoteService ip(String ip){
         this.ip=ip;
         return this;
     }
@@ -97,9 +97,12 @@ public class ClientRemoteService {
     public void close(){
         channel.close().syncUninterruptibly();
         group.shutdownGracefully();
+        hasInit=false;
     }
 
-    public static ClientRemoteService of(){
-        return new ClientRemoteService();
+    public static ClientRemoteService of(String ip,int port){
+        return new ClientRemoteService()
+                .ip(ip).port(port)
+                ;
     }
 }

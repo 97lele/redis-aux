@@ -15,13 +15,13 @@ import java.util.HashMap;
 @Getter
 @AllArgsConstructor
 public enum SupportAction {
-    FUNNEL_CHANGE(1, FunnelChangeParam.class, FunnelRateConfig.class),
-    WINDOW_CHANGE(2, WindowChangeParam.class, WindowRateConfig.class),
-    TOKEN_CHANGE(3, TokenChangeParam.class, TokenRateConfig.class),
+    FUNNEL_CHANGE(1, FunnelChangeParam.class, LimiteGroupConfig.class),
+    WINDOW_CHANGE(2, WindowChangeParam.class, LimiteGroupConfig.class),
+    TOKEN_CHANGE(3, TokenChangeParam.class, LimiteGroupConfig.class),
     CHANGE_IP_RULE(4, ChangeIpRuleParam.class, LimiteGroupConfig.class),
     CHANGE_URL_RULE(5, ChangeUrlRuleParam.class, LimiteGroupConfig.class),
     CHANGE_LIMIT_MODE(6, ChangeLimitModeParam.class, LimiteGroupConfig.class),
-    GET_IP_AND_PORT(7,Void.class, ServerInfo.class),
+    GET_SERVER_INFO(7,Void.class, ServerInfo.class),
     GET_CLIENT_COUNT(8, String.class, HashMap.class);
     private int actionCode;
     private Class<?> param;

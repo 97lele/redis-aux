@@ -25,7 +25,7 @@ public class ServerRemoteService {
 
 
 
-    public ServerRemoteService port(int port){
+    protected ServerRemoteService port(int port){
         this.port=port;
         return this;
     }
@@ -82,8 +82,9 @@ public class ServerRemoteService {
         channel.close().syncUninterruptibly();
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
+        hasInit=false;
     }
-    public static ServerRemoteService of(){
-        return new ServerRemoteService();
+    public static ServerRemoteService of(int port){
+        return new ServerRemoteService().port(port);
     }
 }

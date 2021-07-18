@@ -1,11 +1,14 @@
 package com.xl.redisaux.common.enums;
 
+import lombok.Getter;
+
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author lulu
  * @Date 2020/2/16 22:45
  */
+@Getter
 public enum  TimeUnitEnum {
     DAYS(TimeUnit.DAYS,4),
     HOURS(TimeUnit.HOURS,3),

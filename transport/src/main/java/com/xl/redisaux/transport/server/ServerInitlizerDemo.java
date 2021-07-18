@@ -7,8 +7,7 @@ import java.util.concurrent.ExecutionException;
 public class ServerInitlizerDemo {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        ServerRemoteService start = ServerRemoteService.of()
-                .port(8090)
+        ServerRemoteService start = ServerRemoteService.of(8090)
                 .addHandler(new SimpleHandler(8090))
                 .supportHeartBeat(3, 3)
                 .start();

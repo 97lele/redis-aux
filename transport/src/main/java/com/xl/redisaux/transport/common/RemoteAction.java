@@ -1,6 +1,8 @@
 package com.xl.redisaux.transport.common;
 
 import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +26,8 @@ public  class RemoteAction<T> {
 
     protected static AtomicInteger ID_GENEARTOR =new AtomicInteger(0);
 
+    protected static ObjectMapper objectMapper=new ObjectMapper();
+
    protected RemoteAction(int actionCode,boolean isResponse,int requestId,T body){
        this.isResponse=isResponse;
        this.actionCode=actionCode;
@@ -45,11 +49,15 @@ public  class RemoteAction<T> {
         byteBuf.writeInt(actionCode);
         byteBuf.writeBoolean(isResponse);
         byteBuf.writeInt(requestId);
-        byteBuf.writeBytes(JSON.toJSONBytes(body));
+        try {
+            byteBuf.writeBytes(objectMapper.writeValueAsBytes(body));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("encode error:",e);
+        }
     }
 
-    public T getBody() {
-        return body;
+    public static<R> R getBody(Class<R> clazz,RemoteAction remoteAction) {
+        return (R)remoteAction.getBody();
     }
 
     public static<T> RemoteAction decode(ByteBuf byteBuf) {
@@ -58,7 +66,12 @@ public  class RemoteAction<T> {
         int requestId = byteBuf.readInt();
         String s = byteBuf.toString(StandardCharsets.UTF_8);
         Class<T> actionClass = (Class<T>) SupportAction.getActionClass(actionCode, isResponse);
-        T body = JSON.parseObject(s, actionClass);
+        T body = null;
+        try {
+            body = objectMapper.readValue(s, actionClass);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("decode error:",e);
+        }
         RemoteAction<T> action = new RemoteAction();
         action.actionCode = actionCode;
         action.isResponse = isResponse;

@@ -5,6 +5,7 @@ import com.xl.redisaux.common.utils.CommonUtil;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -156,15 +157,20 @@ public class LimiteGroupConfig {
     }
 
     public Integer getCurrentMode() {
-        if(currentMode!=null){
+        if (currentMode != null) {
             return currentMode.intValue();
         }
         return null;
     }
 
     public boolean setCurrentMode(Integer currentMode) {
+        if (this.currentMode == null) {
+            this.currentMode = new AtomicInteger();
+            this.currentMode.set(currentMode);
+            return true;
+        }
         boolean equals = this.currentMode.equals(currentMode);
-        if(!equals){
+        if (!equals) {
             this.currentMode.set(currentMode);
         }
         return !equals;
@@ -175,7 +181,7 @@ public class LimiteGroupConfig {
     }
 
     public boolean setFunnelRateConfig(FunnelRateConfig funnelRateConfig) {
-        boolean b = !this.funnelRateConfig.equals(funnelRateConfig);
+        boolean b = !Objects.equals(this.funnelRateConfig,funnelRateConfig);
         if (b) {
             this.funnelRateConfig = funnelRateConfig;
         }
@@ -187,7 +193,7 @@ public class LimiteGroupConfig {
     }
 
     public boolean setTokenRateConfig(TokenRateConfig tokenRateConfig) {
-        boolean b = !this.tokenRateConfig.equals(tokenRateConfig);
+        boolean b =! Objects.equals(this.tokenRateConfig,tokenRateConfig);
         if (b) {
             this.tokenRateConfig = tokenRateConfig;
         }
@@ -200,7 +206,7 @@ public class LimiteGroupConfig {
 
     public boolean setWindowRateConfig(
             WindowRateConfig windowRateConfig) {
-        boolean b = !this.windowRateConfig.equals(windowRateConfig);
+        boolean b = !Objects.equals(this.windowRateConfig,windowRateConfig);
         if (b) {
             this.windowRateConfig = windowRateConfig;
         }

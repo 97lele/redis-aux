@@ -8,11 +8,11 @@ public class FunnelChangeParam extends BaseParam{
     private Double requestNeed;
     private Double capacity;
     private Double funnelRate;
-    private Integer funnelRateUnit;
+    private TimeUnitEnum timeUnitEnum;
 
     public FunnelRateConfig toConfig(){
         return FunnelRateConfig.of().capacity(capacity)
                 .funnelRate(funnelRate).requestNeed(requestNeed)
-                .funnelRateUnit(TimeUnitEnum.getTimeUnit(funnelRateUnit)).build();
+                .funnelRateUnit(timeUnitEnum.getTimeUnit()).build();
     }
 }

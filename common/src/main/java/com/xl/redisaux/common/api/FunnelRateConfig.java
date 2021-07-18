@@ -1,6 +1,7 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
