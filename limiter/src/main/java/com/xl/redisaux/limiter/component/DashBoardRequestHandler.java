@@ -3,9 +3,9 @@ package com.xl.redisaux.limiter.component;
 
 import com.xl.redisaux.common.api.*;
 import com.xl.redisaux.common.utils.HostNameUtil;
+import com.xl.redisaux.transport.client.InstanceRemoteService;
 import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
-import com.xl.redisaux.transport.server.ServerRemoteService;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -29,30 +29,54 @@ public class DashBoardRequestHandler implements SmartLifecycle {
     @Autowired
     private LimiterGroupService limiterGroupService;
 
-    private ServerRemoteService remoteService;
+    private InstanceRemoteService remoteService;
 
     private volatile boolean isRunning;
 
     private Integer port;
 
+    private String ip;
+
+    private Integer servletPort;
+
+
+
 
     @Override
     public void start() {
-        String port = environment.getProperty("redisaux.limiter.port", "1210");
-        String timeOutSec = environment.getProperty("redisaux.limiter.keepAlive.timeout", "3");
-        String retryCount = environment.getProperty("redisaux.limiter.keepAlive.lostMaxCount", "5");
-        this.port = Integer.valueOf(port);
-        remoteService = ServerRemoteService.of(this.port);
-        remoteService.supportHeartBeat(Integer.valueOf(timeOutSec), Integer.valueOf(retryCount));
-        remoteService.addHandler(new RequestActionHandler());
-        remoteService.start();
+        this.port = Integer.valueOf(environment.getProperty("redisaux.limiter.dashboard.port", "1210"));
+        this.ip = environment.getProperty("redisaux.limiter.dashboard.ip", "127.0.0.1");
+        this.servletPort= environment.getProperty("server.port", Integer.class);
+        //dashboard默认地址
+        remoteService = InstanceRemoteService.dashboard(ip, this.port);
+        Runnable afterConnected = () -> {
+            InstanceInfo instanceInfo = getInstanceInfo();
+            remoteService.performRequestOneWay(RemoteAction.request(SupportAction.SEND_SERVER_INFO, instanceInfo));
+        };
+        remoteService.supportHeartBeat(30)
+                .addHandler(new RequestActionHandler())
+                .servletPort(servletPort)
+                .afterConnected(afterConnected)
+                .start();
         isRunning = true;
+    }
+
+    public void reconnect(){
+
     }
 
     @Override
     public void stop() {
         remoteService.close();
         isRunning = false;
+    }
+
+    public InstanceInfo getInstanceInfo(){
+        InstanceInfo instanceInfo = new InstanceInfo();
+        instanceInfo.setIp(HostNameUtil.getIp());
+        instanceInfo.setPort(port);
+        instanceInfo.setHostName(HostNameUtil.getHostName());
+        return instanceInfo;
     }
 
     @Override
@@ -79,13 +103,13 @@ public class DashBoardRequestHandler implements SmartLifecycle {
 
         private RemoteAction doHandleAction(RemoteAction remoteAction) {
             SupportAction action = SupportAction.getAction(remoteAction);
-            if (action.equals(SupportAction.GET_SERVER_INFO)) {
-                ServerInfo serverInfo = new ServerInfo();
-                serverInfo.setPort(port);
-                serverInfo.setIp(HostNameUtil.getIp());
-                serverInfo.setHostName(HostNameUtil.getHostName());
-                serverInfo.setGroupIds(limiterGroupService.getGroupIds());
-                return RemoteAction.response(action, serverInfo, remoteAction.getRequestId());
+            if (action.equals(SupportAction.SEND_SERVER_INFO)) {
+                InstanceInfo instanceInfo = new InstanceInfo();
+                instanceInfo.setPort(port);
+                instanceInfo.setIp(HostNameUtil.getIp());
+                instanceInfo.setHostName(HostNameUtil.getHostName());
+                instanceInfo.setGroupIds(limiterGroupService.getGroupIds());
+                return RemoteAction.response(action, instanceInfo, remoteAction.getRequestId());
             }
 
             if (action.equals(SupportAction.GET_RECORD_COUNT)) {
@@ -93,13 +117,13 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                 Map<String, Object> count = limiterGroupService.getCount(body);
                 return RemoteAction.response(action, count, remoteAction.getRequestId());
             }
-            if(action.equals(SupportAction.GET_CONFIG_BY_GROUP)){
-                String body=RemoteAction.getBody(String.class,remoteAction);
-                return RemoteAction.response(action,limiterGroupService.getLimiterConfig(body),remoteAction.getRequestId());
+            if (action.equals(SupportAction.GET_CONFIG_BY_GROUP)) {
+                String body = RemoteAction.getBody(String.class, remoteAction);
+                return RemoteAction.response(action, limiterGroupService.getLimiterConfig(body), remoteAction.getRequestId());
             }
-            if(action.equals(SupportAction.GET_CONFIGS_BY_GROUPS)){
+            if (action.equals(SupportAction.GET_CONFIGS_BY_GROUPS)) {
                 Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
-                return RemoteAction.response(action,limiterGroupService.getConfigByGroupIds(groupIds),remoteAction.getRequestId());
+                return RemoteAction.response(action, limiterGroupService.getConfigByGroupIds(groupIds), remoteAction.getRequestId());
             }
             LimiteGroupConfig config = null;
             switch (action) {

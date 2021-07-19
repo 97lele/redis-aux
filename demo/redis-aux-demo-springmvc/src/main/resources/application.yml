@@ -1,16 +1,10 @@
 server:
   port: 8082
 redisaux:
-  console:
-    host: 10.0.75.1
-  heartbeat:
-    connect:
-      timeout: 10000
-    interval:
-      ms: 10000
-    lost:
-      count: 3
-      ms: 10000
+  limiter:
+    dashboard:
+      port: 1210
+      ip: 127.0.0.1
 #spring:
 #  application:
 #    name: mvcTest

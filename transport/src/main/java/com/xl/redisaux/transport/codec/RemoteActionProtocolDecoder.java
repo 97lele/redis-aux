@@ -1,7 +1,6 @@
 package com.xl.redisaux.transport.codec;
 
 import com.xl.redisaux.transport.common.RemoteAction;
-import com.xl.redisaux.transport.dispatcher.ResultHolder;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;

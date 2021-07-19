@@ -5,7 +5,6 @@ import com.xl.redisaux.common.exceptions.RedisAuxException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,10 +22,12 @@ public enum SupportAction {
     CHANGE_IP_RULE(4, ChangeIpRuleParam.class, LimiteGroupConfig.class),
     CHANGE_URL_RULE(5, ChangeUrlRuleParam.class, LimiteGroupConfig.class),
     CHANGE_LIMIT_MODE(6, ChangeLimitModeParam.class, LimiteGroupConfig.class),
-    GET_SERVER_INFO(7, Void.class, ServerInfo.class),
+    SEND_SERVER_INFO(7, InstanceInfo.class, Void.class),
     GET_RECORD_COUNT(8, String.class, HashMap.class),
     GET_CONFIG_BY_GROUP(9,String.class,LimiteGroupConfig.class),
     GET_CONFIGS_BY_GROUPS(10, Set.class,List.class),
+    HEART_BEAT(11,Void.class, InstanceInfo.class),
+    SUCCESS(0,Object.class,String.class),
     ERROR(-1,Void.class,String.class);
     private int actionCode;
     private Class<?> param;

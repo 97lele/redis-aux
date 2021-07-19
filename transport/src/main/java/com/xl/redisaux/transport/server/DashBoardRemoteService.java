@@ -1,6 +1,6 @@
 package com.xl.redisaux.transport.server;
 
-import com.xl.redisaux.transport.server.handler.ServerChannelInitializer;
+import com.xl.redisaux.transport.server.handler.DashBoardInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -11,10 +11,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
-public class ServerRemoteService {
+public class DashBoardRemoteService {
     protected EventLoopGroup bossGroup;
     protected EventLoopGroup workerGroup;
-    protected ServerChannelInitializer channelInitializer;
+    protected DashBoardInitializer channelInitializer;
     protected ServerBootstrap serverBootstrap;
     protected int port;
     protected Channel channel;
@@ -23,54 +23,52 @@ public class ServerRemoteService {
     protected int maxLost;
     protected int readIdleSec;
 
-
-
-    protected ServerRemoteService port(int port){
-        this.port=port;
+    protected DashBoardRemoteService port(int port) {
+        this.port = port;
         return this;
     }
 
-    public ServerRemoteService supportHeartBeat(int maxLost,int readIdleSec){
-        this.readIdleSec=readIdleSec;
-        this.supportHeartBeat=true;
-        this.maxLost=maxLost;
+    public DashBoardRemoteService supportHeartBeat(int maxLost, int readIdleSec) {
+        this.readIdleSec = readIdleSec;
+        this.supportHeartBeat = true;
+        this.maxLost = maxLost;
         return this;
     }
 
-    public ServerRemoteService addHandler(ChannelInboundHandler...handlers){
-        if(channelInitializer==null){
-            channelInitializer=new ServerChannelInitializer();
+    public DashBoardRemoteService addHandler(ChannelInboundHandler... handlers) {
+        if (channelInitializer == null) {
+            channelInitializer = new DashBoardInitializer();
         }
         channelInitializer.addSharableHandler(handlers);
         return this;
     }
 
-    public ServerRemoteService start(){
-        if(!hasInit){
+    public DashBoardRemoteService start() {
+        if (!hasInit) {
             init();
         }
         ChannelFuture bind = null;
         try {
             bind = serverBootstrap.bind(port).sync();
         } catch (InterruptedException e) {
-            throw new RuntimeException("server start fail:",e);
+            throw new RuntimeException("server start fail:", e);
         }
-        channel=bind.channel();
+        channel = bind.channel();
         return this;
     }
 
-    public synchronized ServerRemoteService init(){
-        if(!hasInit){
-            if(channelInitializer==null){
+    public synchronized DashBoardRemoteService init() {
+        if (!hasInit) {
+            if (channelInitializer == null) {
                 throw new IllegalStateException("should only contain a handler");
             }
-            serverBootstrap=new ServerBootstrap();
-            bossGroup=new NioEventLoopGroup();
-            workerGroup=new NioEventLoopGroup();
-            if(supportHeartBeat){
-                channelInitializer.supportHeartBeat(readIdleSec,maxLost);
+            serverBootstrap = new ServerBootstrap();
+            bossGroup = new NioEventLoopGroup();
+            workerGroup = new NioEventLoopGroup();
+            if (supportHeartBeat) {
+                channelInitializer.supportHeartBeat(readIdleSec, maxLost);
             }
-            serverBootstrap.group(bossGroup,workerGroup)
+            serverBootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(channelInitializer);
@@ -78,13 +76,16 @@ public class ServerRemoteService {
         return this;
     }
 
-    public void close(){
+    public void close() {
         channel.close().syncUninterruptibly();
         bossGroup.shutdownGracefully();
         workerGroup.shutdownGracefully();
-        hasInit=false;
+        hasInit = false;
     }
-    public static ServerRemoteService of(int port){
-        return new ServerRemoteService().port(port);
+
+
+    public static DashBoardRemoteService bind(int port) {
+        return new DashBoardRemoteService().port(port);
     }
+
 }

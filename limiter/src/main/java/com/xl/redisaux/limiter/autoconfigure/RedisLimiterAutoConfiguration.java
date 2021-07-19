@@ -1,26 +1,16 @@
 package com.xl.redisaux.limiter.autoconfigure;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
-import com.xl.redisaux.limiter.aspect.GroupLimiterAspect;
 import com.xl.redisaux.limiter.aspect.NormalLimiterAspect;
-import com.xl.redisaux.limiter.config.ClientConfig;
 import com.xl.redisaux.limiter.core.FunnelRateLimiter;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 import com.xl.redisaux.limiter.core.TokenRateLimiter;
 import com.xl.redisaux.limiter.core.WindowRateLimiter;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
