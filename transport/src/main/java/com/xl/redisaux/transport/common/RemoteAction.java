@@ -1,6 +1,5 @@
 package com.xl.redisaux.transport.common;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.ByteBuf;
@@ -24,9 +23,9 @@ public  class RemoteAction<T> {
 
     protected Class<T> clazz;
 
-    protected static AtomicInteger ID_GENEARTOR =new AtomicInteger(0);
+    protected static AtomicInteger ID_GENERATOR =new AtomicInteger(0);
 
-    protected static ObjectMapper objectMapper=new ObjectMapper();
+    protected static ObjectMapper OBJECT_MAPPER =new ObjectMapper();
 
    protected RemoteAction(int actionCode,boolean isResponse,int requestId,T body){
        this.isResponse=isResponse;
@@ -37,7 +36,7 @@ public  class RemoteAction<T> {
    }
 
    public static<T> RemoteAction<T>  request(SupportAction supportAction,T body){
-       int requestId = ID_GENEARTOR.incrementAndGet();
+       int requestId = ID_GENERATOR.incrementAndGet();
        return new RemoteAction(supportAction.getActionCode(),false,requestId,body);
    }
 
@@ -50,7 +49,7 @@ public  class RemoteAction<T> {
         byteBuf.writeBoolean(isResponse);
         byteBuf.writeInt(requestId);
         try {
-            byteBuf.writeBytes(objectMapper.writeValueAsBytes(body));
+            byteBuf.writeBytes(OBJECT_MAPPER.writeValueAsBytes(body));
         } catch (JsonProcessingException e) {
             throw new RuntimeException("encode error:",e);
         }
@@ -68,7 +67,7 @@ public  class RemoteAction<T> {
         Class<T> actionClass = (Class<T>) SupportAction.getActionClass(actionCode, isResponse);
         T body = null;
         try {
-            body = objectMapper.readValue(s, actionClass);
+            body = OBJECT_MAPPER.readValue(s, actionClass);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("decode error:",e);
         }
