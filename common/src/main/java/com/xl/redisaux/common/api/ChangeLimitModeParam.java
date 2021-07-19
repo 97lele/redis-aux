@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class ChangeLimitModeParam extends BaseParam{
-    private String groupId;
     private Boolean removeOther;
+    private Integer mode;
 }

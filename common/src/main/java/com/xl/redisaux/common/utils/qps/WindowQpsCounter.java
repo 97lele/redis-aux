@@ -53,6 +53,7 @@ public class WindowQpsCounter implements QpsCounter {
 
     /**
      * 默认分为10个桶
+     *
      * @param interval
      * @param timeUnit
      */
@@ -62,6 +63,7 @@ public class WindowQpsCounter implements QpsCounter {
 
     /**
      * 根据桶数量和统计周期确定单个时间片长度
+     *
      * @param bucketSize
      * @param interval
      * @param timeUnit
@@ -93,8 +95,7 @@ public class WindowQpsCounter implements QpsCounter {
             //如果锁被占用并且目标桶的最近更新时间小于可容忍时间差距，把计数放到当前桶里面，减少竞争
             if (enterNextBucketLock.isLocked() && (passTime - latestPassedTimeCloseToTargetBucket) < timeSliceUsedToCheckIfPossibleToBypass) {
 
-            }
-            else {
+            } else {
                 try {
                     enterNextBucketLock.lock();
                     //如果当前时间与最近一次访问时间差大于单个时间片
@@ -130,10 +131,11 @@ public class WindowQpsCounter implements QpsCounter {
 
     /**
      * 计算总和
+     *
      * @return
      */
     @Override
-    public Map<String, String> getSum() {
+    public Map<String, Object> getSum() {
         long success = 0;
         long fail = 0;
         long now = System.currentTimeMillis();
@@ -147,10 +149,10 @@ public class WindowQpsCounter implements QpsCounter {
             }
         }
 
-        Map<String, String> map = new HashMap<>();
-        map.put("success", success + "");
-        map.put("fail", fail + "");
-        map.put("total", fail + success + "");
+        Map<String, Object> map = new HashMap<>();
+        map.put("success", success);
+        map.put("fail", fail);
+        map.put("total", fail + success);
         return map;
     }
 
@@ -161,7 +163,6 @@ public class WindowQpsCounter implements QpsCounter {
         this.bucketSize = bucketSize;
         this.timeSliceUsedToCheckIfPossibleToBypass = 2 * this.window;
     }
-
 
 
     /**

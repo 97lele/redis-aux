@@ -10,8 +10,8 @@ public class ResultHolder {
     private static Map<Integer, ActionFuture> remoteActionMap = new ConcurrentHashMap<>();
 
     public static ActionFuture putRequest(RemoteAction request) {
-        ActionFuture value = new ActionFuture(request);
-        remoteActionMap.put(value.requestId, value);
+        ActionFuture value = new ActionFuture();
+        remoteActionMap.put(request.getRequestId(), value);
         return value;
     }
 

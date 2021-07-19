@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Getter
 @NoArgsConstructor
 @ToString
-public  class RemoteAction<T> {
+public class RemoteAction<T> {
     //header
     protected int actionCode;
     protected boolean isResponse;
@@ -23,26 +23,33 @@ public  class RemoteAction<T> {
 
     protected Class<T> clazz;
 
-    protected static AtomicInteger ID_GENERATOR =new AtomicInteger(0);
+    protected static AtomicInteger ID_GENERATOR = new AtomicInteger(0);
 
-    protected static ObjectMapper OBJECT_MAPPER =new ObjectMapper();
+    protected static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-   protected RemoteAction(int actionCode,boolean isResponse,int requestId,T body){
-       this.isResponse=isResponse;
-       this.actionCode=actionCode;
-       this.requestId=requestId;
-       this.body=body;
-       this.clazz= (Class<T>) body.getClass();
-   }
+    protected RemoteAction(int actionCode, boolean isResponse, int requestId, T body) {
+        this.isResponse = isResponse;
+        this.actionCode = actionCode;
+        this.requestId = requestId;
+        this.body = body;
+        if (body != null) {
+            this.clazz = (Class<T>) body.getClass();
+        }
+    }
 
-   public static<T> RemoteAction<T>  request(SupportAction supportAction,T body){
-       int requestId = ID_GENERATOR.incrementAndGet();
-       return new RemoteAction(supportAction.getActionCode(),false,requestId,body);
-   }
+    public static <T> RemoteAction<T> request(SupportAction supportAction, T body) {
+        int requestId = ID_GENERATOR.incrementAndGet();
+        return new RemoteAction(supportAction.getActionCode(), false, requestId, body);
+    }
 
-   public static<T> RemoteAction<T> response(SupportAction supportAction,T body,int requestId){
-       return new RemoteAction(supportAction.getActionCode(),true,requestId,body);
-   }
+    public static <T> RemoteAction<T> response(SupportAction supportAction, T body, int requestId) {
+        return new RemoteAction(supportAction.getActionCode(), true, requestId, body);
+    }
+
+    public static <T> RemoteAction<T> response(RemoteAction action, T body) {
+        SupportAction supportAction = SupportAction.getAction(action);
+        return response(supportAction, body, action.getRequestId());
+    }
 
     public void encode(ByteBuf byteBuf) {
         byteBuf.writeInt(actionCode);
@@ -51,15 +58,15 @@ public  class RemoteAction<T> {
         try {
             byteBuf.writeBytes(OBJECT_MAPPER.writeValueAsBytes(body));
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("encode error:",e);
+            throw new RuntimeException("encode error:", e);
         }
     }
 
-    public static<R> R getBody(Class<R> clazz,RemoteAction remoteAction) {
-        return (R)remoteAction.getBody();
+    public static <R> R getBody(Class<R> clazz, RemoteAction remoteAction) {
+        return (R) remoteAction.getBody();
     }
 
-    public static<T> RemoteAction decode(ByteBuf byteBuf) {
+    public static <T> RemoteAction decode(ByteBuf byteBuf) {
         int actionCode = byteBuf.readInt();
         boolean isResponse = byteBuf.readBoolean();
         int requestId = byteBuf.readInt();
@@ -69,14 +76,14 @@ public  class RemoteAction<T> {
         try {
             body = OBJECT_MAPPER.readValue(s, actionClass);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("decode error:",e);
+            throw new RuntimeException("decode error:", e);
         }
         RemoteAction<T> action = new RemoteAction();
         action.actionCode = actionCode;
         action.isResponse = isResponse;
         action.requestId = requestId;
-        action.body=body;
-        action.clazz=actionClass;
+        action.body = body;
+        action.clazz = actionClass;
         return action;
     }
 
@@ -86,6 +93,6 @@ public  class RemoteAction<T> {
 
     public void setBody(T body) {
         this.body = body;
-        this.clazz= (Class<T>) body.getClass();
+        this.clazz = (Class<T>) body.getClass();
     }
 }

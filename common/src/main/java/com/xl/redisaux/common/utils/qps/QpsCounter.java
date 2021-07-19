@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public interface QpsCounter {
     void pass(boolean success);
 
-    Map<String, String> getSum();
+    Map<String, Object> getSum();
 
     void setInterval(int interval, TimeUnit unit, int bucketSize);
 }
