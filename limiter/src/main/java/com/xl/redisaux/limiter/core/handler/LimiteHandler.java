@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core.handler;
 
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 
@@ -11,7 +11,7 @@ import com.xl.redisaux.limiter.core.BaseRateLimiter;
 public class LimiteHandler implements GroupHandler {
     private int order=-1;
     @Override
-    public int handle(LimiteGroupConfig limitGroupConfig, String ip, String url, BaseRateLimiter baseRateLimiter, String methodKey) {
+    public int handle(LimitGroupConfig limitGroupConfig, String ip, String url, BaseRateLimiter baseRateLimiter, String methodKey) {
         return baseRateLimiter.canExecute(limitGroupConfig, methodKey)? LimiterConstants.PASS:LimiterConstants.TOOMUCHREQUEST;
     }
 

@@ -3,6 +3,7 @@ package com.xl.redisaux.limiter.component;
 
 import com.xl.redisaux.common.api.*;
 import com.xl.redisaux.common.utils.HostNameUtil;
+import com.xl.redisaux.limiter.autoconfigure.LimitGroupConfiguration;
 import com.xl.redisaux.transport.client.InstanceRemoteService;
 import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
@@ -14,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
 
+import javax.annotation.Resource;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -23,11 +26,14 @@ import java.util.function.Predicate;
  */
 @Slf4j
 public class DashBoardRequestHandler implements SmartLifecycle {
-    @Autowired
+    @Resource
     private Environment environment;
 
-    @Autowired
+    @Resource
     private LimiterGroupService limiterGroupService;
+
+    @Resource
+    private LimitGroupConfiguration config;
 
     private InstanceRemoteService remoteService;
 
@@ -39,16 +45,19 @@ public class DashBoardRequestHandler implements SmartLifecycle {
 
     private Integer servletPort;
 
-
-
-
     @Override
     public void start() {
-        this.port = Integer.valueOf(environment.getProperty("redisaux.limiter.dashboard.port", "1210"));
-        this.ip = environment.getProperty("redisaux.limiter.dashboard.ip", "127.0.0.1");
-        this.servletPort= environment.getProperty("server.port", Integer.class);
+        LimitGroupConfiguration.DashboardConfig config = this.config.getDashboard();
+        this.port = config.getPort();
+        this.ip = config.getIp();
+        this.servletPort = environment.getProperty("server.port", Integer.class);
         //dashboard默认地址
         remoteService = InstanceRemoteService.dashboard(ip, this.port);
+        //如果使用文件配置，直接使用文件配置，否则代码自定义
+        if(this.config.isUseConfig()){
+            List<LimitGroupConfig> groups = this.config.getGroups();
+            limiterGroupService.saveAll(groups);
+        }
         Runnable afterConnected = () -> {
             InstanceInfo instanceInfo = getInstanceInfo();
             remoteService.performRequestOneWay(RemoteAction.request(SupportAction.SEND_SERVER_INFO, instanceInfo));
@@ -61,7 +70,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         isRunning = true;
     }
 
-    public void reconnect(){
+    public void reconnect() {
 
     }
 
@@ -71,10 +80,10 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         isRunning = false;
     }
 
-    public InstanceInfo getInstanceInfo(){
+    public InstanceInfo getInstanceInfo() {
         InstanceInfo instanceInfo = new InstanceInfo();
         instanceInfo.setIp(HostNameUtil.getIp());
-        instanceInfo.setPort(port);
+        instanceInfo.setPort(servletPort);
         instanceInfo.setHostName(HostNameUtil.getHostName());
         return instanceInfo;
     }
@@ -125,7 +134,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                 Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
                 return RemoteAction.response(action, limiterGroupService.getConfigByGroupIds(groupIds), remoteAction.getRequestId());
             }
-            LimiteGroupConfig config = null;
+            LimitGroupConfig config = null;
             switch (action) {
                 case FUNNEL_CHANGE:
                     FunnelChangeParam body = RemoteAction.getBody(FunnelChangeParam.class, remoteAction);
@@ -180,8 +189,8 @@ public class DashBoardRequestHandler implements SmartLifecycle {
             return RemoteAction.response(action, config, remoteAction.getRequestId());
         }
 
-        private LimiteGroupConfig saveConfig(BaseParam param, Predicate<LimiteGroupConfig> setFunction) {
-            LimiteGroupConfig limiterConfig = limiterGroupService.getLimiterConfig(param.getGroupId());
+        private LimitGroupConfig saveConfig(BaseParam param, Predicate<LimitGroupConfig> setFunction) {
+            LimitGroupConfig limiterConfig = limiterGroupService.getLimiterConfig(param.getGroupId());
             boolean test = setFunction.test(limiterConfig);
             if (test) {
                 limiterGroupService.save(limiterConfig, true, false);

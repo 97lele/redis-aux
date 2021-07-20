@@ -1,29 +1,34 @@
 package com.xl.redisaux.demo.springmvc.config;
 
-import com.xl.redisaux.common.api.FunnelRateConfig;
-import com.xl.redisaux.common.api.LimiteGroupConfig;
-import com.xl.redisaux.common.api.TokenRateConfig;
-import com.xl.redisaux.common.api.WindowRateConfig;
-import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
 import com.xl.redisaux.limiter.core.handler.GroupHandlerFactory;
+import com.xl.redisaux.limiter.autoconfigure.LimitGroupConfiguration;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 @Configuration
 public class RateLimitConfig implements InitializingBean {
     @Autowired
     private LimiterGroupService limiterGroupService;
- 
+    @Autowired
+    private LimitGroupConfiguration groupConfig;
+
     @Override
     public void afterPropertiesSet() {
+        List<LimitGroupConfig> groups = groupConfig.getGroups();
+        for (LimitGroupConfig group : groups) {
+            limiterGroupService.clear(group.getId());
+            //保存到redis,也可以保存到本地
+            limiterGroupService.save(group);
+        }
+        /*手动建造
         //清除原来的配置
-        limiterGroupService.clear("1");
-        //新建
-        LimiteGroupConfig config = LimiteGroupConfig.of().id("1")
+         limiterGroupService.clear("1");
+        LimiteGroupConfig config = LimiteGroupConfig.of("1")
                 .remark("this.application").tokenConfig(
                         //令牌桶配置，下面表示令牌桶容量为5，初始桶为3，每1s生产3个令牌，每个请求消耗1个令牌
                         TokenRateConfig.of()
@@ -49,28 +54,25 @@ public class RateLimitConfig implements InitializingBean {
                         .requestNeed(1.0)
                         .build())
                 //黑白名单，网段 xxx.xxx.xxx./24,类似 192.168.0.0-192.168.2.1 以及 192* 分号分隔
-                /*.blackRule("127.0.0.1")
+                .blackRule("127.0.0.1")
                 .enableBlackList(true)
                 .enableWhiteList(true).
                 whiteRule("192.168.0.*")
-                */
                 .blackRuleFallback("ip")
                 //当前限流模式
                 .currentMode(LimiterConstants.TOKEN_LIMITER)
                 //开启统计，是统计复用该配置下的请求数
                 .enableCount(true)
                 //统计时间范围,如果没有则从第一次请求开始统计
-                .countDuring(1,TimeUnit.MINUTES)
+                .qpsCountDuring(1,TimeUnit.MINUTES)
                 //url配置,;号分割
                 .unableURLPrefix("/user;/qq")
                 .enableURLPrefix("/test")
                 //url匹配失败后的执行方法
                 .urlFallBack("userBlack")
                 .build();
-        //保存到redis,也可以保存到本地
-        limiterGroupService.save(config, true, false);
-        //读取redis上的配置
-//        limiterGroupService.reload("1");
+                 //读取redis上的配置
+        limiterGroupService.reload("1");*/
         //添加对应的拦截器,不然切面中不会执行对应的逻辑，这里也可以实现自己的拦截器并添加上去
         limiterGroupService.addHandler(GroupHandlerFactory.limiteHandler())
                 .addHandler(GroupHandlerFactory.ipBlackHandler())

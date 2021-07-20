@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD,ElementType.TYPE})
-public @interface LimiteGroup {
+public @interface LimitGroup {
     String groupId();
     String fallback() default "";
     boolean passArgs() default false;

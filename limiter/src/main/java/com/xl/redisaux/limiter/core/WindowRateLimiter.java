@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core;
 
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.limiter.annonations.WindowLimiter;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,9 +39,9 @@ public class WindowRateLimiter implements BaseRateLimiter {
     }
 
     @Override
-    public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
-        List<String> keyList = limiteGroup.getWindowKeyName(methodKey);
-        WindowRateConfig windowRateConfig = limiteGroup.getWindowRateConfig();
+    public Boolean canExecute(LimitGroupConfig limitGroup, String methodKey) {
+        List<String> keyList = limitGroup.getWindowKeyName(methodKey);
+        WindowRateConfig windowRateConfig = limitGroup.getWindowRateConfig();
         return handleParam(keyList, windowRateConfig.getPassCount(), windowRateConfig.getDuringUnit(), windowRateConfig.getDuring());
     }
 

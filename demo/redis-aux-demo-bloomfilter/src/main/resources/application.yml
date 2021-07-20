@@ -6,24 +6,24 @@
 #    sentinel:
 #      master: mymaster #主服务器所在集群名称
 #      nodes:  localhost:26379,localhost:26479,localhost:26579
-spring:
-  redis:
-    cluster:
-      # 各 Redis 节点信息
-      nodes: localhost:7001,localhost:7002,localhost:7003,localhost:7004,localhost:7005,localhost:7006
-      # 执行命令超时时间
-      command-timeout: 15000
-      # 重试次数
-      max-attempts: 5
-      # 跨集群执行命令时要遵循的最大重定向数量
-      max-redirects: 3
-      # 连接池最大连接数（使用负值表示没有限制）
-      max-active: 16
-      # 连接池最大阻塞等待时间（使用负值表示没有限制）
-      max-wait: -1
-      # 连接池中的最大空闲连接
-      max-idle: 8
-      # 连接池中的最小空闲连接
-      min-idle: 0
-      # 是否在从池中取出连接前进行检验,如果检验失败,则从池中去除连接并尝试取出另一个
-      test-on-borrow: true
+#spring:
+#  redis:
+#    cluster:
+#      # 各 Redis 节点信息
+#      nodes: localhost:7001,localhost:7002,localhost:7003,localhost:7004,localhost:7005,localhost:7006
+#      # 执行命令超时时间
+#      command-timeout: 15000
+#      # 重试次数
+#      max-attempts: 5
+#      # 跨集群执行命令时要遵循的最大重定向数量
+#      max-redirects: 3
+#      # 连接池最大连接数（使用负值表示没有限制）
+#      max-active: 16
+#      # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#      max-wait: -1
+#      # 连接池中的最大空闲连接
+#      max-idle: 8
+#      # 连接池中的最小空闲连接
+#      min-idle: 0
+#      # 是否在从池中取出连接前进行检验,如果检验失败,则从池中去除连接并尝试取出另一个
+#      test-on-borrow: true

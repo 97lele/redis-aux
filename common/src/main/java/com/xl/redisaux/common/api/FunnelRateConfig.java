@@ -1,6 +1,7 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.common.enums.TimeUnitEnum;
 import lombok.NoArgsConstructor;
 
 import java.util.Objects;
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class FunnelRateConfig {
 
-    private Integer type= LimiterConstants.FUNNEL_LIMITER;
+    private Integer type = LimiterConstants.FUNNEL_LIMITER;
     //漏斗配置
     private Double capacity;
 
@@ -31,7 +32,9 @@ public class FunnelRateConfig {
 
     private TimeUnit funnelRateUnit;
 
-    public FunnelRateConfig(){
+    private int unitMode;
+
+    public FunnelRateConfig() {
 
     }
 
@@ -52,11 +55,11 @@ public class FunnelRateConfig {
         return Objects.hash(type, capacity, funnelRate, requestNeed, funnelRateUnit);
     }
 
-    public FunnelRateConfig(Builder builder){
-        this.capacity =builder.capacity;
-        this.funnelRate =builder.funnelRate;
-        this.requestNeed =builder.requestNeed==null?1: builder.requestNeed;
-        this.funnelRateUnit =builder.funnelRateUnit==null?TimeUnit.SECONDS: builder.funnelRateUnit;
+    public FunnelRateConfig(Builder builder) {
+        this.capacity = builder.capacity;
+        this.funnelRate = builder.funnelRate;
+        this.requestNeed = builder.requestNeed == null ? 1 : builder.requestNeed;
+        this.funnelRateUnit = builder.funnelRateUnit == null ? TimeUnit.SECONDS : builder.funnelRateUnit;
     }
 
     public Double getCapacity() {
@@ -88,17 +91,28 @@ public class FunnelRateConfig {
     }
 
     public TimeUnit getFunnelRateUnit() {
+        if (funnelRateUnit == null) {
+            funnelRateUnit = TimeUnitEnum.getTimeUnit(unitMode);
+        }
         return funnelRateUnit;
+    }
+
+    public void setUnitMode(int unitMode) {
+        if (funnelRateUnit == null) {
+            funnelRateUnit = TimeUnitEnum.getTimeUnit(unitMode);
+        }
+        this.unitMode = unitMode;
     }
 
     public void setFunnelRateUnit(TimeUnit funnelRateUnit) {
         this.funnelRateUnit = funnelRateUnit;
     }
-    public static Builder of(){
+
+    public static Builder of() {
         return new Builder();
     }
 
-    public static class Builder{
+    public static class Builder {
         private Double capacity;
 
         /**
@@ -116,22 +130,27 @@ public class FunnelRateConfig {
 
         private TimeUnit funnelRateUnit;
 
-        public Builder capacity(Double capacity){
-            this.capacity=capacity;
+        public Builder capacity(Double capacity) {
+            this.capacity = capacity;
             return this;
         }
-        public Builder funnelRate(Double funnelRate){
-            this.funnelRate=funnelRate;
+
+        public Builder funnelRate(Double funnelRate) {
+            this.funnelRate = funnelRate;
             return this;
         }
-        public Builder requestNeed(Double requestNeed){
-            this.requestNeed=requestNeed;
-            return this;
-        } public Builder funnelRateUnit(TimeUnit funnelRateUnit){
-            this.funnelRateUnit=funnelRateUnit;
+
+        public Builder requestNeed(Double requestNeed) {
+            this.requestNeed = requestNeed;
             return this;
         }
-        public FunnelRateConfig build(){
+
+        public Builder funnelRateUnit(TimeUnit funnelRateUnit) {
+            this.funnelRateUnit = funnelRateUnit;
+            return this;
+        }
+
+        public FunnelRateConfig build() {
             return new FunnelRateConfig(this);
         }
     }

@@ -1,6 +1,7 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.common.enums.TimeUnitEnum;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,8 @@ public class TokenRateConfig {
     private TimeUnit tokenRateUnit;
 
     private Double initToken;
+
+    private int unitMode;
 
     public TokenRateConfig() {
 
@@ -88,6 +91,9 @@ public class TokenRateConfig {
     }
 
     public TimeUnit getTokenRateUnit() {
+        if(tokenRateUnit==null){
+            tokenRateUnit = TimeUnitEnum.getTimeUnit(unitMode);
+        }
         return tokenRateUnit;
     }
 
@@ -101,6 +107,13 @@ public class TokenRateConfig {
 
     public void setInitToken(Double initToken) {
         this.initToken = initToken;
+    }
+
+    public void setUnitMode(int unitMode) {
+        if(tokenRateUnit==null){
+           tokenRateUnit=TimeUnitEnum.getTimeUnit(unitMode);
+        }
+        this.unitMode = unitMode;
     }
 
     public static Builder of() {

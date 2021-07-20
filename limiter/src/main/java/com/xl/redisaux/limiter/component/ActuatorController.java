@@ -1,7 +1,7 @@
 package com.xl.redisaux.limiter.component;
 
 import com.xl.redisaux.common.api.FunnelRateConfig;
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.common.api.TokenRateConfig;
 import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.common.utils.IpCheckUtil;
@@ -30,11 +30,11 @@ public class ActuatorController {
 
     //更改ip规则
     @PostMapping("/redis-aux/changeIpRule")
-    public LimiteGroupConfig changeRule(@RequestParam("groupId") String groupId,
-                                        @RequestParam(value = "rule", required = false) String rule,
-                                        @RequestParam(value = "enable", required = false) Boolean enable,
-                                        @RequestParam(value = "white", required = false) Boolean white) {
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+    public LimitGroupConfig changeRule(@RequestParam("groupId") String groupId,
+                                       @RequestParam(value = "rule", required = false) String rule,
+                                       @RequestParam(value = "enable", required = false) Boolean enable,
+                                       @RequestParam(value = "white", required = false) Boolean white) {
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if (white) {
             limiter.setWhiteRule(rule);
             limiter.setEnableWhiteList(enable);
@@ -48,11 +48,11 @@ public class ActuatorController {
 
     //更改url匹配规则
     @PostMapping("/redis-aux/changeUrlRule")
-    public LimiteGroupConfig changeUrlRule(@RequestParam("groupId") String groupId,
-                                           @RequestParam("enableUrl") String enableUrl,
-                                           @RequestParam("unableUrl") String unableUrl
+    public LimitGroupConfig changeUrlRule(@RequestParam("groupId") String groupId,
+                                          @RequestParam("enableUrl") String enableUrl,
+                                          @RequestParam("unableUrl") String unableUrl
                                            ) {
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         boolean change=false;
         if (enableUrl != null) {
             change=true;
@@ -71,10 +71,10 @@ public class ActuatorController {
 
     //更改模式
     @PostMapping("/redis-aux/changeLimitMode")
-    public LimiteGroupConfig changeMode(@RequestParam("groupId") String groupId, @RequestParam("mode") Integer mode
+    public LimitGroupConfig changeMode(@RequestParam("groupId") String groupId, @RequestParam("mode") Integer mode
             , @RequestParam("removeOther") Boolean removeOther
     ) {
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if (mode < 4 && mode > 0&& limiter.setCurrentMode(mode)) {
             limiterGroupService.save(limiter, true, removeOther);
         }
@@ -93,7 +93,7 @@ public class ActuatorController {
         FunnelRateConfig config = FunnelRateConfig.of().capacity(capacity)
                 .funnelRate(funnelRate).requestNeed(requestNeed)
                 .funnelRateUnit(TimeUnitEnum.getTimeUnit(funnelRateUnit)).build();
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if(limiter.setFunnelRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }
@@ -107,7 +107,7 @@ public class ActuatorController {
                                                 @RequestParam(value = "duringUnit", required = false) Integer mode
     ) {
         WindowRateConfig config = WindowRateConfig.of().passCount(passCount).during(during).duringUnit(TimeUnitEnum.getTimeUnit(mode)).build();
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if(limiter.setWindowRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }
@@ -124,7 +124,7 @@ public class ActuatorController {
     ) {
         TokenRateConfig config = TokenRateConfig.of().capacity(capacity).initToken(initToken).tokenRate(tokenRate)
                 .requestNeed(requestNeed).tokenRateUnit(TimeUnitEnum.getTimeUnit(duringUnit)).build();
-        LimiteGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
+        LimitGroupConfig limiter = limiterGroupService.getLimiterConfig(groupId);
         if(limiter.setTokenRateConfig(config)){
             limiterGroupService.save(limiter, true, false);
         }

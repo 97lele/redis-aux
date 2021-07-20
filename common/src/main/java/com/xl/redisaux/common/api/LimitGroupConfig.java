@@ -1,6 +1,7 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.common.enums.TimeUnitEnum;
 import com.xl.redisaux.common.utils.CommonUtil;
 
 import java.util.Collections;
@@ -14,12 +15,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date 2020/2/15 16:16
  */
 
-public class LimiteGroupConfig {
-    public LimiteGroupConfig() {
+public class LimitGroupConfig {
+    public LimitGroupConfig() {
 
     }
 
-    public LimiteGroupConfig(Builder builder) {
+    public LimitGroupConfig(Builder builder) {
         this.remark = builder.remark;
         this.id = builder.id;
         this.blackRule = builder.blackRule;
@@ -29,16 +30,17 @@ public class LimiteGroupConfig {
         this.windowRateConfig = builder.windowRateConfig;
         this.tokenRateConfig = builder.tokenRateConfig;
         this.blackRuleFallback = builder.blackRuleFallback == null ? "" : builder.blackRuleFallback;
-        this.enableWhiteList = builder.enableWhiteList == null ? false : builder.enableWhiteList;
-        this.enableBlackList = builder.enableBlackList == null ? false : builder.enableBlackList;
+        this.enableWhiteList = builder.enableWhiteList;
+        this.enableBlackList = builder.enableBlackList;
         this.enableURLPrefix = builder.enableURLPrefix == null ? "/*" : builder.enableURLPrefix;
         this.unableURLPrefix = builder.unableURLPrefix == null ? "" : builder.unableURLPrefix;
-        this.countDuring = builder.countDuring == null ? 1 : builder.countDuring;
-        this.enableQpsCount = builder.enableCount == null ? false : builder.enableCount;
-        this.countDuringUnit = builder.countDuringUnit == null ? TimeUnit.MINUTES : builder.countDuringUnit;
+        this.qpsCountDuring = builder.qpsCountDuring == null ? 1 : builder.qpsCountDuring;
+        this.enableQpsCount = builder.enableQpsCount;
+        this.qpsCountDuringUnit = builder.qpsCountDuringUnit == null ? TimeUnit.MINUTES : builder.qpsCountDuringUnit;
         this.urlFallBack = builder.urlFallBack == null ? "" : builder.urlFallBack;
         this.bucketSize = builder.bucketSize == null ? 10 : builder.bucketSize;
-
+        this.removeOtherLimit = builder.removeOtherLimit;
+        this.saveInRedis = builder.saveInRedis;
     }
 
     /**
@@ -108,13 +110,35 @@ public class LimiteGroupConfig {
     /**
      * 持续周期
      */
-    private int countDuring;
+    private int qpsCountDuring;
     /**
      * 周期单位
      */
-    private TimeUnit countDuringUnit;
+    private TimeUnit qpsCountDuringUnit;
 
     private Integer bucketSize;
+
+    private int qpsUnitMode;
+
+    private boolean removeOtherLimit=true;
+
+    public boolean isRemoveOtherLimit() {
+        return removeOtherLimit;
+    }
+
+    public boolean isSaveInRedis() {
+        return saveInRedis;
+    }
+
+    /**
+     * 是否保存到redis
+     */
+    private boolean saveInRedis=true;
+
+    public void setQpsUnitMode(int unitMode) {
+        qpsCountDuringUnit = TimeUnitEnum.getTimeUnit(unitMode);
+        this.qpsUnitMode = unitMode;
+    }
 
     public Integer getBucketSize() {
         return bucketSize;
@@ -181,7 +205,7 @@ public class LimiteGroupConfig {
     }
 
     public boolean setFunnelRateConfig(FunnelRateConfig funnelRateConfig) {
-        boolean b = !Objects.equals(this.funnelRateConfig,funnelRateConfig);
+        boolean b = !Objects.equals(this.funnelRateConfig, funnelRateConfig);
         if (b) {
             this.funnelRateConfig = funnelRateConfig;
         }
@@ -193,7 +217,7 @@ public class LimiteGroupConfig {
     }
 
     public boolean setTokenRateConfig(TokenRateConfig tokenRateConfig) {
-        boolean b =! Objects.equals(this.tokenRateConfig,tokenRateConfig);
+        boolean b = !Objects.equals(this.tokenRateConfig, tokenRateConfig);
         if (b) {
             this.tokenRateConfig = tokenRateConfig;
         }
@@ -206,7 +230,7 @@ public class LimiteGroupConfig {
 
     public boolean setWindowRateConfig(
             WindowRateConfig windowRateConfig) {
-        boolean b = !Objects.equals(this.windowRateConfig,windowRateConfig);
+        boolean b = !Objects.equals(this.windowRateConfig, windowRateConfig);
         if (b) {
             this.windowRateConfig = windowRateConfig;
         }
@@ -269,20 +293,23 @@ public class LimiteGroupConfig {
         this.enableQpsCount = enableQpsCount;
     }
 
-    public int getCountDuring() {
-        return countDuring;
+    public int getQpsCountDuring() {
+        return qpsCountDuring;
     }
 
-    public void setCountDuring(int countDuring) {
-        this.countDuring = countDuring;
+    public void setQpsCountDuring(int qpsCountDuring) {
+        this.qpsCountDuring = qpsCountDuring;
     }
 
-    public TimeUnit getCountDuringUnit() {
-        return countDuringUnit;
+    public TimeUnit getQpsCountDuringUnit() {
+        if (qpsCountDuringUnit == null) {
+            qpsCountDuringUnit = TimeUnitEnum.getTimeUnit(qpsUnitMode);
+        }
+        return qpsCountDuringUnit;
     }
 
-    public void setCountDuringUnit(TimeUnit countDuringUnit) {
-        this.countDuringUnit = countDuringUnit;
+    public void setQpsCountDuringUnit(TimeUnit qpsCountDuringUnit) {
+        this.qpsCountDuringUnit = qpsCountDuringUnit;
     }
 
     public List<String> getFunnelKeyName(String methodKey) {
@@ -305,8 +332,8 @@ public class LimiteGroupConfig {
         this.tokenRateConfig = null;
     }
 
-    public static Builder of() {
-        return new Builder();
+    public static Builder of(String id) {
+        return new Builder().id(id);
     }
 
     public static class Builder {
@@ -318,18 +345,22 @@ public class LimiteGroupConfig {
         private FunnelRateConfig funnelRateConfig;
         private TokenRateConfig tokenRateConfig;
         private WindowRateConfig windowRateConfig;
-        private Boolean enableWhiteList;
-        private Boolean enableBlackList;
+        private boolean enableWhiteList;
+        private boolean enableBlackList;
         private String blackRuleFallback;
         private String enableURLPrefix;
         private String unableURLPrefix;
-        private Boolean enableCount;
-        private Integer countDuring;
-        private TimeUnit countDuringUnit;
+        private boolean enableQpsCount;
+        private Integer qpsCountDuring;
+        private TimeUnit qpsCountDuringUnit;
         private Integer bucketSize;
         private String urlFallBack;
+        //是否删除除当前模式外的限流器信息
+        private boolean removeOtherLimit;
+        //是否保存到redis
+        private boolean saveInRedis;
 
-        public Builder id(String id) {
+        protected Builder id(String id) {
             this.id = id;
             return this;
         }
@@ -369,8 +400,8 @@ public class LimiteGroupConfig {
             return this;
         }
 
-        public Builder enableWhiteList(Boolean enableWhiteList) {
-            this.enableWhiteList = enableWhiteList;
+        public Builder enableWhiteList() {
+            this.enableWhiteList = true;
             return this;
         }
 
@@ -379,8 +410,8 @@ public class LimiteGroupConfig {
             return this;
         }
 
-        public Builder enableBlackList(Boolean enableBlackList) {
-            this.enableBlackList = enableBlackList;
+        public Builder enableBlackList() {
+            this.enableBlackList = true;
             return this;
         }
 
@@ -399,14 +430,15 @@ public class LimiteGroupConfig {
             return this;
         }
 
-        public Builder enableCount(Boolean enableCount) {
-            this.enableCount = enableCount;
+        //开启计数，默认1分钟
+        public Builder enableCount() {
+            this.enableQpsCount = true;
             return this;
         }
 
-        public Builder countDuring(Integer countDuring, TimeUnit timeUnit) {
-            this.countDuring = countDuring;
-            this.countDuringUnit = timeUnit;
+        public Builder qpsCountDuring(Integer countDuring, TimeUnit timeUnit) {
+            this.qpsCountDuring = countDuring;
+            this.qpsCountDuringUnit = timeUnit;
             return this;
         }
 
@@ -415,9 +447,18 @@ public class LimiteGroupConfig {
             return this;
         }
 
+        public Builder saveInRedis() {
+            this.saveInRedis = true;
+            return this;
+        }
 
-        public LimiteGroupConfig build() {
-            return new LimiteGroupConfig(this);
+        public Builder removeOtherLimit() {
+            this.removeOtherLimit = true;
+            return this;
+        }
+
+        public LimitGroupConfig build() {
+            return new LimitGroupConfig(this);
         }
     }
 }

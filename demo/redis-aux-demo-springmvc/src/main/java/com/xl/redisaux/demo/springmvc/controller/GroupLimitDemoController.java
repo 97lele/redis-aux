@@ -2,13 +2,13 @@ package com.xl.redisaux.demo.springmvc.controller;
 
 import com.xl.redisaux.demo.springmvc.service.TestService;
 import com.xl.redisaux.limiter.annonations.LimiteExclude;
-import com.xl.redisaux.limiter.annonations.LimiteGroup;
+import com.xl.redisaux.limiter.annonations.LimitGroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@LimiteGroup(groupId = "1", fallback = "test")
+@LimitGroup(groupId = "1", fallback = "test")
 public class GroupLimitDemoController {
     @Autowired
     private TestService service;

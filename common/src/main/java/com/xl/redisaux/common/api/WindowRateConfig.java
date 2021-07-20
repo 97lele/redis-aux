@@ -1,6 +1,7 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import com.xl.redisaux.common.enums.TimeUnitEnum;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,8 @@ public class WindowRateConfig {
     private TimeUnit duringUnit;
 
     private Long during;
+
+    private int unitMode;
 
     public WindowRateConfig() {
 
@@ -55,6 +58,9 @@ public class WindowRateConfig {
     }
 
     public TimeUnit getDuringUnit() {
+        if(duringUnit==null){
+            return TimeUnitEnum.getTimeUnit(unitMode);
+        }
         return duringUnit;
     }
 
@@ -72,6 +78,13 @@ public class WindowRateConfig {
 
     public static Builder of() {
         return new Builder();
+    }
+
+    public void setUnitMode(int unitMode) {
+        if(duringUnit==null){
+            duringUnit=TimeUnitEnum.getTimeUnit(unitMode);
+        }
+        this.unitMode = unitMode;
     }
 
     public static class Builder {

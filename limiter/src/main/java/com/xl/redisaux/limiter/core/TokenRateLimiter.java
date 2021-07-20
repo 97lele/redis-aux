@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core;
 
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.common.api.TokenRateConfig;
 import com.xl.redisaux.limiter.annonations.TokenLimiter;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -42,9 +42,9 @@ public class TokenRateLimiter implements BaseRateLimiter {
     }
 
     @Override
-    public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
-        TokenRateConfig tokenRateConfig = limiteGroup.getTokenRateConfig();
-        return handleParam(limiteGroup.getTokenKeyName(methodKey), tokenRateConfig.getCapacity(), tokenRateConfig.getRequestNeed(),
+    public Boolean canExecute(LimitGroupConfig limitGroup, String methodKey) {
+        TokenRateConfig tokenRateConfig = limitGroup.getTokenRateConfig();
+        return handleParam(limitGroup.getTokenKeyName(methodKey), tokenRateConfig.getCapacity(), tokenRateConfig.getRequestNeed(),
                 tokenRateConfig.getTokenRate(), tokenRateConfig.getTokenRateUnit(), tokenRateConfig.getInitToken());
     }
 

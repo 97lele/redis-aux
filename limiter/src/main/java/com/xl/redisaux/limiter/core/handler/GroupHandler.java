@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core.handler;
 
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 
 /**
@@ -17,7 +17,7 @@ public interface GroupHandler {
      * 具体看constats
      * @return
      */
-    int handle(LimiteGroupConfig limitGroupConfig, String ip,
+    int handle(LimitGroupConfig limitGroupConfig, String ip,
                String url, BaseRateLimiter baseRateLimiter,
                String methodKey
                );

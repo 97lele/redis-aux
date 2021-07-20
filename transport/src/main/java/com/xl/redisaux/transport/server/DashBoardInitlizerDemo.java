@@ -16,7 +16,7 @@ public class DashBoardInitlizerDemo {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         DashBoardRemoteService start = DashBoardRemoteService.bind(1210)
                 .addHandler(new ConnectionHandler(),new SimpleHandler())
-                .supportHeartBeat(30, 3)
+                .supportHeartBeat(3, 30)
                 .start();
         TimeUnit.SECONDS.sleep(5);
         Map<String, Channel> instanceMap = ConnectionHandler.getInstanceMap();

@@ -1,6 +1,6 @@
 package com.xl.redisaux.limiter.core.handler;
 
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.utils.IpRuleHolder;
 import com.xl.redisaux.common.consts.LimiterConstants;
@@ -18,7 +18,7 @@ public class IpBlackHandler implements GroupHandler {
     }
 
     @Override
-    public int handle(LimiteGroupConfig limitGroupConfig, String ip, String url, BaseRateLimiter baseRateLimiter, String methodKey) {
+    public int handle(LimitGroupConfig limitGroupConfig, String ip, String url, BaseRateLimiter baseRateLimiter, String methodKey) {
         if (limitGroupConfig.isEnableBlackList()) {
             // 判断规则有无变
             String blackRule = limitGroupConfig.getBlackRule();

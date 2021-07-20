@@ -3,8 +3,26 @@ server:
 redisaux:
   limiter:
     dashboard:
-      port: 1210
       ip: 127.0.0.1
+      port: 1210
+    groups:
+      - id: 1
+        remark: test
+        tokenRateConfig:
+          capacity: 2.0
+          initToken: 3.0
+          requestNeed: 1.0
+          tokenRate: 3
+        windowRateConfig:
+          passCount: 5
+          during: 1000
+          unitMode: -1
+        currentMode: 2
+        blackRuleFallback: ip
+        enableQPS: true
+        unableURLPrefix: /user;/qq
+        enableURLPrefix: /test
+        urlFallBack: userBlack
 #spring:
 #  application:
 #    name: mvcTest

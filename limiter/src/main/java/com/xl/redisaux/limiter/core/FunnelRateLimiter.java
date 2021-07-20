@@ -1,7 +1,7 @@
 package com.xl.redisaux.limiter.core;
 
 import com.xl.redisaux.common.api.FunnelRateConfig;
-import com.xl.redisaux.common.api.LimiteGroupConfig;
+import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.limiter.annonations.FunnelLimiter;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -40,12 +40,12 @@ public class FunnelRateLimiter implements BaseRateLimiter {
     }
 
     @Override
-    public Boolean canExecute(LimiteGroupConfig limiteGroup, String methodKey) {
-        FunnelRateConfig funnelRateConfig = limiteGroup.getFunnelRateConfig();
+    public Boolean canExecute(LimitGroupConfig limitGroup, String methodKey) {
+        FunnelRateConfig funnelRateConfig = limitGroup.getFunnelRateConfig();
         double funnelCapacity = funnelRateConfig.getCapacity();
         double funnelRatePerTimeUnit = funnelRateConfig.getFunnelRate();
         double funnelRequestNeed = funnelRateConfig.getRequestNeed();
-        return handleParam(limiteGroup.getFunnelKeyName(methodKey), funnelCapacity, funnelRequestNeed, funnelRatePerTimeUnit, funnelRateConfig.getFunnelRateUnit());
+        return handleParam(limitGroup.getFunnelKeyName(methodKey), funnelCapacity, funnelRequestNeed, funnelRatePerTimeUnit, funnelRateConfig.getFunnelRateUnit());
     }
 
     private Boolean handleParam(List<String> keyList, double capacity, double need, double rate, TimeUnit timeUnit) {
