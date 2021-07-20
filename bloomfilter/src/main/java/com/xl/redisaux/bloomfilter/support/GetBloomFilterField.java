@@ -34,7 +34,7 @@ public class GetBloomFilterField {
         if (lambda == null) {
             try {
                 //writeReplace方法用于获取SerializedLamda对象
-                Method writeReplace = sFunction.getClass().getDeclaredMethod(BloomFilterConstants.LAMBDAMETHODNAME);
+                Method writeReplace = sFunction.getClass().getDeclaredMethod(BloomFilterConstants.LAMBDA_METHOD_NAME);
                 writeReplace.setAccessible(true);
                 lambda = (SerializedLambda) writeReplace.invoke(sFunction);
             } catch (NoSuchMethodException e) {

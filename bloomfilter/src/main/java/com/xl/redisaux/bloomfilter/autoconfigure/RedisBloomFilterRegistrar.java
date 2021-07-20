@@ -35,7 +35,7 @@ public class RedisBloomFilterRegistrar implements ImportBeanDefinitionRegistrar 
         Map<String, Object> attributes = importingClassMetadata
                 .getAnnotationAttributes(EnableBloomFilter.class.getCanonicalName());
         transaction = (Boolean) attributes.get("transaction");
-        String[] scanPaths = (String[]) attributes.get(BloomFilterConstants.SCAPATH);
+        String[] scanPaths = (String[]) attributes.get(BloomFilterConstants.SCAN_PATH);
         //扫描并存储注解上的信息
         if (!scanPaths[0].isEmpty()) {
             bloomFilterFieldMap = new HashMap<>();

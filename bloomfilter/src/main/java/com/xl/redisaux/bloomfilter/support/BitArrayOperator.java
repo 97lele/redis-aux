@@ -6,6 +6,7 @@ import com.xl.redisaux.bloomfilter.core.bitarray.RedisBitArray;
 import com.xl.redisaux.bloomfilter.support.expire.WatiForDeleteKey;
 import com.xl.redisaux.bloomfilter.support.expire.CheckTask;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.util.Collection;
@@ -24,12 +25,12 @@ public class BitArrayOperator {
 
     private final DefaultRedisScript resetBitScript;
 
-    private final RedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     private final CheckTask checkTask;
 
 
-    public BitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, RedisTemplate redisTemplate, CheckTask checkTask) {
+    public BitArrayOperator(DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, StringRedisTemplate redisTemplate, CheckTask checkTask) {
         this.setBitScript = setBitScript;
         this.getBitScript = getBitScript;
         this.resetBitScript = resetBitScript;

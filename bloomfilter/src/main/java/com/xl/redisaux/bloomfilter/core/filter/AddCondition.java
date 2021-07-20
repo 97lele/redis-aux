@@ -9,14 +9,11 @@ import java.util.concurrent.TimeUnit;
  * @author lulu
  * @Date 2020/1/11 20:48
  */
-public final class AddCondition {
+public final class AddCondition extends BaseCondition<AddCondition>{
     protected Double fpp;
     protected Long exceptionInsert;
-    protected String keyPrefix;
-    protected String keyName;
     protected Long timeout;
     protected TimeUnit timeUnit;
-    protected BaseCondition baseCondition;
     protected ExpireCondition expireCondition;
     protected Boolean local;
 
@@ -31,15 +28,6 @@ public final class AddCondition {
         return this;
     }
 
-    public AddCondition keyPrefix(String keyPrefix) {
-        this.keyPrefix = keyPrefix;
-        return this;
-    }
-
-    public AddCondition keyName(String keyName) {
-        this.keyName = keyName;
-        return this;
-    }
 
     public AddCondition timeout(Long timeuot) {
         this.timeout = timeuot;
@@ -58,7 +46,7 @@ public final class AddCondition {
         return this;
     }
 
-    InnerInfo build() {
+  public  InnerInfo build() {
         if (keyName == null) {
             throw new RedisAuxException("key is null!");
         }
@@ -69,13 +57,6 @@ public final class AddCondition {
         this.local=local==null?false:local;
         return new InnerInfo(this);
 
-    }
-
-    public BaseCondition toBaseCondition() {
-        if (this.baseCondition == null) {
-            this.baseCondition = BaseCondition.create().keyName(keyName).keyPrefix(keyPrefix);
-        }
-        return this.baseCondition;
     }
 
     public ExpireCondition toExpireCondition() {
@@ -91,7 +72,6 @@ public final class AddCondition {
 
     protected void clear() {
         this.expireCondition = null;
-        this.baseCondition = null;
     }
 
     public Double getFpp() {

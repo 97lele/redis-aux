@@ -46,20 +46,19 @@ public class BloomFilterTestService {
         String key = "testAdd";
         //默认local为false
         AddCondition addCondition = AddCondition.create().keyName(key).local(isLocal);
-        BaseCondition baseCondition = addCondition.toBaseCondition();
         bloomFilter.add(addCondition, "hello");
-        System.out.println("contain he:"+bloomFilter.mightContain(baseCondition,"he"));
-        System.out.println("contain hello:"+bloomFilter.mightContain(baseCondition,"hello"));
+        System.out.println("contain he:"+bloomFilter.mightContain(addCondition,"he"));
+        System.out.println("contain hello:"+bloomFilter.mightContain(addCondition,"hello"));
         //多值操作
         bloomFilter.addAll(addCondition, Arrays.asList("h","a","c"));
-        System.out.println("before reset："+bloomFilter.mightContains(baseCondition,Arrays.asList("a","b","c")));
+        System.out.println("before reset："+bloomFilter.mightContains(addCondition,Arrays.asList("a","b","c")));
         //重置
-        bloomFilter.reset(baseCondition);
-        System.out.println("after reset："+bloomFilter.mightContains(baseCondition,Arrays.asList("a","hello","qq")));
-        System.out.println("before delete："+bloomFilter.containKey(baseCondition));
+        bloomFilter.reset(addCondition);
+        System.out.println("after reset："+bloomFilter.mightContains(addCondition,Arrays.asList("a","hello","qq")));
+        System.out.println("before delete："+bloomFilter.containKey(addCondition));
         //删除
-        bloomFilter.remove(baseCondition);
-        System.out.println("after delete："+bloomFilter.containKey(baseCondition));
+        bloomFilter.remove(addCondition);
+        System.out.println("after delete："+bloomFilter.containKey(addCondition));
     }
 
 

@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -17,9 +17,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 @ConditionalOnClass(RedisConnectionFactory.class)
 public class BloomRedisTemplateConfig {
-    @Bean(name = BloomFilterConstants.INNERTEMPLATE)
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    @Bean(name = BloomFilterConstants.INNER_TEMPLATE)
+    public StringRedisTemplate redisTemplate(RedisConnectionFactory factory) {
+        StringRedisTemplate redisTemplate = new StringRedisTemplate();
         redisTemplate.setConnectionFactory(factory);
         GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
         redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);

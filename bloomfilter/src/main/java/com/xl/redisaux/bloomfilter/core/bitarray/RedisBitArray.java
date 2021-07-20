@@ -2,8 +2,9 @@ package com.xl.redisaux.bloomfilter.core.bitarray;
 
 import com.xl.redisaux.common.consts.BloomFilterConstants;
 import com.xl.redisaux.common.exceptions.RedisAuxException;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -17,7 +18,7 @@ import java.util.List;
 public class RedisBitArray implements BitArray {
 
 
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
     private long bitSize;
 
@@ -32,8 +33,7 @@ public class RedisBitArray implements BitArray {
     private DefaultRedisScript resetBitScript;
 
 
-
-    public RedisBitArray(RedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript,long bitSize) {
+    public RedisBitArray(StringRedisTemplate redisTemplate, String key, DefaultRedisScript setBitScript, DefaultRedisScript getBitScript, DefaultRedisScript resetBitScript, long bitSize) {
         if (bitSize > BloomFilterConstants.MAX_REDIS_BIT_SIZE) {
             throw new RedisAuxException("Invalid redis bit size, must small than 2 to the 32");
         }
@@ -46,8 +46,6 @@ public class RedisBitArray implements BitArray {
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
     }
-
-
 
 
     @Override
@@ -102,14 +100,10 @@ public class RedisBitArray implements BitArray {
 
     @Override
     public void reset() {
-        redisTemplate.execute(resetBitScript, keyList, bitSize);
+        //这个脚本大概率执行不了,改为删除
+       //redisTemplate.execute(resetBitScript, keyList, bitSize);
+        redisTemplate.delete(key);
     }
-
-
-
-
-
-
 
 
     /**
@@ -153,6 +147,7 @@ public class RedisBitArray implements BitArray {
     @Override
     public void clear() {
         keyList.clear();
+        redisTemplate.delete(key);
         keyList = null;
     }
 

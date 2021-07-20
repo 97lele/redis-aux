@@ -222,7 +222,6 @@ public class RedisBloomFilter {
 
     public void expire(ExpireCondition expireCondition) {
         InnerInfo condition = expireCondition.build();
-        expireCondition.clear();
         expire(condition.getKeyPrefix(), condition.getKeyName(), condition.getTimeout(), condition.getTimeUnit(),condition.isLocal());
     }
 
