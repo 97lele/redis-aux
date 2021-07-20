@@ -3,7 +3,7 @@ package com.xl.redisaux.bloomfilter.support;
 
 import com.xl.redisaux.bloomfilter.annonations.BloomFilterPrefix;
 import com.xl.redisaux.bloomfilter.annonations.BloomFilterProperty;
-import com.xl.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistar;
+import com.xl.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistrar;
 import com.xl.redisaux.common.consts.BloomFilterConstants;
 import com.xl.redisaux.common.utils.CommonUtil;
 import com.xl.redisaux.common.exceptions.RedisAuxException;
@@ -63,8 +63,8 @@ public class GetBloomFilterField {
             }
             if (aClass.isAnnotationPresent(BloomFilterPrefix.class)) {
                 BloomFilterPrefix annotation = aClass.getAnnotation(BloomFilterPrefix.class);
-                if (RedisBloomFilterRegistar.bloomFilterFieldMap != null) {
-                    Map<String, BloomFilterProperty> map = RedisBloomFilterRegistar.bloomFilterFieldMap.get(annotation.prefix());
+                if (RedisBloomFilterRegistrar.bloomFilterFieldMap != null) {
+                    Map<String, BloomFilterProperty> map = RedisBloomFilterRegistrar.bloomFilterFieldMap.get(annotation.prefix());
                     BloomFilterProperty field = map.get(CommonUtil.getKeyName(annotation.prefix(), fieldName));
                     res = new BloomFilterInfo(annotation.prefix().trim().equals("") ? aClass.getCanonicalName() : annotation.prefix(),
                             field.key().trim().equals("") ? fieldName : field.key(),

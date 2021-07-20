@@ -4,7 +4,6 @@ import com.xl.redisaux.common.exceptions.RedisAuxException;
 import org.aspectj.lang.ProceedingJoinPoint;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author lulu
@@ -13,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public interface LimiterAspect {
 
 
-    AtomicBoolean HAS_REQUEST = new AtomicBoolean(false);
 
     default void limitPointCut() {
 

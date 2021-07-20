@@ -5,6 +5,7 @@ import com.xl.redisaux.bloomfilter.annonations.BloomFilterProperty;
 import com.xl.redisaux.bloomfilter.annonations.EnableBloomFilter;
 import com.xl.redisaux.common.consts.BloomFilterConstants;
 import com.xl.redisaux.common.utils.CommonUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -14,7 +15,6 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,8 @@ import java.util.Map;
  * 布隆过滤器注册类，主要是lambda和扫描自定义包
  */
 @SuppressWarnings("unchecked")
-public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
+@Slf4j
+public class RedisBloomFilterRegistrar implements ImportBeanDefinitionRegistrar {
     public static Map<String, Map<String, BloomFilterProperty>> bloomFilterFieldMap;
     public static boolean transaction;
 
@@ -36,8 +37,8 @@ public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
         transaction = (Boolean) attributes.get("transaction");
         String[] scanPaths = (String[]) attributes.get(BloomFilterConstants.SCAPATH);
         //扫描并存储注解上的信息
-        if (!scanPaths[0].trim().equals("")) {
-            bloomFilterFieldMap = new HashMap();
+        if (!scanPaths[0].isEmpty()) {
+            bloomFilterFieldMap = new HashMap<>();
             ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
                     false);
             scanner.addIncludeFilter(new AnnotationTypeFilter(BloomFilterPrefix.class));
@@ -64,12 +65,10 @@ public class RedisBloomFilterRegistar implements ImportBeanDefinitionRegistrar {
                         bloomFilterFieldMap.put(prefix, map);
                     }
                 }
-
-
             }
             bloomFilterFieldMap = Collections.unmodifiableMap(bloomFilterFieldMap);
         } else {
-            System.err.println("=============redisbloomfilter not support work with lambda cause not set the scan path(also require jdk1.8+)=============");
+            log.warn("=============redisbloomfilter not support work with lambda cause not set the scan path(also require jdk1.8+)=============");
         }
 
         //指定扫描自己写的符合默认扫描注解的组件

@@ -3,6 +3,7 @@ package com.xl.redisaux.limiter.component;
 
 import com.xl.redisaux.common.api.*;
 import com.xl.redisaux.common.utils.HostNameUtil;
+import com.xl.redisaux.common.utils.NamedThreadFactory;
 import com.xl.redisaux.limiter.autoconfigure.LimitGroupConfiguration;
 import com.xl.redisaux.transport.client.InstanceRemoteService;
 import com.xl.redisaux.transport.common.RemoteAction;
@@ -11,7 +12,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
 
@@ -19,6 +19,8 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 
 /**
@@ -44,6 +46,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
     private String ip;
 
     private Integer servletPort;
+    private ExecutorService dashBoardThread = Executors.newSingleThreadExecutor(new NamedThreadFactory("dashboard-client", true));
 
     @Override
     public void start() {
@@ -54,7 +57,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         //dashboard默认地址
         remoteService = InstanceRemoteService.dashboard(ip, this.port);
         //如果使用文件配置，直接使用文件配置，否则代码自定义
-        if(this.config.isUseConfig()){
+        if (this.config.isUseConfig()) {
             List<LimitGroupConfig> groups = this.config.getGroups();
             limiterGroupService.saveAll(groups);
         }
@@ -62,22 +65,19 @@ public class DashBoardRequestHandler implements SmartLifecycle {
             InstanceInfo instanceInfo = getInstanceInfo();
             remoteService.performRequestOneWay(RemoteAction.request(SupportAction.SEND_SERVER_INFO, instanceInfo));
         };
-        remoteService.supportHeartBeat(30)
+        dashBoardThread.execute(() -> remoteService.supportHeartBeat(config.getIdleSec())
                 .addHandler(new RequestActionHandler())
                 .servletPort(servletPort)
                 .afterConnected(afterConnected)
-                .start();
+                .start());
         isRunning = true;
-    }
-
-    public void reconnect() {
-
     }
 
     @Override
     public void stop() {
         remoteService.close();
         isRunning = false;
+        dashBoardThread.shutdown();
     }
 
     public InstanceInfo getInstanceInfo() {

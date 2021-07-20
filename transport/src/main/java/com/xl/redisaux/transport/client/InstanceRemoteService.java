@@ -144,7 +144,9 @@ public class InstanceRemoteService {
     }
 
     public void close() {
-        channel.close().syncUninterruptibly();
+        if(channel!=null){
+            channel.close().syncUninterruptibly();
+        }
         group.shutdownGracefully();
         hasInit = false;
     }

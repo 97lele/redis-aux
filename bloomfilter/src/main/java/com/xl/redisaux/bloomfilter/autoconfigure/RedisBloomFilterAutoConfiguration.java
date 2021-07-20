@@ -8,8 +8,6 @@ import com.xl.redisaux.bloomfilter.core.filter.RedisBloomFilter;
 import com.xl.redisaux.bloomfilter.core.filter.RedisBloomFilterItem;
 import com.xl.redisaux.bloomfilter.support.expire.CheckTask;
 import com.xl.redisaux.common.consts.BloomFilterConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -19,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +32,9 @@ import java.util.Properties;
 @ConditionalOnClass(RedisBloomFilter.class)
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @SuppressWarnings("unchecked")
-class RedisBloomFilterAutoConfiguration {
+public class RedisBloomFilterAutoConfiguration {
 
-    @Autowired
-    @Qualifier(BloomFilterConstants.INNERTEMPLATE)
+    @Resource(name = BloomFilterConstants.INNERTEMPLATE)
     private RedisTemplate redisTemplate;
 
 

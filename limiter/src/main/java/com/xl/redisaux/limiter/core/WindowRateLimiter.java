@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -32,9 +33,7 @@ public class WindowRateLimiter implements BaseRateLimiter {
     @Override
     public Boolean canExecute(Annotation baseLimiter, String methodKey) {
         WindowLimiter windowLimiter = (WindowLimiter) baseLimiter;
-        String methodName = windowLimiter.fallback();
-        boolean passArgs = windowLimiter.passArgs();
-        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
+        List<String> keyList = Collections.singletonList(methodKey);
         return handleParam(keyList, windowLimiter.passCount(), windowLimiter.duringUnit(), windowLimiter.during());
     }
 

@@ -6,8 +6,6 @@ import com.xl.redisaux.limiter.core.FunnelRateLimiter;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 import com.xl.redisaux.limiter.core.TokenRateLimiter;
 import com.xl.redisaux.limiter.core.WindowRateLimiter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -16,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +28,10 @@ import java.util.Map;
 @ConditionalOnBean(RedisTemplate.class)
 public class RedisLimiterAutoConfiguration {
 
-    @Autowired
-    @Qualifier(LimiterConstants.LIMITER)
+    @Resource(name=LimiterConstants.LIMITER)
     private RedisTemplate redisTemplate;
 
-    public static Map<Integer, BaseRateLimiter> rateLimiterMap = new HashMap();
+    public static Map<Integer, BaseRateLimiter> RATE_LIMITER_MAP = new HashMap<>();
 
 
     /**
@@ -116,9 +114,9 @@ public class RedisLimiterAutoConfiguration {
 
     @Bean
     public NormalLimiterAspect limiterAspect() {
-        rateLimiterMap.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
-        rateLimiterMap.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
-        rateLimiterMap.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
+        RATE_LIMITER_MAP.put(LimiterConstants.WINDOW_LIMITER, new WindowRateLimiter(redisTemplate, windowLimitScript()));
+        RATE_LIMITER_MAP.put(LimiterConstants.TOKEN_LIMITER, new TokenRateLimiter(redisTemplate, tokenLimitScript()));
+        RATE_LIMITER_MAP.put(LimiterConstants.FUNNEL_LIMITER, new FunnelRateLimiter(redisTemplate, funnelLimitScript()));
         return new NormalLimiterAspect();
     }
 

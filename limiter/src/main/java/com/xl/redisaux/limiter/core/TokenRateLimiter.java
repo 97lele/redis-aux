@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -34,9 +35,7 @@ public class TokenRateLimiter implements BaseRateLimiter {
         double capacity = tokenLimiter.capacity();
         double need = tokenLimiter.requestNeed();
         double rate = tokenLimiter.tokenRate();
-        String methodName = tokenLimiter.fallback();
-        boolean passArgs = tokenLimiter.passArgs();
-        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
+        List<String> keyList = Collections.singletonList(methodKey);
         return handleParam(keyList, capacity, need, rate, rateUnit, tokenLimiter.initToken());
 
     }

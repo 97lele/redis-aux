@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.annonations;
 
 
 import com.xl.redisaux.common.consts.LimiterConstants;
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,8 +30,10 @@ public @interface WindowLimiter {
      */
     long passCount();
 
+    @AliasFor(annotation = LimiterType.class,attribute = "fallback")
     String fallback() default "";
 
+    @AliasFor(annotation = LimiterType.class,attribute = "passArgs")
     boolean passArgs() default false;
 
 

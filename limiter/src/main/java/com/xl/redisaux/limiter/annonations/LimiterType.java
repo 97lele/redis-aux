@@ -14,4 +14,8 @@ public @interface LimiterType {
      * @return
      */
     int mode();
+
+    String fallback() default "";
+
+    boolean passArgs() default false;
 }

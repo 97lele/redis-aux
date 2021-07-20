@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.autoconfigure;
 
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.limiter.aspect.GroupLimiterAspect;
+import com.xl.redisaux.limiter.aspect.NormalLimiterAspect;
 import com.xl.redisaux.limiter.component.ActuatorController;
 import com.xl.redisaux.limiter.component.DashBoardRequestHandler;
 import com.xl.redisaux.limiter.component.LimiterGroupService;
@@ -30,8 +31,8 @@ public class GroupLimiterRelateBeanRegistry implements BeanDefinitionRegistryPos
         if (RedisLimiterRegistar.connectConsole.get()) {
             registry("dashboardRequestHandler", DashBoardRequestHandler.class,beanDefinitionRegistry);
         }
-
-
+        //注册普通限流
+        registry(LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class,beanDefinitionRegistry);
     }
 
     @Override

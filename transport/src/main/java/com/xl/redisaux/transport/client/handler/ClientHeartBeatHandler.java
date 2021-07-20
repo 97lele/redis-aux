@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ClientHeartBeatHandler extends ChannelInboundHandlerAdapter {
     private int port;
     private InstanceRemoteService remoteService;
-    private boolean notSend = true;
 
     protected ClientHeartBeatHandler(int port, InstanceRemoteService remoteService) {
         this.port = port;
@@ -32,12 +31,8 @@ public class ClientHeartBeatHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.WRITER_IDLE) {
-                if (notSend) {
-                    InstanceInfo instanceInfo = new InstanceInfo(HostNameUtil.getIp(), port, HostNameUtil.getHostName(), null);
-                    ctx.writeAndFlush(RemoteAction.response(SupportAction.HEART_BEAT, instanceInfo, -1));
-                    notSend = false;
-                }
-
+                InstanceInfo instanceInfo = new InstanceInfo(HostNameUtil.getIp(), port, HostNameUtil.getHostName(), null);
+                ctx.writeAndFlush(RemoteAction.response(SupportAction.HEART_BEAT, instanceInfo, -1));
             }
         } else {
             super.userEventTriggered(ctx, evt);

@@ -1,6 +1,6 @@
 package com.xl.redisaux.bloomfilter.annonations;
 
-import com.xl.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistar;
+import com.xl.redisaux.bloomfilter.autoconfigure.RedisBloomFilterRegistrar;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.ElementType;
@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RedisBloomFilterRegistar.class})
+@Import({RedisBloomFilterRegistrar.class})
 public @interface EnableBloomFilter {
     boolean transaction() default false;
 

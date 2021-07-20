@@ -6,9 +6,9 @@ import com.xl.redisaux.common.api.TokenRateConfig;
 import com.xl.redisaux.common.api.WindowRateConfig;
 import com.xl.redisaux.common.utils.IpCheckUtil;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +20,7 @@ import java.util.Set;
 @RestController
 public class ActuatorController {
 
-    @Autowired
+    @Resource
     private LimiterGroupService limiterGroupService;
 
     @GetMapping("/redis-aux/getIp")

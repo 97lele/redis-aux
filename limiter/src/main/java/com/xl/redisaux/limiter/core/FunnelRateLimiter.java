@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,9 +34,7 @@ public class FunnelRateLimiter implements BaseRateLimiter {
         double capacity = funnelLimiter.capacity();
         double need = funnelLimiter.requestNeed();
         double rate = funnelLimiter.funnelRate();
-        String methodName = funnelLimiter.fallback();
-        boolean passArgs = funnelLimiter.passArgs();
-        List<String> keyList = BaseRateLimiter.getKey(methodKey, methodName, passArgs);
+        List<String> keyList = Collections.singletonList(methodKey);
         return handleParam(keyList, capacity, need, rate, timeUnit);
     }
 

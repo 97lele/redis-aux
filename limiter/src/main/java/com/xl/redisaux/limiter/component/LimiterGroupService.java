@@ -14,15 +14,13 @@ import com.xl.redisaux.limiter.autoconfigure.RedisLimiterRegistar;
 import com.xl.redisaux.limiter.core.BaseRateLimiter;
 import com.xl.redisaux.limiter.core.handler.GroupHandler;
 import com.xl.redisaux.limiter.core.handler.GroupHandlerList;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * @author lulu
@@ -31,11 +29,10 @@ import java.util.stream.Collectors;
 public class LimiterGroupService {
 
 
-    @Autowired
-    @Qualifier(LimiterConstants.LIMITER)
+    @Resource(name=LimiterConstants.LIMITER)
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Autowired
+    @Resource
     private ObjectMapper objectMapper;
 
     private final GroupHandlerList groupHandlers;
@@ -45,7 +42,7 @@ public class LimiterGroupService {
     private final DefaultRedisScript delGroupScript;
 
     private final Map<String, QpsCounter> qpsCounterMap;
-    private ConcurrentHashMap<String, String> groupIdMap;
+    private final ConcurrentHashMap<String, String> groupIdMap;
 
 
     public LimiterGroupService() {
