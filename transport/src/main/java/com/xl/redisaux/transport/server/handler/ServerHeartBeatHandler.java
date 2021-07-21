@@ -23,19 +23,20 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
             if (event.state() == IdleState.READER_IDLE) {
-                if (++curLost > maxLost) {
+                if (++curLost >= maxLost) {
                     Channel channel = ctx.channel();
                     ConnectionHandler.unRegisterInstance(channel);
                     channel.close();
                 }
-            }else {
-                curLost = 0;
             }
         } else {
             super.userEventTriggered(ctx, evt);
         }
     }
 
+    public void resetLostTime(){
+        curLost=0;
+    }
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         super.channelUnregistered(ctx);
