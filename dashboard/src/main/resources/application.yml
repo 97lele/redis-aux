@@ -1,0 +1,7 @@
+redisaux:
+  limiter:
+    dashboard:
+      port: 1210
+      maxLost: 5
+      idleSec: 30
+      cronOfInfoPuller: 0/6 * * * * ?

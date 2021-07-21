@@ -1,9 +1,17 @@
 package com.xl.redisaux.dashboard.config;
 
 import com.xl.redisaux.common.utils.HostNameUtil;
+import com.xl.redisaux.dashboard.service.InstanceMessageHandler;
+import com.xl.redisaux.transport.server.DashBoardRemoteService;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author tanjl11
@@ -35,5 +43,17 @@ public class DashboardConfig {
             return "0/5 * * * * ?";
         }
         return cronOfInfoPuller;
+    }
+
+    @Bean
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+        threadPoolTaskScheduler.setThreadNamePrefix("pull-instance-info");
+        threadPoolTaskScheduler.setPoolSize(Runtime.getRuntime().availableProcessors() + 1);
+        threadPoolTaskScheduler.setDaemon(true);
+        threadPoolTaskScheduler.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        threadPoolTaskScheduler.setWaitForTasksToCompleteOnShutdown(false);
+        threadPoolTaskScheduler.setRemoveOnCancelPolicy(true);
+        return threadPoolTaskScheduler;
     }
 }

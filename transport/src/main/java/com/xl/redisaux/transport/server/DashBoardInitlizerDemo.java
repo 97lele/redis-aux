@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit;
 public class DashBoardInitlizerDemo {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        DashBoardRemoteService start = DashBoardRemoteService.bind(1210)
-                .addHandler(new ConnectionHandler(),new SimpleHandler())
+        DashBoardRemoteService start = DashBoardRemoteService.bind(1210,null,null)
+                .addHandler(new SimpleHandler())
                 .supportHeartBeat(3, 3)
                 .start();
         TimeUnit.SECONDS.sleep(5);

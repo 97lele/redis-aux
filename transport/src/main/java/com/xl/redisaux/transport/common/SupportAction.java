@@ -26,7 +26,8 @@ public enum SupportAction {
     GET_RECORD_COUNT(8, String.class, HashMap.class),
     GET_CONFIG_BY_GROUP(9,String.class, LimitGroupConfig.class),
     GET_CONFIGS_BY_GROUPS(10, Set.class,List.class),
-    HEART_BEAT(11,Void.class, InstanceInfo.class),
+    GET_GROUPS(11,Void.class,Set.class),
+    HEART_BEAT(12,Void.class, InstanceInfo.class),
     SUCCESS(0,Object.class,String.class),
     ERROR(-1,Void.class,String.class);
     private int actionCode;

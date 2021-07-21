@@ -15,8 +15,11 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import org.springframework.beans.factory.DisposableBean;
 
-public class DashBoardRemoteService {
+import java.util.function.Consumer;
+
+public class DashBoardRemoteService implements DisposableBean {
     protected EventLoopGroup bossGroup;
     protected EventLoopGroup workerGroup;
     protected DashBoardInitializer channelInitializer;
@@ -27,6 +30,7 @@ public class DashBoardRemoteService {
     protected boolean supportHeartBeat;
     protected int maxLost;
     protected int readIdleSec;
+
 
     protected DashBoardRemoteService port(int port) {
         this.port = port;
@@ -41,9 +45,6 @@ public class DashBoardRemoteService {
     }
 
     public DashBoardRemoteService addHandler(ChannelInboundHandler... handlers) {
-        if (channelInitializer == null) {
-            channelInitializer = new DashBoardInitializer();
-        }
         channelInitializer.addSharableHandler(handlers);
         return this;
     }
@@ -89,16 +90,25 @@ public class DashBoardRemoteService {
     }
 
     public static ActionFuture performRequest(RemoteAction<?> remoteAction, InstanceInfo instanceInfo) {
-        Channel channel = ConnectionHandler.getInstanceChannelMap().get(instanceInfo);
-        if (channel == null) {
-            return null;
+        if (instanceInfo != null) {
+            Channel channel = ConnectionHandler.getInstanceChannelMap().get(instanceInfo);
+            if (channel == null) {
+                return null;
+            }
+            channel.writeAndFlush(remoteAction);
+            return ResultHolder.putRequest(remoteAction);
         }
-        channel.writeAndFlush(remoteAction);
-        return ResultHolder.putRequest(remoteAction);
+        return null;
     }
 
-    public static DashBoardRemoteService bind(int port) {
-        return new DashBoardRemoteService().port(port);
+    public static DashBoardRemoteService bind(int port, Consumer<Channel> afterRegister, Consumer<Channel> afterUnRegister) {
+        DashBoardRemoteService dashBoardRemoteService = new DashBoardRemoteService();
+        dashBoardRemoteService.channelInitializer = new DashBoardInitializer(afterRegister, afterUnRegister);
+        return dashBoardRemoteService.port(port);
     }
 
+    @Override
+    public void destroy() throws Exception {
+        close();
+    }
 }

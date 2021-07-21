@@ -1,10 +1,116 @@
 package com.xl.redisaux.dashboard.service;
 
+import com.xl.redisaux.common.api.InstanceInfo;
+import com.xl.redisaux.common.api.LimitGroupConfig;
+import com.xl.redisaux.dashboard.config.DashboardConfig;
+import com.xl.redisaux.transport.common.RemoteAction;
+import com.xl.redisaux.transport.common.SupportAction;
+import com.xl.redisaux.transport.dispatcher.ActionFuture;
+import com.xl.redisaux.transport.server.DashBoardRemoteService;
+import com.xl.redisaux.transport.server.handler.ConnectionHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
 /**
  * @author tanjl11
  * @date 2021/07/21 11:04
  * 定时拉取服务端数据
  */
-public class InstanceInfoPuller {
+@Component
+@Slf4j
+public class InstanceInfoPuller implements SmartLifecycle {
+    @Resource
+    private DashboardConfig dashboardConfig;
+    @Resource
+    private ThreadPoolTaskScheduler taskScheduler;
 
+    protected volatile boolean isRunning;
+
+    private final Map<InstanceInfo, ScheduledFuture> map = new ConcurrentHashMap<>();
+
+    private final Map<InstanceInfo, List<LimitGroupConfig>> configMap = new ConcurrentHashMap<>();
+
+    @Override
+    public void start() {
+        DashBoardRemoteService.bind(dashboardConfig.getPort(), e -> {
+            InstanceInfo instanceInfo = ConnectionHandler.getInstanceInfoByChannel(e);
+            this.addTask(instanceInfo);
+        }, e -> {
+            InstanceInfo instanceInfo = ConnectionHandler.getInstanceInfoByChannel(e);
+            this.cancelTask(instanceInfo);
+        })
+                .supportHeartBeat(dashboardConfig.getMaxLost(), dashboardConfig.getIdleSec())
+                .addHandler(new InstanceMessageHandler())
+                .start();
+        isRunning = true;
+    }
+
+    @Override
+    public void stop() {
+        for (Map.Entry<InstanceInfo, ScheduledFuture> entry : map.entrySet()) {
+            entry.getValue().cancel(true);
+        }
+        map.clear();
+        taskScheduler.shutdown();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void addTask(InstanceInfo instanceInfo) {
+        if (instanceInfo == null) {
+            return;
+        }
+        CronTrigger trigger = new CronTrigger(dashboardConfig.getCronOfInfoPuller());
+        ScheduledFuture<?> schedule = taskScheduler.schedule(() -> {
+            RemoteAction remoteAction = null;
+            try {
+                ActionFuture actionFuture = DashBoardRemoteService.performRequest(RemoteAction.request(SupportAction.GET_GROUPS, null), instanceInfo);
+                remoteAction = actionFuture.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
+                Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
+                ActionFuture getConfigs = DashBoardRemoteService.performRequest(RemoteAction.request(SupportAction.GET_CONFIGS_BY_GROUPS, groupIds), instanceInfo);
+                remoteAction = getConfigs.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
+                List<LimitGroupConfig> configs = RemoteAction.getBody(List.class, remoteAction);
+                configMap.put(instanceInfo, configs);
+            } catch (Exception e) {
+                log.error(String.format("拉取信息失败,ip:%s,port:%s", instanceInfo == null ? null : instanceInfo.getIp(), instanceInfo == null ? null : instanceInfo.getPort()), e);
+                cancelTask(instanceInfo);
+            }
+        }, trigger);
+        if (instanceInfo != null) {
+            map.put(instanceInfo, schedule);
+        }
+    }
+
+    public void cancelTask(InstanceInfo instanceInfo) {
+        if (instanceInfo != null) {
+            ScheduledFuture scheduledFuture = map.get(instanceInfo);
+            if (scheduledFuture != null) {
+                scheduledFuture.cancel(true);
+                map.remove(instanceInfo);
+            }
+        }
+
+    }
+
+    public List<LimitGroupConfig> getByInstanceInfo(InstanceInfo instanceInfo) {
+        return configMap.get(instanceInfo);
+    }
+
+    public Map<InstanceInfo, List<LimitGroupConfig>> getConfigMap() {
+        return configMap;
+    }
 }

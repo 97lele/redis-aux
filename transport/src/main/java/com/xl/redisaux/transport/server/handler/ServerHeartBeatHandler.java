@@ -7,14 +7,19 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Consumer;
+
 @Slf4j
 public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
-    private int maxLost;
+    private final int maxLost;
     private int curLost;
+    private final Consumer<Channel> afterUnRegister;
 
-    public ServerHeartBeatHandler(int maxLost) {
+    public ServerHeartBeatHandler(int maxLost,Consumer<Channel> afterUnRegister) {
+        this.afterUnRegister=afterUnRegister;
         this.maxLost = maxLost;
     }
+
 
     //如果不活跃,除掉
     @Override
@@ -26,6 +31,9 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
                 if (++curLost >= maxLost) {
                     Channel channel = ctx.channel();
                     ConnectionHandler.unRegisterInstance(channel);
+                    if (afterUnRegister != null) {
+                        afterUnRegister.accept(channel);
+                    }
                     channel.close();
                 }
             }
@@ -34,14 +42,18 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    public void resetLostTime(){
-        curLost=0;
+    public void resetLostTime() {
+        curLost = 0;
     }
+
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         super.channelUnregistered(ctx);
         Channel channel = ctx.channel();
         ConnectionHandler.unRegisterInstance(channel);
+        if (afterUnRegister != null) {
+            afterUnRegister.accept(channel);
+        }
         channel.close();
     }
 }
