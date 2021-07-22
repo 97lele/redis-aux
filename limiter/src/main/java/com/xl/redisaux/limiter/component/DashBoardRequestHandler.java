@@ -63,6 +63,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         }
         Runnable afterConnected = () -> {
             InstanceInfo instanceInfo = getInstanceInfo();
+            //这里就不使用future了
             remoteService.performRequestOneWay(RemoteAction.request(SupportAction.SEND_SERVER_INFO, instanceInfo));
         };
         dashBoardThread.execute(() -> remoteService.supportHeartBeat(config.getIdleSec())

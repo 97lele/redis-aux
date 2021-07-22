@@ -324,14 +324,6 @@ public class LimitGroupConfig {
 
         return Collections.singletonList(CommonUtil.getLimiterName(id, methodKey, LimiterConstants.WINDOW));
     }
-
-
-    public void destory() {
-        this.funnelRateConfig = null;
-        this.windowRateConfig = null;
-        this.tokenRateConfig = null;
-    }
-
     public static Builder of(String id) {
         return new Builder().id(id);
     }

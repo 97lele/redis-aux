@@ -90,9 +90,16 @@ public class DashBoardRemoteService implements DisposableBean {
     }
 
     public static ActionFuture performRequest(RemoteAction<?> remoteAction, InstanceInfo instanceInfo) {
+        return performRequest(remoteAction, instanceInfo, null);
+    }
+
+    public static ActionFuture performRequest(RemoteAction<?> remoteAction, InstanceInfo instanceInfo, Consumer<InstanceInfo> onInstanceMiss) {
         if (instanceInfo != null) {
             Channel channel = ConnectionHandler.getInstanceChannelMap().get(instanceInfo);
             if (channel == null) {
+                if (onInstanceMiss != null) {
+                    onInstanceMiss.accept(instanceInfo);
+                }
                 return null;
             }
             channel.writeAndFlush(remoteAction);
