@@ -8,6 +8,7 @@ import com.xl.redisaux.transport.common.SupportAction;
 import com.xl.redisaux.transport.dispatcher.ActionFuture;
 import com.xl.redisaux.transport.server.DashBoardRemoteService;
 import com.xl.redisaux.transport.server.handler.ConnectionHandler;
+import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -15,6 +16,7 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,23 +38,33 @@ public class InstanceInfoPuller implements SmartLifecycle {
     private ThreadPoolTaskScheduler taskScheduler;
 
     protected volatile boolean isRunning;
-
+    /**
+     * 存放每个实例的任务
+     */
     private final Map<InstanceInfo, ScheduledFuture> map = new ConcurrentHashMap<>();
 
     private final Map<InstanceInfo, List<LimitGroupConfig>> configMap = new ConcurrentHashMap<>();
 
     @Override
     public void start() {
-        DashBoardRemoteService.bind(dashboardConfig.getPort(), e -> {
-            InstanceInfo instanceInfo = ConnectionHandler.getInstanceInfoByChannel(e);
-            this.addTask(instanceInfo);
-        }, e -> {
-            InstanceInfo instanceInfo = ConnectionHandler.getInstanceInfoByChannel(e);
-            this.cancelTask(instanceInfo);
-        })
+        DashBoardRemoteService.bind(dashboardConfig.getPort())
                 .supportHeartBeat(dashboardConfig.getMaxLost(), dashboardConfig.getIdleSec())
-                .addHandler(new InstanceMessageHandler())
+                .addHandler(new ConnectionHandler(),new InstanceMessageHandler())
                 .start();
+        //开启扫描的扫描注册上来的任务
+        CronTrigger trigger = new CronTrigger(dashboardConfig.getCronOfScanInstance());
+        taskScheduler.schedule(() -> {
+            Map<InstanceInfo, Channel> instanceChannelMap = ConnectionHandler.getInstanceChannelMap();
+            for (Map.Entry<InstanceInfo, Channel> entry : instanceChannelMap.entrySet()) {
+                //代表有新的实例加入，添加信息拉取任务
+                if (map.get(entry.getKey()) == null) {
+                    addTask(entry.getKey());
+                    //代表旧的任务
+                }
+            }
+            //查找不在instanceMap的实例，取消任务
+            checkAndCancelTask();
+        }, trigger);
         isRunning = true;
     }
 
@@ -90,9 +102,7 @@ public class InstanceInfoPuller implements SmartLifecycle {
                 cancelTask(instanceInfo);
             }
         }, trigger);
-        if (instanceInfo != null) {
-            map.put(instanceInfo, schedule);
-        }
+        map.put(instanceInfo, schedule);
     }
 
     public void cancelTask(InstanceInfo instanceInfo) {
@@ -104,6 +114,17 @@ public class InstanceInfoPuller implements SmartLifecycle {
             }
         }
 
+    }
+
+    public void checkAndCancelTask() {
+        Iterator<Map.Entry<InstanceInfo, ScheduledFuture>> iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<InstanceInfo, ScheduledFuture> cur = iterator.next();
+            if (!ConnectionHandler.getInstanceChannelMap().containsKey(cur.getKey())) {
+                cur.getValue().cancel(true);
+                iterator.remove();
+            }
+        }
     }
 
     public List<LimitGroupConfig> getByInstanceInfo(InstanceInfo instanceInfo) {

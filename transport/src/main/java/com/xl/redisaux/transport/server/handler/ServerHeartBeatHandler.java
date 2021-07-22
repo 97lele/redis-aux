@@ -13,10 +13,8 @@ import java.util.function.Consumer;
 public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
     private final int maxLost;
     private int curLost;
-    private final Consumer<Channel> afterUnRegister;
 
-    public ServerHeartBeatHandler(int maxLost,Consumer<Channel> afterUnRegister) {
-        this.afterUnRegister=afterUnRegister;
+    public ServerHeartBeatHandler(int maxLost) {
         this.maxLost = maxLost;
     }
 
@@ -31,9 +29,6 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
                 if (++curLost >= maxLost) {
                     Channel channel = ctx.channel();
                     ConnectionHandler.unRegisterInstance(channel);
-                    if (afterUnRegister != null) {
-                        afterUnRegister.accept(channel);
-                    }
                     channel.close();
                 }
             }
@@ -51,9 +46,6 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
         super.channelUnregistered(ctx);
         Channel channel = ctx.channel();
         ConnectionHandler.unRegisterInstance(channel);
-        if (afterUnRegister != null) {
-            afterUnRegister.accept(channel);
-        }
         channel.close();
     }
 }

@@ -101,9 +101,9 @@ public class DashBoardRemoteService implements DisposableBean {
         return null;
     }
 
-    public static DashBoardRemoteService bind(int port, Consumer<Channel> afterRegister, Consumer<Channel> afterUnRegister) {
+    public static DashBoardRemoteService bind(int port) {
         DashBoardRemoteService dashBoardRemoteService = new DashBoardRemoteService();
-        dashBoardRemoteService.channelInitializer = new DashBoardInitializer(afterRegister, afterUnRegister);
+        dashBoardRemoteService.channelInitializer = new DashBoardInitializer();
         return dashBoardRemoteService.port(port);
     }
 

@@ -25,6 +25,7 @@ public class DashboardConfig {
     private int maxLost;
     private int idleSec;
     private String cronOfInfoPuller;
+    private String cronOfScanInstance;
 
     public int getIdleSec() {
         return idleSec == 0 ? 30 : idleSec;
@@ -43,6 +44,13 @@ public class DashboardConfig {
             return "0/5 * * * * ?";
         }
         return cronOfInfoPuller;
+    }
+
+    public String getCronOfScanInstance(){
+        if (cronOfScanInstance == null || cronOfScanInstance.isEmpty()) {
+            return "0/30 * * * * ?";
+        }
+        return cronOfScanInstance;
     }
 
     @Bean

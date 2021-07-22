@@ -29,9 +29,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
      */
     private final static Map<String, InstanceInfo> CHANNEL_INSTANCE_MAP = new ConcurrentHashMap<>();
 
-    private final Consumer<Channel> afterRegister;
-    public ConnectionHandler(Consumer<Channel> afterRegister){
-        this.afterRegister=afterRegister;
+    public ConnectionHandler(){
     }
 
     @Override
@@ -43,13 +41,10 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
             log.info("收到心跳包信息或首次注册信息,{}", body);
             Channel channel = ctx.channel();
             registerInstance(body, channel);
-            if(afterRegister!=null){
-                afterRegister.accept(channel);
-            }
             ctx.pipeline().get(ServerHeartBeatHandler.class).resetLostTime();
             ctx.flush();
         } else {
-            ctx.write(msg);
+            ctx.fireChannelRead(msg);
         }
     }
 
