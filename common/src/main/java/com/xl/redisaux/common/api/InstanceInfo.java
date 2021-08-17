@@ -39,6 +39,17 @@ public class InstanceInfo {
         return ip + ":" + port;
     }
 
+    public static InstanceInfo uniqueKey2Instance(String uniqueKey) {
+        String[] split = uniqueKey.split(":");
+        if (split.length == 2) {
+            InstanceInfo instanceInfo = new InstanceInfo();
+            instanceInfo.setIp(split[0]);
+            instanceInfo.setPort(Integer.valueOf(split[1]));
+            return instanceInfo;
+        }
+        return null;
+    }
+
     public void setGroupIds(Set<String> groupIds) {
         this.groupIds = groupIds;
     }

@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 @ChannelHandler.Sharable
 @Slf4j
@@ -27,6 +29,9 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
      */
     private final static Map<String, InstanceInfo> CHANNEL_INSTANCE_MAP = new ConcurrentHashMap<>();
 
+    public ConnectionHandler(){
+    }
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RemoteAction msg) throws Exception {
         //只处理心跳请求和心跳包信息
@@ -34,7 +39,8 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         if (action.equals(SupportAction.SEND_SERVER_INFO) || action.equals(SupportAction.HEART_BEAT)) {
             InstanceInfo body = RemoteAction.getBody(InstanceInfo.class, msg);
             log.info("收到心跳包信息或首次注册信息,{}", body);
-            registerInstance(body, ctx.channel());
+            Channel channel = ctx.channel();
+            registerInstance(body, channel);
             ctx.pipeline().get(ServerHeartBeatHandler.class).resetLostTime();
             ctx.flush();
         } else {
@@ -62,8 +68,16 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         }
     }
 
+    public static Set<InstanceInfo> listAll(){
+        return INSTANCE_CHANNEL_MAP.keySet();
+    }
 
     public static Map<InstanceInfo, Channel> getInstanceChannelMap() {
         return INSTANCE_CHANNEL_MAP;
     }
+
+    public static InstanceInfo getInstanceInfoByChannel(Channel channel){
+        return CHANNEL_INSTANCE_MAP.get(channel.id().asShortText());
+    }
+
 }

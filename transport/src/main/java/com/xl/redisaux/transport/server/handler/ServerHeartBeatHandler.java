@@ -7,14 +7,17 @@ import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.Consumer;
+
 @Slf4j
 public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
-    private int maxLost;
+    private final int maxLost;
     private int curLost;
 
     public ServerHeartBeatHandler(int maxLost) {
         this.maxLost = maxLost;
     }
+
 
     //如果不活跃,除掉
     @Override
@@ -34,9 +37,10 @@ public class ServerHeartBeatHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    public void resetLostTime(){
-        curLost=0;
+    public void resetLostTime() {
+        curLost = 0;
     }
+
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         super.channelUnregistered(ctx);

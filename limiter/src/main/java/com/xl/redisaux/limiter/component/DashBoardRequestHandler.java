@@ -63,6 +63,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         }
         Runnable afterConnected = () -> {
             InstanceInfo instanceInfo = getInstanceInfo();
+            //这里就不使用future了
             remoteService.performRequestOneWay(RemoteAction.request(SupportAction.SEND_SERVER_INFO, instanceInfo));
         };
         dashBoardThread.execute(() -> remoteService.supportHeartBeat(config.getIdleSec())
@@ -120,7 +121,10 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                 instanceInfo.setGroupIds(limiterGroupService.getGroupIds());
                 return RemoteAction.response(action, instanceInfo, remoteAction.getRequestId());
             }
-
+            if(action.equals(SupportAction.GET_GROUPS)){
+                Set<String> groupIds = limiterGroupService.getGroupIds();
+                return RemoteAction.response(action,groupIds,remoteAction.getRequestId());
+            }
             if (action.equals(SupportAction.GET_RECORD_COUNT)) {
                 String body = RemoteAction.getBody(String.class, remoteAction);
                 Map<String, Object> count = limiterGroupService.getCount(body);
