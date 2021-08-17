@@ -34,7 +34,6 @@ public class GroupLimiterAspect implements LimiterAspect {
     @Resource
     private LimiterGroupService service;
 
-    private static ThreadLocal<Boolean> hasExecuted = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     @Override
     @Pointcut("@within(com.xl.redisaux.limiter.annonations.LimitGroup)||@annotation(com.xl.redisaux.limiter.annonations.LimitGroup)")
@@ -45,8 +44,6 @@ public class GroupLimiterAspect implements LimiterAspect {
     @Override
     @Around("limitPointCut()")
     public Object methodLimit(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        if (!hasExecuted.get()) {
-            hasExecuted.set(true);
             MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
             //获取执行的方法
             Method method = signature.getMethod();
@@ -82,7 +79,6 @@ public class GroupLimiterAspect implements LimiterAspect {
             updateCount(enableQpsCount, pass, limitGroupConfig);
             if (!pass) {
                 //触发异常方法，清除
-                hasExecuted.remove();
                 String methodStr = group.fallback();
                 if (handleResult == LimiterConstants.WRONGPREFIX && limitGroupConfig.getUrlFallBack() != null) {
                     methodStr = limitGroupConfig.getUrlFallBack();
@@ -95,10 +91,6 @@ public class GroupLimiterAspect implements LimiterAspect {
                 }
                 return LimiterAspect.executeFallBack(group.passArgs(), methodStr, beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), bean);
             }
-        } else {
-            //代表第二次进来 执行过了，清空
-            hasExecuted.remove();
-        }
         return proceedingJoinPoint.proceed();
     }
 

@@ -25,7 +25,6 @@ public class NormalLimiterAspect implements LimiterAspect {
 
     private final Map<String, Annotation> annotationMap;
 
-    private static ThreadLocal<Boolean> hasExecuted = ThreadLocal.withInitial(() -> Boolean.FALSE);
 
     public NormalLimiterAspect() {
         this.annotationMap = new ConcurrentHashMap<>();
@@ -42,8 +41,6 @@ public class NormalLimiterAspect implements LimiterAspect {
     @Override
     @Around("limitPointCut()")
     public Object methodLimit(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        if (!hasExecuted.get()) {
-            hasExecuted.set(true);
             MethodSignature signature = (MethodSignature) proceedingJoinPoint.getSignature();
             Class<?> beanClass = proceedingJoinPoint.getTarget().getClass();
             //获取所在类名
@@ -77,12 +74,8 @@ public class NormalLimiterAspect implements LimiterAspect {
                 }
             }
             if (!canPass) {
-                hasExecuted.remove();
                 return LimiterAspect.executeFallBack(baseLimiter.passArgs(), baseLimiter.fallback(), beanClass, method.getParameterTypes(), proceedingJoinPoint.getArgs(), proceedingJoinPoint.getTarget());
             }
-        } else {
-            hasExecuted.remove();
-        }
         return proceedingJoinPoint.proceed();
 
     }

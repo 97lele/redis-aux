@@ -31,8 +31,6 @@ public class GroupLimiterRelateBeanRegistry implements BeanDefinitionRegistryPos
         if (RedisLimiterRegistar.connectConsole.get()) {
             registry("dashboardRequestHandler", DashBoardRequestHandler.class,beanDefinitionRegistry);
         }
-        //注册普通限流
-        registry(LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class,beanDefinitionRegistry);
     }
 
     @Override
