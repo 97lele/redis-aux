@@ -5,6 +5,7 @@ redisaux:
     dashboard:
       ip: 127.0.0.1
       port: 1210
+      idleSec: 10
     groups:
       - id: 1
         remark: test

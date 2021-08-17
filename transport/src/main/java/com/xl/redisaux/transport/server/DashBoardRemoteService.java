@@ -1,5 +1,10 @@
 package com.xl.redisaux.transport.server;
 
+import com.xl.redisaux.common.api.InstanceInfo;
+import com.xl.redisaux.transport.common.RemoteAction;
+import com.xl.redisaux.transport.dispatcher.ActionFuture;
+import com.xl.redisaux.transport.dispatcher.ResultHolder;
+import com.xl.redisaux.transport.server.handler.ConnectionHandler;
 import com.xl.redisaux.transport.server.handler.DashBoardInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -83,6 +88,14 @@ public class DashBoardRemoteService {
         hasInit = false;
     }
 
+    public static ActionFuture performRequest(RemoteAction<?> remoteAction, InstanceInfo instanceInfo) {
+        Channel channel = ConnectionHandler.getInstanceChannelMap().get(instanceInfo);
+        if (channel == null) {
+            return null;
+        }
+        channel.writeAndFlush(remoteAction);
+        return ResultHolder.putRequest(remoteAction);
+    }
 
     public static DashBoardRemoteService bind(int port) {
         return new DashBoardRemoteService().port(port);
