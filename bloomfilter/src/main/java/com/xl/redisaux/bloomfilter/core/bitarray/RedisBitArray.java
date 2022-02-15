@@ -22,7 +22,7 @@ public class RedisBitArray implements BitArray {
 
     private long bitSize;
 
-    private LinkedList<String> keyList;
+    private ArrayList<String> keyList;
 
     private String key;
 
@@ -42,12 +42,16 @@ public class RedisBitArray implements BitArray {
         this.key = key;
         this.setBitScript = setBitScript;
         this.getBitScript = getBitScript;
-        this.keyList = new LinkedList();
+        this.keyList = new ArrayList<>(2);
         this.keyList.add(key);
         this.resetBitScript = resetBitScript;
     }
 
-
+    /**
+     * 设置bit
+     * @param index
+     * @return
+     */
     @Override
     public boolean set(long[] index) {
         Object[] value = Arrays.stream(index).boxed().toArray();
@@ -68,6 +72,11 @@ public class RedisBitArray implements BitArray {
         return set(res);
     }
 
+    /**
+     * 查询各下标位置
+     * @param index
+     * @return
+     */
     @Override
     public boolean get(long[] index) {
         List<Long> res = getBitScriptExecute(index, index.length);
@@ -81,12 +90,13 @@ public class RedisBitArray implements BitArray {
      */
     @Override
     public List<Boolean> getBatch(List index) {
-        //index.size*keyList.size
+        //index.size*keyList.size 转成一维数组
         long[] array = getArrayFromList(index);
+        //((long[]) index.get(0)).length 代表一个key对应的下标个数
         List<Long> list = getBitScriptExecute(array, ((long[]) index.get(0)).length);
         List<Boolean> res = new ArrayList(index.size());
         for (Long temp : list) {
-            res.add(Boolean.valueOf(temp.equals(BloomFilterConstants.TRUE)));
+            res.add(temp.equals(BloomFilterConstants.TRUE));
         }
         return res;
     }
@@ -112,10 +122,11 @@ public class RedisBitArray implements BitArray {
      */
     private List getBitScriptExecute(long[] index, int size) {
         Object[] value = new Long[index.length + 1];
-        value[0] = Long.valueOf(size);
+        value[0] = (long) size;
         for (int i = 1; i < value.length; i++) {
-            value[i] = Long.valueOf(index[i - 1]);
+            value[i] = index[i - 1];
         }
+        //value 第一位是多少个下标为一组，其余都是要确认的下标
         List res = (List) redisTemplate.execute(getBitScript, keyList, value);
         return res;
     }

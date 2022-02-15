@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author lulu
  * @Date 2020/1/11 20:48
+ * 方便调用的一个入参
  */
 public final class AddCondition extends BaseCondition<AddCondition>{
     protected Double fpp;

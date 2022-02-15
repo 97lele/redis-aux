@@ -2,6 +2,7 @@ package com.xl.redisaux.bloomfilter.support.expire;
 
 import com.xl.redisaux.common.consts.BloomFilterConstants;
 import com.xl.redisaux.common.utils.NamedThreadFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.PreDestroy;
@@ -13,6 +14,7 @@ import java.util.concurrent.*;
 /**
  * 检查过期时间任务
  */
+@Slf4j
 public class CheckTask extends Thread implements KeyExpirePublisher, InitializingBean {
     private List<KeyExpireListener> listeners = new ArrayList();
     private PriorityBlockingQueue<WatiForDeleteKey> priorityQueue;
@@ -54,7 +56,7 @@ public class CheckTask extends Thread implements KeyExpirePublisher, Initializin
                         TimeUnit.MILLISECONDS.sleep(dispearTime - now);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                   log.warn("等待键过期任务被终止",e);
                 }
 
             }
