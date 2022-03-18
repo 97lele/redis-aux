@@ -1,7 +1,13 @@
 package com.xl.redisaux.demo.springmvc.service;
 
 import com.xl.redisaux.limiter.annonations.WindowLimiter;
+import org.aspectj.weaver.ast.Test;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 
 /**
  * <pre>
@@ -20,12 +26,26 @@ import org.springframework.stereotype.Service;
  * </pre>
  */
 @Service
-public class TestService {
+public class TestService implements InitializingBean {
+    @Value("${mphelper.shard-support:true}")
+    private boolean shardSupport;
+
     @WindowLimiter(passCount = 5,fallback = "no")
     public void test(){
         System.out.println("service-ok");
     }
     public void no(){
         System.out.println("too much");
+    }
+
+    @Bean
+    public BigDecimal bb(){
+        System.out.println(shardSupport);
+        return BigDecimal.ONE;
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println(shardSupport);
     }
 }

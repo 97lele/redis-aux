@@ -11,6 +11,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -28,10 +31,11 @@ public class SimpleHandler extends SimpleChannelInboundHandler<RemoteAction> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RemoteAction remoteAction) throws Exception {
         if (remoteAction.isResponse()) {
+            log.info("编码{}",remoteAction.getActionCode());
+            log.info("实体{}",remoteAction);
             log.info("服务端收到结果{}", remoteAction.getBody());
             ResultHolder.onSuccess(remoteAction);
-            channelHandlerContext.flush();
+            channelHandlerContext.writeAndFlush(remoteAction);
         }
     }
-
 }

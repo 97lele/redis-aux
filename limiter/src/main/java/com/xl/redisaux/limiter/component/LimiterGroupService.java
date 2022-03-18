@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LimiterGroupService {
 
 
-    @Resource(name=LimiterConstants.LIMITER)
+    @Resource(name = LimiterConstants.LIMITER)
     private RedisTemplate<String, Object> redisTemplate;
 
     @Resource
@@ -148,12 +148,13 @@ public class LimiterGroupService {
         for (LimitGroupConfig limitGroup : limitGroups) {
             if (limitGroup.isSaveInRedis()) {
                 saveInRedis.add(limitGroup);
+                addIfEnableGroup(limitGroup.getId());
                 if (limitGroup.isRemoveOtherLimit()) {
                     removeOthers.add(limitGroup);
                 }
             }
         }
-        //只有redis才回移除数据
+        //只有redis才会移除数据
         if (saveInRedis.size() > 0) {
             Map<String, String> resMap = new HashMap<>(limitGroups.size());
             for (LimitGroupConfig limitGroup : limitGroups) {
@@ -172,7 +173,6 @@ public class LimiterGroupService {
     }
 
     public LimitGroupConfig getLimiterConfig(String groupId) {
-        addGroupIdWhenExecute(groupId);
         LimitGroupConfig group = BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.get(groupId);
         if (group == null) {
             reload(groupId);
@@ -182,6 +182,10 @@ public class LimiterGroupService {
 
     public List<LimitGroupConfig> getConfigByGroupIds(Set<String> groupIds) {
         List<LimitGroupConfig> res = new ArrayList<>(groupIds.size());
+        boolean isEmpty = BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.isEmpty();
+        if (isEmpty) {
+            reload(groupIds);
+        }
         Set<Map.Entry<String, LimitGroupConfig>> entries = BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.entrySet();
         for (Map.Entry<String, LimitGroupConfig> entry : entries) {
             if (groupIds.contains(entry.getKey())) {
@@ -191,11 +195,28 @@ public class LimiterGroupService {
         return res;
     }
 
+    public void reload(Collection<String> groupIds) {
+        List<Object> objects = redisTemplate.opsForValue().multiGet(groupIds);
+        for (Object object : objects) {
+            if (object != null) {
+                try {
+                    LimitGroupConfig limitGroupConfig = objectMapper.readValue(object.toString(), LimitGroupConfig.class);
+                    BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.put(limitGroupConfig.getId(), limitGroupConfig);
+                    addIfEnableGroup(limitGroupConfig.getId());
+                } catch (JsonProcessingException e) {
+                    throw new RedisAuxException("json序列化异常:" + e.getMessage());
+                }
+            }
+        }
+    }
+
     public void reload(String groupId) {
-        String configStr = redisTemplate.opsForValue().get(CommonUtil.getLimiterConfigName(groupId)).toString();
+        Object configStr = redisTemplate.opsForValue().get(CommonUtil.getLimiterConfigName(groupId));
         try {
             if (!StringUtils.isEmpty(configStr)) {
-                BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.put(groupId, objectMapper.readValue(configStr, LimitGroupConfig.class));
+                LimitGroupConfig limitGroupConfig = objectMapper.readValue(configStr.toString(), LimitGroupConfig.class);
+                BaseRateLimiter.RATE_LIMIT_GROUP_CONFIG_MAP.put(limitGroupConfig.getId(), limitGroupConfig);
+                addIfEnableGroup(limitGroupConfig.getId());
             }
         } catch (JsonProcessingException e) {
             throw new RedisAuxException("json序列化异常:" + e.getMessage());
@@ -231,9 +252,9 @@ public class LimiterGroupService {
 
     }
 
-    private void addGroupIdWhenExecute(String groupId) {
+    private void addIfEnableGroup(String groupId) {
         if (RedisLimiterRegistar.connectConsole.get()) {
-            this.groupIdMap.put(groupId, "");
+            this.groupIdMap.putIfAbsent(groupId, "");
         }
     }
 

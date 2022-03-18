@@ -7,18 +7,20 @@ import com.xl.redisaux.transport.dispatcher.ResultHolder;
 import com.xl.redisaux.transport.server.handler.ConnectionHandler;
 import com.xl.redisaux.transport.server.handler.DashBoardInitializer;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInboundHandler;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
 
+@Slf4j
 public class DashBoardRemoteService implements DisposableBean {
     protected EventLoopGroup bossGroup;
     protected EventLoopGroup workerGroup;
@@ -74,9 +76,15 @@ public class DashBoardRemoteService implements DisposableBean {
             if (supportHeartBeat) {
                 channelInitializer.supportHeartBeat(readIdleSec, maxLost);
             }
-            serverBootstrap.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .handler(new LoggingHandler(LogLevel.INFO))
+            serverBootstrap.group(this.bossGroup, this.workerGroup)
+                    .channel(Epoll.isAvailable() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 1024)
+                    .option(ChannelOption.SO_REUSEADDR, true)
+                    .option(ChannelOption.SO_KEEPALIVE, false)
+                    .childOption(ChannelOption.TCP_NODELAY, true)
+                    .childOption(ChannelOption.SO_SNDBUF, 65536)
+                    .childOption(ChannelOption.SO_RCVBUF, 65536)
+                    .localAddress(new InetSocketAddress(port))
                     .childHandler(channelInitializer);
         }
         return this;
@@ -102,8 +110,18 @@ public class DashBoardRemoteService implements DisposableBean {
                 }
                 return null;
             }
-            channel.writeAndFlush(remoteAction);
-            return ResultHolder.putRequest(remoteAction);
+            ActionFuture actionFuture = ResultHolder.putRequest(remoteAction);
+            channel.writeAndFlush(remoteAction).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future.isSuccess()) {
+                        log.info("发送请求成功");
+                    } else {
+                        log.info("发送请求失败");
+                    }
+                }
+            });
+            return actionFuture;
         }
         return null;
     }

@@ -22,17 +22,21 @@ import org.springframework.context.annotation.Configuration;
 public class GroupLimiterRelateBeanRegistry implements BeanDefinitionRegistryPostProcessor {
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry beanDefinitionRegistry) throws BeansException {
+        boolean enableConsole = RedisLimiterRegistar.connectConsole.get();
+
         if (RedisLimiterRegistar.enableGroup.get()) {
-            registry(LimiterConstants.ACTUATORCONTROLLER, ActuatorController.class, beanDefinitionRegistry);
+            if (!enableConsole) {
+                registry(LimiterConstants.ACTUATORCONTROLLER, ActuatorController.class, beanDefinitionRegistry);
+            }
             registry(LimiterConstants.GROUP_LIMITER_ASPECT, GroupLimiterAspect.class, beanDefinitionRegistry);
             registry(LimiterConstants.LIMITGROUPSERVICE, LimiterGroupService.class, beanDefinitionRegistry);
         }
         //注册server服务端
-        if (RedisLimiterRegistar.connectConsole.get()) {
-            registry("dashboardRequestHandler", DashBoardRequestHandler.class,beanDefinitionRegistry);
+        if (enableConsole) {
+            registry("dashboardRequestHandler", DashBoardRequestHandler.class, beanDefinitionRegistry);
         }
         //注册普通限流
-        registry(LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class,beanDefinitionRegistry);
+        registry(LimiterConstants.NORMAL_LIMITER_ASPECT, NormalLimiterAspect.class, beanDefinitionRegistry);
     }
 
     @Override

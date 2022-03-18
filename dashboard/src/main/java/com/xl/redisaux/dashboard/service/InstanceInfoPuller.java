@@ -1,5 +1,7 @@
 package com.xl.redisaux.dashboard.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xl.redisaux.common.api.InstanceInfo;
 import com.xl.redisaux.common.api.LimitGroupConfig;
 import com.xl.redisaux.dashboard.config.DashboardConfig;
@@ -11,7 +13,6 @@ import com.xl.redisaux.transport.server.handler.ConnectionHandler;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,10 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 /**
  * @author tanjl11
@@ -37,8 +42,15 @@ public class InstanceInfoPuller implements SmartLifecycle {
      * 存放每个实例的任务
      */
     private final Map<InstanceInfo, ScheduledFuture<?>> map = new ConcurrentHashMap<>();
+    /**
+     * 实例与配置的信息
+     */
+    private final Map<InstanceInfo, Map<String, LimitGroupConfig>> configMap = new HashMap<>();
 
-    private final Map<InstanceInfo, List<LimitGroupConfig>> configMap = new ConcurrentHashMap<>();
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final WriteLock writeLock = readWriteLock.writeLock();
+    private final ReadLock readLock = readWriteLock.readLock();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Resource
     public void setDashboardConfig(DashboardConfig dashboardConfig) {
@@ -101,6 +113,7 @@ public class InstanceInfoPuller implements SmartLifecycle {
         CronTrigger trigger = new CronTrigger(dashboardConfig.getCronOfInfoPuller());
         ScheduledFuture<?> schedule = taskScheduler.schedule(() -> {
             RemoteAction<?> remoteAction = null;
+            //定期拉取有的分组信息
             try {
                 ActionFuture actionFuture = DashBoardRemoteService.performRequest(RemoteAction.request(SupportAction.GET_GROUPS, null), instanceInfo, this::cancelTask);
                 if (actionFuture == null) {
@@ -108,19 +121,47 @@ public class InstanceInfoPuller implements SmartLifecycle {
                 }
                 remoteAction = actionFuture.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
                 Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
+                //获取分组信息的详情
+                if (groupIds == null || groupIds.isEmpty()) {
+                    return;
+                }
                 ActionFuture getConfigs = DashBoardRemoteService.performRequest(RemoteAction.request(SupportAction.GET_CONFIGS_BY_GROUPS, groupIds), instanceInfo, this::cancelTask);
                 if (getConfigs == null) {
                     return;
                 }
                 remoteAction = getConfigs.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
-                List<LimitGroupConfig> configs = RemoteAction.getBody(List.class, remoteAction);
-                configMap.put(instanceInfo, configs);
             } catch (Exception e) {
                 log.error(String.format("拉取信息失败,ip:%s,port:%s", instanceInfo.getIp(), instanceInfo.getPort()), e);
                 cancelTask(instanceInfo);
             }
+            //定期更新信息
+            try {
+                writeLock.lock();
+                List data = RemoteAction.getBody(List.class, remoteAction);
+                if (data != null && data.size() > 0) {
+                    List<LimitGroupConfig> groupConfigs = objectMapper.convertValue(data, new TypeReference<List<LimitGroupConfig>>() {
+                    });
+                    writeResult(instanceInfo, groupConfigs);
+                }
+
+            } catch (Exception e) {
+                log.error("实例信息写入本地失败", e);
+            } finally {
+                writeLock.unlock();
+            }
         }, trigger);
         map.put(instanceInfo, schedule);
+    }
+
+    protected void writeResult(InstanceInfo instanceInfo, List<LimitGroupConfig> configs) {
+        Map<String, LimitGroupConfig> groupConfigMap = configMap.get(instanceInfo);
+        if (groupConfigMap == null) {
+            groupConfigMap = new HashMap<>();
+        }
+        for (LimitGroupConfig config : configs) {
+            groupConfigMap.put(config.getId(), config);
+        }
+        configMap.put(instanceInfo, groupConfigMap);
     }
 
     public void cancelTask(InstanceInfo instanceInfo) {
@@ -145,11 +186,39 @@ public class InstanceInfoPuller implements SmartLifecycle {
         }
     }
 
-    public List<LimitGroupConfig> getByInstanceInfo(InstanceInfo instanceInfo) {
-        return configMap.get(instanceInfo);
+    public Collection<LimitGroupConfig> getByInstanceInfo(InstanceInfo instanceInfo) {
+        return (Collection<LimitGroupConfig>) wrapByReadLock(() -> {
+            Map<String, LimitGroupConfig> tempMap = configMap.get(instanceInfo);
+            if (tempMap != null) {
+                return tempMap.values();
+            }
+            return Collections.EMPTY_LIST;
+        });
     }
 
-    public Map<InstanceInfo, List<LimitGroupConfig>> getConfigMap() {
-        return configMap;
+    public Set<InstanceInfo> getInstanceInfo() {
+        return (Set<InstanceInfo>) wrapByReadLock(() -> configMap.keySet());
+    }
+
+    public LimitGroupConfig getByParam(InstanceInfo instanceInfo, String id) {
+        return (LimitGroupConfig) wrapByReadLock(() -> {
+            Map<String, LimitGroupConfig> configMap = this.configMap.get(instanceInfo);
+            if (configMap != null) {
+                return configMap.get(id);
+            }
+            return null;
+        });
+    }
+
+    public Object wrapByReadLock(Callable callable) {
+        try {
+            readLock.lock();
+            return callable.call();
+        } catch (Exception e) {
+            log.error("获取失败", e);
+        } finally {
+            readLock.unlock();
+        }
+        return null;
     }
 }

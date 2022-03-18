@@ -1,10 +1,7 @@
 package com.xl.redisaux.dashboard.service;
 
-import com.xl.redisaux.common.api.InstanceInfo;
 import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.dispatcher.ResultHolder;
-import com.xl.redisaux.transport.server.handler.ConnectionHandler;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -17,9 +14,10 @@ public class InstanceMessageHandler extends SimpleChannelInboundHandler<RemoteAc
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RemoteAction msg) throws Exception {
         if (msg.isResponse()) {
-            log.info("服务端收到结果{}", msg.getBody());
+            log.debug("消息{}", msg);
+            log.debug("服务端收到结果{}", msg.getBody());
             ResultHolder.onSuccess(msg);
-            ctx.flush();
+            ctx.fireChannelRead(msg);
         }
     }
 

@@ -29,7 +29,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
      */
     private final static Map<String, InstanceInfo> CHANNEL_INSTANCE_MAP = new ConcurrentHashMap<>();
 
-    public ConnectionHandler(){
+    public ConnectionHandler() {
     }
 
     @Override
@@ -38,7 +38,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         SupportAction action = SupportAction.getAction(msg);
         if (action.equals(SupportAction.SEND_SERVER_INFO) || action.equals(SupportAction.HEART_BEAT)) {
             InstanceInfo body = RemoteAction.getBody(InstanceInfo.class, msg);
-            log.info("收到心跳包信息或首次注册信息,{}", body);
+            log.debug("收到心跳包信息或首次注册信息,{}", body);
             Channel channel = ctx.channel();
             registerInstance(body, channel);
             ctx.pipeline().get(ServerHeartBeatHandler.class).resetLostTime();
@@ -53,7 +53,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         String channelId = channel.id().asShortText();
         instanceInfo.setConnectedStartTime(System.currentTimeMillis());
         if (!INSTANCE_CHANNEL_MAP.containsKey(instanceInfo)) {
-            log.info("注册实例，{}", key);
+            log.debug("注册实例，{}", key);
             INSTANCE_CHANNEL_MAP.put(instanceInfo, channel);
             CHANNEL_INSTANCE_MAP.put(channelId, instanceInfo);
         }
@@ -63,12 +63,12 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         String key = channel.id().asShortText();
         InstanceInfo remove = CHANNEL_INSTANCE_MAP.remove(key);
         if (Objects.nonNull(remove)) {
-            log.info("移除不活跃的实例，{}", remove.uniqueKey());
+            log.debug("移除不活跃的实例，{}", remove.uniqueKey());
             INSTANCE_CHANNEL_MAP.remove(remove);
         }
     }
 
-    public static Set<InstanceInfo> listAll(){
+    public static Set<InstanceInfo> listAll() {
         return INSTANCE_CHANNEL_MAP.keySet();
     }
 
@@ -76,7 +76,7 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
         return INSTANCE_CHANNEL_MAP;
     }
 
-    public static InstanceInfo getInstanceInfoByChannel(Channel channel){
+    public static InstanceInfo getInstanceInfoByChannel(Channel channel) {
         return CHANNEL_INSTANCE_MAP.get(channel.id().asShortText());
     }
 

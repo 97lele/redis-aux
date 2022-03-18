@@ -12,12 +12,14 @@ import lombok.extern.slf4j.Slf4j;
 public class DemoClientHandler extends SimpleChannelInboundHandler<RemoteAction> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, RemoteAction remoteAction) throws Exception {
-        if(remoteAction.isResponse()){
+        if (remoteAction.isResponse()) {
             log.info("收到结果");
-            log.info("请求ID，{}",remoteAction.getRequestId());
-            log.info("编码，{}",remoteAction.getActionCode());
-            log.info("实体内容，{}",remoteAction.getClazz());
+            log.info("请求ID，{}", remoteAction.getRequestId());
+            log.info("编码，{}", remoteAction.getActionCode());
+            log.info("实体内容，{}", remoteAction.getClazz());
             ResultHolder.onSuccess(remoteAction);
+        } else {
+            channelHandlerContext.fireChannelRead(remoteAction);
         }
     }
 }

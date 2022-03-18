@@ -16,12 +16,12 @@ import java.util.Set;
 @Getter
 @AllArgsConstructor
 public enum SupportAction {
-    FUNNEL_CHANGE(1, FunnelChangeParam.class, LimitGroupConfig.class),
-    WINDOW_CHANGE(2, WindowChangeParam.class, LimitGroupConfig.class),
-    TOKEN_CHANGE(3, TokenChangeParam.class, LimitGroupConfig.class),
-    CHANGE_IP_RULE(4, ChangeIpRuleParam.class, LimitGroupConfig.class),
-    CHANGE_URL_RULE(5, ChangeUrlRuleParam.class, LimitGroupConfig.class),
-    CHANGE_LIMIT_MODE(6, ChangeLimitModeParam.class, LimitGroupConfig.class),
+    FUNNEL_CHANGE(1, FunnelChangeParam.class, FunnelRateConfig.class),
+    WINDOW_CHANGE(2, WindowChangeParam.class, WindowRateConfig.class),
+    TOKEN_CHANGE(3, TokenChangeParam.class, TokenRateConfig.class),
+    CHANGE_IP_RULE(4, ChangeIpRuleParam.class, String.class),
+    CHANGE_URL_RULE(5, ChangeUrlRuleParam.class, String.class),
+    CHANGE_LIMIT_MODE(6, ChangeLimitModeParam.class, Integer.class),
     SEND_SERVER_INFO(7, InstanceInfo.class, Void.class),
     GET_RECORD_COUNT(8, String.class, HashMap.class),
     GET_CONFIG_BY_GROUP(9,String.class, LimitGroupConfig.class),

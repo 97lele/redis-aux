@@ -1,13 +1,12 @@
 package com.xl.redisaux.dashboard.controller;
 
-import com.xl.redisaux.common.api.ChangeLimitModeParam;
-import com.xl.redisaux.common.api.InstanceInfo;
-import com.xl.redisaux.common.api.LimitGroupConfig;
+import com.xl.redisaux.common.api.*;
+import com.xl.redisaux.dashboard.service.InstanceInfoPuller;
 import com.xl.redisaux.dashboard.service.InstanceManagerService;
-import lombok.Getter;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -28,12 +27,38 @@ public class ManagerInstanceController {
     }
 
     @GetMapping("/getConfig")
-    public List<LimitGroupConfig> getConfigByInstanceInfo(String uniqueKey) {
+    public Collection<LimitGroupConfig> getConfigByInstanceInfo(String uniqueKey) {
         return managerService.getConfigByInstanceInfo(uniqueKey);
     }
 
-    @GetMapping("/changeConfig")
-    public LimitGroupConfig changeConfig(@RequestParam("url") String url, @RequestBody ChangeLimitModeParam param) {
-        return managerService.changeConfig(url, param);
+    @PostMapping("/changeMode")
+    public Integer changeConfig(@RequestBody ChangeLimitModeParam param) {
+        return managerService.changeMode(param);
+    }
+
+
+    @PostMapping("/changeUrlRule")
+    public String changeUrlRule(@RequestBody ChangeUrlRuleParam urlRuleParam) {
+        return managerService.changeUrlRule(urlRuleParam);
+    }
+
+    @PostMapping("/tokenChange")
+    public TokenRateConfig tokenChange(@RequestBody TokenChangeParam tokenChangeParam) {
+        return managerService.tokenChange(tokenChangeParam);
+    }
+
+    @PostMapping("/windowChange")
+    public WindowRateConfig windowChange(@RequestBody WindowChangeParam changeParam) {
+        return managerService.windowChange(changeParam);
+    }
+
+    @PostMapping("/funnelChange")
+    public FunnelRateConfig windowChange(@RequestBody FunnelChangeParam changeParam) {
+        return managerService.funnelChange(changeParam);
+    }
+
+    @PostMapping("/changeIpRule")
+    public String changeIpRule(@RequestBody ChangeIpRuleParam param) {
+        return managerService.changeIpRule(param);
     }
 }
