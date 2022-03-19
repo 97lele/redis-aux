@@ -21,16 +21,22 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("unchecked")
 public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
-
+    /**
+     * 缓存，key和具体字节数组
+     */
     private final Map<String, BitArray> bitArrayMap;
-
-
+    /**
+     * 缓存，key和对应的hash函数个数
+     */
     private final Map<String, Integer> numHashFunctionsMap;
 
     private final Funnel<? super T> funnel;
 
     private final Strategy strategy;
-
+    /**
+     * 操作类
+     * 创建字节数组，过期数组
+     */
     private BitArrayOperator bitArrayOperator;
 
 
@@ -66,7 +72,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         BitArray<T> bits = bitArrayMap.get(key);
         //如果这个bit不存在，则直接返回false
         if (bits == null) {
-            List<Boolean> list = new LinkedList();
+            List<Boolean> list = new ArrayList<>(members.size());
             for (int i = 0; i < members.size(); i++) {
                 list.add(Boolean.FALSE);
             }
@@ -90,21 +96,21 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
 
     /**
-     * 这里判断不为空才删除的原因是，有可能里面的键不在里面
-     *
-     * @param iterable
+     * 这里判断不为空才删除的原因是，有可能里面的键不在里面(有四种类型)
+     * 首先清理缓存，然后删掉实际的键
+     * @param keys
      */
-    public void removeAll(Collection<String> iterable) {
+    public void removeAll(Collection<String> keys) {
         boolean delete = false;
         List<List<String>> list = new ArrayList();
-        for (String s : iterable) {
-            BitArray tBitArray = bitArrayMap.get(s);
+        for (String key : keys) {
+            BitArray tBitArray = bitArrayMap.get(key);
             if (tBitArray != null) {
                 if(tBitArray instanceof RedisBitArray){
                     list.add(((RedisBitArray) tBitArray).getKeyList());
                 }
-                bitArrayMap.remove(s);
-                numHashFunctionsMap.remove(s);
+                bitArrayMap.remove(key);
+                numHashFunctionsMap.remove(key);
                 delete = true;
                 tBitArray.clear();
                 tBitArray = null;
@@ -114,9 +120,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         if (delete) {
             List<String> deleteKeys = new LinkedList<String>();
             for (List<String> keyGroup : list) {
-                for (String key : keyGroup) {
-                    deleteKeys.add(key);
-                }
+                deleteKeys.addAll(keyGroup);
             }
             bitArrayOperator.delete(deleteKeys);
         }
@@ -135,16 +139,31 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
+    /**
+     * 添加内容
+     * @param key
+     * @param member
+     * @param expectedInsertions 预期插入的个数
+     * @param fpp 可以接受的错误率
+     * @param timeout 键的过期时间
+     * @param timeUnit
+     * @param local 是否本地数组
+     */
     public void put(String key, T member, long expectedInsertions, double fpp, long timeout, TimeUnit timeUnit,boolean local) {
+        //参数校验
         Preconditions.checkArgument(
                 expectedInsertions >= 0, "Expected insertions (%s) must be >= 0", expectedInsertions);
         Preconditions.checkArgument(fpp > 0.0, "False positive probability (%s) must be > 0.0", fpp);
         Preconditions.checkArgument(fpp < 1.0, "False positive probability (%s) must be < 1.0", fpp);
-        //获取keyname
+        //生成字节缓存并返回是否已经添加
         Boolean noAdd = genCache(bitArrayMap.get(key), key, expectedInsertions, fpp,local);
+        //获取字节数组
         BitArray bits = bitArrayMap.get(key);
+        //获取hash函数个数
         Integer numHashFunctions = numHashFunctionsMap.get(key);
+        //对字节数组下标设置
         strategy.put(member, funnel, numHashFunctions, bits);
+        //如果尚未添加过，并且有过期时间的，需要设置
         if (noAdd && timeout != -1) {
             //设置过期时间
             bitArrayOperator.expire(key, timeout, timeUnit,local);
@@ -162,6 +181,7 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
 
         BitArray bits = bitArrayMap.get(key);
         Integer numHashFunctions = numHashFunctionsMap.get(key);
+        //批量设置的方法
         strategy.putAll(funnel, numHashFunctions, bits, members);
         if (noAdd && timeout != -1) {
             //设置过期时间
@@ -169,11 +189,24 @@ public class RedisBloomFilterItem<T> implements KeyExpireListener {
         }
     }
 
+    /**
+     * 缓存生成
+     * @param bits
+     * @param key
+     * @param expectedInsertions
+     * @param fpp
+     * @param local
+     * @return
+     */
     private Boolean genCache(BitArray bits, String key, long expectedInsertions, double fpp,  boolean local) {
         Boolean noAdd = bits == null;
-        if ((noAdd)) {
+        //如果尚未生成缓存
+        if (noAdd) {
+            //计算预估的字节大小
             long numBits = CommonUtil.optimalNumOfBits(expectedInsertions, fpp);
+            //创建字节数组
             bits = bitArrayOperator.createBitArray(key, numBits, local);
+            //添加缓存
             bitArrayMap.put(key, bits);
             //获取hash函数数量
             numHashFunctionsMap.put(key, CommonUtil.optimalNumOfHashFunctions(expectedInsertions, numBits));

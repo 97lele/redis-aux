@@ -51,6 +51,7 @@ public class RedisBloomFilterAutoConfiguration {
         if (strategy == null) {
             strategy = RedisBloomFilterStrategies.MURMUR128_MITZ_32.getStrategy();
         }
+        //支持四种，Long,Integer,String,byte
         Map<Class, RedisBloomFilterItem> map = new HashMap(FunnelEnum.values().length);
         for (FunnelEnum funnelEnum : FunnelEnum.values()) {
             RedisBloomFilterItem item = RedisBloomFilterItem.create(funnelEnum.getFunnel(), strategy, redisBitArrayFactory());
