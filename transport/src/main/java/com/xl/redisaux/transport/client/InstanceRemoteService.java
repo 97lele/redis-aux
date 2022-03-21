@@ -100,7 +100,7 @@ public class InstanceRemoteService {
                     .option(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.SO_KEEPALIVE, false)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-                    .option(ChannelOption.SO_SNDBUF,65535)
+                    .option(ChannelOption.SO_SNDBUF, 65535)
                     .option(ChannelOption.SO_RCVBUF, 65535)
                     .handler(channelInitializer);
             this.bootstrap = b;
@@ -146,10 +146,10 @@ public class InstanceRemoteService {
     }
 
     public void close() {
-        if(channel!=null){
+        if (channel != null) {
             channel.close().syncUninterruptibly();
         }
-        if(group!=null){
+        if (group != null) {
             group.shutdownGracefully();
         }
         hasInit = false;

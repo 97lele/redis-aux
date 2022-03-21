@@ -22,7 +22,7 @@ public class ResultHolder {
         ActionFuture actionFuture = remoteActionMap.get(remoteAction.getRequestId());
         if (actionFuture != null) {
             actionFuture.success(remoteAction);
-            log.info("请求结束{}", actionFuture);
+            log.trace("请求结束:{}", actionFuture);
             remoteActionMap.remove(remoteAction.getRequestId());
         }
     }

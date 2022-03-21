@@ -19,27 +19,13 @@ public class BaseChannelInitializer extends ChannelInitializer<NioSocketChannel>
     private List<ChannelInboundHandler> sharableHandler;
 
     private List<Supplier<ChannelInboundHandler>> notSharableHandler;
-    private DefaultEventExecutorGroup defaultEventExecutorGroup;
 
-    public BaseChannelInitializer() {
-        this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
-                Runtime.getRuntime().availableProcessors() * 2,
-                new ThreadFactory() {
-
-                    private AtomicInteger threadIndex = new AtomicInteger(0);
-
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        return new Thread(r, "NettyServerThread" + this.threadIndex.incrementAndGet());
-                    }
-                });
-    }
 
     @Override
     protected void initChannel(NioSocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
         pipeline
-                .addLast(defaultEventExecutorGroup, new RemoteActionFrameDecoder()
+                .addLast( new RemoteActionFrameDecoder()
                         , new RemoteActionFrameEncoder()
                         , new RemoteActionProtocolEncoder()
                         , new RemoteActionProtocolDecoder()
@@ -47,12 +33,12 @@ public class BaseChannelInitializer extends ChannelInitializer<NioSocketChannel>
                 );
         if (sharableHandler != null) {
             for (ChannelInboundHandler inboundHandler : sharableHandler) {
-                pipeline.addLast(defaultEventExecutorGroup, inboundHandler);
+                pipeline.addLast( inboundHandler);
             }
         }
         if (notSharableHandler != null) {
             for (Supplier<ChannelInboundHandler> supplier : notSharableHandler) {
-                pipeline.addLast(defaultEventExecutorGroup, supplier.get());
+                pipeline.addLast( supplier.get());
             }
         }
     }

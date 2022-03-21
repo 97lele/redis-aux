@@ -11,7 +11,8 @@ import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
@@ -97,11 +98,16 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         return isRunning;
     }
 
+    /**
+     * dashboard向客户端发起的请求
+     */
     @ChannelHandler.Sharable
-    public class RequestActionHandler extends SimpleChannelInboundHandler<RemoteAction> {
+    public class RequestActionHandler extends ChannelInboundHandlerAdapter {
 
         @Override
-        protected void channelRead0(ChannelHandlerContext channelHandlerContext, RemoteAction remoteAction) throws Exception {
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            RemoteAction remoteAction = (RemoteAction) msg;
+            //如果是请求类型，返回
             if (!remoteAction.isResponse()) {
                 RemoteAction res = null;
                 try {
@@ -110,7 +116,10 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                     log.error("error:", e);
                     res = RemoteAction.request(SupportAction.ERROR, e.getMessage());
                 }
-                channelHandlerContext.write(res);
+                ctx.writeAndFlush(res);
+            } else {
+                //响应类型，默认释放
+                ReferenceCountUtil.release(msg);
             }
         }
 
@@ -118,7 +127,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
             SupportAction action = SupportAction.getAction(remoteAction);
             long start = System.currentTimeMillis();
             Object res = null;
-            try{
+            try {
                 switch (action) {
                     case SEND_SERVER_INFO:
                         InstanceInfo instanceInfo = new InstanceInfo(HostNameUtil.getIp(), port, HostNameUtil.getHostName());
@@ -180,14 +189,14 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                             }
                             return change;
                         });
-                        res=config.getEnableURLPrefix()+"@@"+config.getUnableURLPrefix();
+                        res = config.getEnableURLPrefix() + "@@" + config.getUnableURLPrefix();
                         break;
                     default:
                         return RemoteAction.request(SupportAction.ERROR, "code not found");
                 }
                 return RemoteAction.response(action, res, remoteAction.getRequestId());
-            }finally {
-                log.info("请求处理耗时：{}",System.currentTimeMillis()-start);
+            } finally {
+                log.trace("请求处理耗时：{},编码:{},requestId:{}", System.currentTimeMillis() - start, remoteAction.getActionCode(), remoteAction.getRequestId());
             }
 
         }

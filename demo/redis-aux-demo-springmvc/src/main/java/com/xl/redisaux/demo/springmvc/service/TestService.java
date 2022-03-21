@@ -30,22 +30,21 @@ public class TestService implements InitializingBean {
     @Value("${mphelper.shard-support:true}")
     private boolean shardSupport;
 
-    @WindowLimiter(passCount = 5,fallback = "no")
-    public void test(){
+    @WindowLimiter(passCount = 5, fallback = "no")
+    public void test() {
         System.out.println("service-ok");
     }
-    public void no(){
+
+    public void no() {
         System.out.println("too much");
     }
 
     @Bean
-    public BigDecimal bb(){
-        System.out.println(shardSupport);
+    public BigDecimal bb() {
         return BigDecimal.ONE;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        System.out.println(shardSupport);
     }
 }

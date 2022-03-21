@@ -5,10 +5,8 @@ import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
 import com.xl.redisaux.transport.dispatcher.ActionFuture;
 import com.xl.redisaux.transport.dispatcher.ResultHolder;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -19,7 +17,7 @@ import java.util.function.Consumer;
 
 @ChannelHandler.Sharable
 @Slf4j
-public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction> {
+public class ConnectionHandler extends ChannelInboundHandlerAdapter {
     /**
      * ip:port(instanceInfo) channel
      */
@@ -33,20 +31,27 @@ public class ConnectionHandler extends SimpleChannelInboundHandler<RemoteAction>
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RemoteAction msg) throws Exception {
-        //只处理心跳请求和心跳包信息
-        SupportAction action = SupportAction.getAction(msg);
-        if (action.equals(SupportAction.SEND_SERVER_INFO) || action.equals(SupportAction.HEART_BEAT)) {
-            InstanceInfo body = RemoteAction.getBody(InstanceInfo.class, msg);
-            log.debug("收到心跳包信息或首次注册信息,{}", body);
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        RemoteAction remoteAction = (RemoteAction) msg;
+        SupportAction action = SupportAction.getAction(remoteAction);
+        boolean isSign = action.equals(SupportAction.SEND_SERVER_INFO);
+        boolean isHeartBeat = action.equals(SupportAction.HEART_BEAT);
+        if (isSign || isHeartBeat) {
+            InstanceInfo body = RemoteAction.getBody(InstanceInfo.class, remoteAction);
+            if (isSign) {
+                log.debug("实例{}注册成功", body);
+            } else {
+                log.trace("收到心跳包信息,{}", body);
+            }
             Channel channel = ctx.channel();
             registerInstance(body, channel);
             ctx.pipeline().get(ServerHeartBeatHandler.class).resetLostTime();
-            ctx.flush();
+            ReferenceCountUtil.release(msg);
         } else {
             ctx.fireChannelRead(msg);
         }
     }
+
 
     protected static void registerInstance(InstanceInfo instanceInfo, Channel channel) {
         String key = instanceInfo.uniqueKey();

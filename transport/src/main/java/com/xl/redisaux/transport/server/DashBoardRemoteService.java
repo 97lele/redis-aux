@@ -111,16 +111,8 @@ public class DashBoardRemoteService implements DisposableBean {
                 return null;
             }
             ActionFuture actionFuture = ResultHolder.putRequest(remoteAction);
-            channel.writeAndFlush(remoteAction).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) throws Exception {
-                    if (future.isSuccess()) {
-                        log.info("发送请求成功");
-                    } else {
-                        log.info("发送请求失败");
-                    }
-                }
-            });
+            //向客户端发送请求
+            channel.writeAndFlush(remoteAction);
             return actionFuture;
         }
         return null;
