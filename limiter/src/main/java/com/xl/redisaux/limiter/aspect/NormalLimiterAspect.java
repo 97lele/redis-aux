@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -21,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("unchecked")
 @Aspect
 @Slf4j
-public class NormalLimiterAspect implements LimiterAspect {
+public class NormalLimiterAspect implements LimiterAspect, Ordered {
 
     private final Map<String, Annotation> annotationMap;
 
@@ -61,14 +63,14 @@ public class NormalLimiterAspect implements LimiterAspect {
                     if (annotationType.isAnnotationPresent(LimiterType.class)) {
                         target = annotation;
                         annotationMap.put(methodKey, target);
-                        annotationMap.put(methodKey+"#",AnnotatedElementUtils.getMergedAnnotation(method,LimiterType.class));
+                        annotationMap.put(methodKey + "#", AnnotatedElementUtils.getMergedAnnotation(method, LimiterType.class));
                         break;
                     }
                 }
             }
             boolean canPass = true;
             if (target != null) {
-                baseLimiter = (LimiterType) annotationMap.get(methodKey+"#");
+                baseLimiter = (LimiterType) annotationMap.get(methodKey + "#");
                 BaseRateLimiter rateLimiter = RedisLimiterAutoConfiguration.RATE_LIMITER_MAP.get(baseLimiter.mode());
                 try {
                     canPass = rateLimiter.canExecute(target, methodKey);
@@ -85,5 +87,10 @@ public class NormalLimiterAspect implements LimiterAspect {
         }
         return proceedingJoinPoint.proceed();
 
+    }
+
+    @Override
+    public int getOrder() {
+        return 1;
     }
 }

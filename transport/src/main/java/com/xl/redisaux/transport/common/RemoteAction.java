@@ -17,6 +17,7 @@ public class RemoteAction<T> {
     //header
     protected int actionCode;
     protected boolean isResponse;
+    protected boolean isSuccess;
     protected int requestId;
     //body
     protected T body;
@@ -39,11 +40,17 @@ public class RemoteAction<T> {
 
     public static <T> RemoteAction<T> request(SupportAction supportAction, T body) {
         int requestId = ID_GENERATOR.incrementAndGet();
-        return new RemoteAction(supportAction.getActionCode(), false, requestId, body);
+        RemoteAction remoteAction = new RemoteAction(supportAction.getActionCode(), false, requestId, body);
+        remoteAction.isSuccess = true;
+        return remoteAction;
     }
 
     public static <T> RemoteAction<T> response(SupportAction supportAction, T body, int requestId) {
-        return new RemoteAction(supportAction.getActionCode(), true, requestId, body);
+        RemoteAction remoteAction = new RemoteAction(supportAction.getActionCode(), true, requestId, body);
+        if (!supportAction.equals(SupportAction.ERROR)) {
+            remoteAction.isSuccess = true;
+        }
+        return remoteAction;
     }
 
     public static <T> RemoteAction<T> response(RemoteAction action, T body) {
@@ -54,6 +61,7 @@ public class RemoteAction<T> {
     public void encode(ByteBuf byteBuf) {
         byteBuf.writeInt(actionCode);
         byteBuf.writeBoolean(isResponse);
+        byteBuf.writeBoolean(isSuccess);
         byteBuf.writeInt(requestId);
         try {
             byteBuf.writeBytes(OBJECT_MAPPER.writeValueAsBytes(body));
@@ -69,6 +77,7 @@ public class RemoteAction<T> {
     public static <T> RemoteAction decode(ByteBuf byteBuf) {
         int actionCode = byteBuf.readInt();
         boolean isResponse = byteBuf.readBoolean();
+        boolean isSuccess = byteBuf.readBoolean();
         int requestId = byteBuf.readInt();
         String s = byteBuf.toString(StandardCharsets.UTF_8);
         Class<T> actionClass = (Class<T>) SupportAction.getActionClass(actionCode, isResponse);
@@ -82,6 +91,7 @@ public class RemoteAction<T> {
         action.actionCode = actionCode;
         action.isResponse = isResponse;
         action.requestId = requestId;
+        action.isSuccess = isSuccess;
         action.body = body;
         action.clazz = actionClass;
         return action;

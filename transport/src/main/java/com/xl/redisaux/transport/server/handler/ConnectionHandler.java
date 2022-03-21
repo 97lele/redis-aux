@@ -39,7 +39,7 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
         if (isSign || isHeartBeat) {
             InstanceInfo body = RemoteAction.getBody(InstanceInfo.class, remoteAction);
             if (isSign) {
-                log.debug("实例{}注册成功", body);
+                log.trace("实例{}注册", body);
             } else {
                 log.trace("收到心跳包信息,{}", body);
             }

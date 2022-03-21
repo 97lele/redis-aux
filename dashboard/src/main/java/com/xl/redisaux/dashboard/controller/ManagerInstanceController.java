@@ -1,13 +1,11 @@
 package com.xl.redisaux.dashboard.controller;
 
 import com.xl.redisaux.common.api.*;
-import com.xl.redisaux.dashboard.service.InstanceInfoPuller;
 import com.xl.redisaux.dashboard.service.InstanceManagerService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -57,8 +55,8 @@ public class ManagerInstanceController {
         return managerService.funnelChange(changeParam);
     }
 
-    @PostMapping("/changeIpRule")
+    @PostMapping("/changeBWRule")
     public String changeIpRule(@RequestBody ChangeIpRuleParam param) {
-        return managerService.changeIpRule(param);
+        return managerService.changeBWRule(param);
     }
 }

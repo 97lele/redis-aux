@@ -18,11 +18,28 @@ public class ActionFuture {
     private RemoteAction response;
     private Throwable e;
 
+    static ActionFuture NOT_READY = new ActionFuture();
+
+    static {
+        NOT_READY.e = new IllegalStateException("连接尚未建立");
+    }
+
+    public ActionFuture() {
+    }
+
+    public boolean isFail() {
+        return e != null;
+    }
+
     public ActionFuture(RemoteAction request) {
         this.start = System.currentTimeMillis();
         this.requestId = request.getRequestId();
         this.code = request.getActionCode();
         this.obj = request.getBody();
+    }
+
+    public static ActionFuture notReady() {
+        return NOT_READY;
     }
 
     private final Sync sync = new Sync();

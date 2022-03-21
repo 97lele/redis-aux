@@ -13,7 +13,7 @@ public enum TimeUnitEnum {
     DAYS(TimeUnit.DAYS, 3),
     HOURS(TimeUnit.HOURS, 2),
     MINUTES(TimeUnit.MINUTES, 1),
-    SECOND(TimeUnit.SECONDS, 0),
+    SECONDS(TimeUnit.SECONDS, 0),
     MILLISECONDS(TimeUnit.MILLISECONDS, 4),
     MICROSECONDS(TimeUnit.MICROSECONDS, 5);
 

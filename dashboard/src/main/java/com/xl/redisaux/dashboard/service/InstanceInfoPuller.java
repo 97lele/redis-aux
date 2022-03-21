@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xl.redisaux.common.api.InstanceInfo;
 import com.xl.redisaux.common.api.LimitGroupConfig;
+import com.xl.redisaux.common.exceptions.RedisAuxException;
 import com.xl.redisaux.dashboard.config.DashboardConfig;
 import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
@@ -97,11 +98,18 @@ public class InstanceInfoPuller implements SmartLifecycle {
 
     public static <R> R performRequest(String uniqueKey, Class<R> res, SupportAction supportAction, Object param) {
         ActionFuture actionFuture = DashBoardRemoteService.performRequest(RemoteAction.request(supportAction, param), InstanceInfo.uniqueKey2Instance(uniqueKey));
+        if (actionFuture.isFail()) {
+            log.error("请求失败", actionFuture.getE());
+            throw new RuntimeException(actionFuture.getE());
+        }
         RemoteAction remoteAction = null;
         try {
             remoteAction = actionFuture.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
         } catch (Exception e) {
             log.error(String.format("请求失败,address:%s", uniqueKey), e);
+        }
+        if (!remoteAction.isSuccess()) {
+            throw new RedisAuxException("远程处理失败,cause:"+remoteAction.getBody().toString());
         }
         return RemoteAction.getBody(res, remoteAction);
     }
@@ -119,6 +127,10 @@ public class InstanceInfoPuller implements SmartLifecycle {
                 if (actionFuture == null) {
                     return;
                 }
+                if (actionFuture.isFail()) {
+                    log.error("请求失败", actionFuture.getE());
+                    return;
+                }
                 remoteAction = actionFuture.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);
                 Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
                 //获取分组信息的详情
@@ -127,6 +139,10 @@ public class InstanceInfoPuller implements SmartLifecycle {
                 }
                 ActionFuture getConfigs = DashBoardRemoteService.performRequest(RemoteAction.request(SupportAction.GET_CONFIGS_BY_GROUPS, groupIds), instanceInfo, this::cancelTask);
                 if (getConfigs == null) {
+                    return;
+                }
+                if (actionFuture.isFail()) {
+                    log.error("请求失败", actionFuture.getE());
                     return;
                 }
                 remoteAction = getConfigs.get(dashboardConfig.getIdleSec(), TimeUnit.SECONDS);

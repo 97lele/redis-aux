@@ -108,7 +108,7 @@ public class DashBoardRemoteService implements DisposableBean {
                 if (onInstanceMiss != null) {
                     onInstanceMiss.accept(instanceInfo);
                 }
-                return null;
+                return ActionFuture.notReady();
             }
             ActionFuture actionFuture = ResultHolder.putRequest(remoteAction);
             //向客户端发送请求
