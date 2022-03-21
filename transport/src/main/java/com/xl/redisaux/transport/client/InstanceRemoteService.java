@@ -5,10 +5,7 @@ import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.dispatcher.ActionFuture;
 import com.xl.redisaux.transport.dispatcher.ResultHolder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInboundHandler;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +97,11 @@ public class InstanceRemoteService {
             this.group = new NioEventLoopGroup();
             b.group(group)
                     .channel(NioSocketChannel.class)
+                    .option(ChannelOption.TCP_NODELAY, true)
+                    .option(ChannelOption.SO_KEEPALIVE, false)
+                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                    .option(ChannelOption.SO_SNDBUF, 65535)
+                    .option(ChannelOption.SO_RCVBUF, 65535)
                     .handler(channelInitializer);
             this.bootstrap = b;
             hasInit = true;
@@ -144,10 +146,10 @@ public class InstanceRemoteService {
     }
 
     public void close() {
-        if(channel!=null){
+        if (channel != null) {
             channel.close().syncUninterruptibly();
         }
-        if(group!=null){
+        if (group != null) {
             group.shutdownGracefully();
         }
         hasInit = false;

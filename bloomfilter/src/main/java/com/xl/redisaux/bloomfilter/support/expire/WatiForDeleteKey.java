@@ -40,7 +40,7 @@ public class WatiForDeleteKey implements Comparable {
 
             long self = existTime - (now - startTime);
             //小顶堆，在上面是最小的，存活时间最少在上面
-            return self < other ? -1 : (self == other) ? 0 : 1;
+            return Long.compare(self, other);
         }
         throw new RedisAuxException("WaitForDeleteKey无法比对");
     }

@@ -5,3 +5,7 @@ redisaux:
       maxLost: 5
       idleSec: 30
       cronOfInfoPuller: 0/6 * * * * ?
+logging:
+  level:
+    com.xl.redisaux: debug
+

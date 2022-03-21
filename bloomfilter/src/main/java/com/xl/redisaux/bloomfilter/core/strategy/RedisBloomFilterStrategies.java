@@ -5,6 +5,7 @@ import com.google.common.hash.Funnel;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Longs;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -15,11 +16,10 @@ import java.util.List;
  */
 @SuppressWarnings("unchecked")
 public enum RedisBloomFilterStrategies {
-
-
+    /**
+     * 64位的hash运算策略
+     */
     MURMUR128_MITZ_64(new Strategy() {
-
-
         @Override
         public <T> boolean put(T object, Funnel<? super T> funnel, int numHashFunctions, BitArray bitArray) {
             long bitSize = bitArray.bitSize();
@@ -40,7 +40,7 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> boolean putAll(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = new LinkedList<long[]>();
+            List<long[]> res = new ArrayList<>(objects.size());
             for (T object : objects) {
                 byte[] bytes = getHash(object, funnel);
                 res.add(getIndex(bytes, numHashFunctions, bitSize));
@@ -51,7 +51,7 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> List<Boolean> mightContains(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = new LinkedList<long[]>();
+            List<long[]> res = new ArrayList<>(objects.size());
             for (T object : objects) {
                 byte[] bytes = getHash(object, funnel);
                 res.add(getIndex(bytes, numHashFunctions, bitSize));
@@ -59,11 +59,11 @@ public enum RedisBloomFilterStrategies {
             return bits.getBatch(res);
         }
 
-
+        //低8位
         private long lowerEight(byte[] bytes) {
             return Longs.fromBytes(bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
         }
-
+        //高8位
         private long upperEight(byte[] bytes) {
             return Longs.fromBytes(bytes[15], bytes[14], bytes[13], bytes[12], bytes[11], bytes[10], bytes[9], bytes[8]);
         }
@@ -73,9 +73,12 @@ public enum RedisBloomFilterStrategies {
         }
 
         private long[] getIndex(byte[] bytes, int numHashFunctions, long bitSize) {
+            //低位
             long hash1 = this.lowerEight(bytes);
+            //高位
             long hash2 = this.upperEight(bytes);
             long combinedHash = hash1;
+            //存放计算后的一个下标
             long[] batchIndex = new long[numHashFunctions];
             for (int i = 0; i < numHashFunctions; ++i) {
                 batchIndex[i] = (combinedHash & 9223372036854775807L) % bitSize;
@@ -84,7 +87,9 @@ public enum RedisBloomFilterStrategies {
             return batchIndex;
         }
     }, "64"),
-
+    /**
+     * 32位的hash运算策略
+     */
     MURMUR128_MITZ_32(new Strategy() {
         @Override
         public <T> boolean put(T object, Funnel<? super T> funnel, int numHashFunctions, BitArray bitArray
@@ -109,7 +114,7 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> boolean putAll(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = new LinkedList<long[]>();
+            List<long[]> res = new ArrayList<>(objects.size());
             for (T object : objects) {
                 long bytes = getHash(object, funnel);
                 res.add(getIndex(bytes, numHashFunctions, bitSize));
@@ -120,7 +125,7 @@ public enum RedisBloomFilterStrategies {
         @Override
         public <T> List<Boolean> mightContains(Funnel<? super T> funnel, int numHashFunctions, BitArray bits, List<T> objects) {
             long bitSize = bits.bitSize();
-            List<long[]> res = new LinkedList<long[]>();
+            List<long[]> res = new ArrayList<>(objects.size());
             for (T object : objects) {
                 long bytes = getHash(object, funnel);
                 res.add(getIndex(bytes, numHashFunctions, bitSize));

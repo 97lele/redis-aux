@@ -49,3 +49,6 @@ redisaux:
 #    sentinel:
 #      master: mymaster #主服务器所在集群名称
 #      nodes:  localhost:26379,localhost:26479,localhost:26579
+logging:
+  level:
+    com.xl.redisaux: debug

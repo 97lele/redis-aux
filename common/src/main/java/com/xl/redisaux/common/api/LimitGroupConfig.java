@@ -3,6 +3,7 @@ package com.xl.redisaux.common.api;
 import com.xl.redisaux.common.consts.LimiterConstants;
 import com.xl.redisaux.common.enums.TimeUnitEnum;
 import com.xl.redisaux.common.utils.CommonUtil;
+import lombok.Data;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author lulu
  * @Date 2020/2/15 16:16
  */
-
 public class LimitGroupConfig {
     public LimitGroupConfig() {
 
@@ -120,7 +120,7 @@ public class LimitGroupConfig {
 
     private int qpsUnitMode;
 
-    private boolean removeOtherLimit=true;
+    private boolean removeOtherLimit = true;
 
     public boolean isRemoveOtherLimit() {
         return removeOtherLimit;
@@ -133,7 +133,7 @@ public class LimitGroupConfig {
     /**
      * 是否保存到redis
      */
-    private boolean saveInRedis=true;
+    private boolean saveInRedis = true;
 
     public void setQpsUnitMode(int unitMode) {
         qpsCountDuringUnit = TimeUnitEnum.getTimeUnit(unitMode);
@@ -324,6 +324,7 @@ public class LimitGroupConfig {
 
         return Collections.singletonList(CommonUtil.getLimiterName(id, methodKey, LimiterConstants.WINDOW));
     }
+
     public static Builder of(String id) {
         return new Builder().id(id);
     }

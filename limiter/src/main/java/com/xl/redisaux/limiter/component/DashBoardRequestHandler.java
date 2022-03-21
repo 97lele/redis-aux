@@ -1,3 +1,4 @@
+
 package com.xl.redisaux.limiter.component;
 
 
@@ -10,22 +11,25 @@ import com.xl.redisaux.transport.common.RemoteAction;
 import com.xl.redisaux.transport.common.SupportAction;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.env.Environment;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 
+
 /**
  * 服务端
+ * 处理控制台发来的请求
  */
+
 @Slf4j
 public class DashBoardRequestHandler implements SmartLifecycle {
     @Resource
@@ -94,11 +98,16 @@ public class DashBoardRequestHandler implements SmartLifecycle {
         return isRunning;
     }
 
+    /**
+     * dashboard向客户端发起的请求
+     */
     @ChannelHandler.Sharable
-    public class RequestActionHandler extends SimpleChannelInboundHandler<RemoteAction> {
+    public class RequestActionHandler extends ChannelInboundHandlerAdapter {
 
         @Override
-        protected void channelRead0(ChannelHandlerContext channelHandlerContext, RemoteAction remoteAction) throws Exception {
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            RemoteAction remoteAction = (RemoteAction) msg;
+            //如果是请求类型，返回
             if (!remoteAction.isResponse()) {
                 RemoteAction res = null;
                 try {
@@ -107,99 +116,99 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                     log.error("error:", e);
                     res = RemoteAction.request(SupportAction.ERROR, e.getMessage());
                 }
-                channelHandlerContext.writeAndFlush(res);
+                ctx.writeAndFlush(res);
+            } else {
+                //响应类型，默认释放
+                ReferenceCountUtil.release(msg);
             }
         }
 
         private RemoteAction doHandleAction(RemoteAction remoteAction) {
             SupportAction action = SupportAction.getAction(remoteAction);
-            if (action.equals(SupportAction.SEND_SERVER_INFO)) {
-                InstanceInfo instanceInfo = new InstanceInfo();
-                instanceInfo.setPort(port);
-                instanceInfo.setIp(HostNameUtil.getIp());
-                instanceInfo.setHostName(HostNameUtil.getHostName());
-                instanceInfo.setGroupIds(limiterGroupService.getGroupIds());
-                return RemoteAction.response(action, instanceInfo, remoteAction.getRequestId());
+            long start = System.currentTimeMillis();
+            Object res = null;
+            try {
+                switch (action) {
+                    case SEND_SERVER_INFO:
+                        InstanceInfo instanceInfo = new InstanceInfo(HostNameUtil.getIp(), port, HostNameUtil.getHostName());
+                        instanceInfo.setGroupIds(limiterGroupService.getGroupIds());
+                        return RemoteAction.response(action, instanceInfo, remoteAction.getRequestId());
+                    case GET_GROUPS:
+                        Set<String> groupIds = limiterGroupService.getGroupIds();
+                        return RemoteAction.response(action, groupIds, remoteAction.getRequestId());
+                    case GET_RECORD_COUNT:
+                        return RemoteAction.response(action, limiterGroupService.getCount(RemoteAction.getBody(String.class, remoteAction)), remoteAction.getRequestId());
+                    case GET_CONFIG_BY_GROUP:
+                        return RemoteAction.response(action, limiterGroupService.getLimiterConfig(RemoteAction.getBody(String.class, remoteAction)), remoteAction.getRequestId());
+                    case GET_CONFIGS_BY_GROUPS:
+                        return RemoteAction.response(action, limiterGroupService.getConfigByGroupIds(RemoteAction.getBody(Set.class, remoteAction)), remoteAction.getRequestId());
+                    case FUNNEL_CHANGE:
+                        FunnelChangeParam body = RemoteAction.getBody(FunnelChangeParam.class, remoteAction);
+                        res = saveConfig(body, e -> e.setFunnelRateConfig(body.toConfig())).getFunnelRateConfig();
+                        break;
+                    case WINDOW_CHANGE:
+                        WindowChangeParam windowChangeParam = RemoteAction.getBody(WindowChangeParam.class, remoteAction);
+                        res = saveConfig(windowChangeParam, e -> e.setWindowRateConfig(windowChangeParam.toConfig())).getWindowRateConfig();
+                        break;
+                    case TOKEN_CHANGE:
+                        TokenChangeParam tokenChangeParam = RemoteAction.getBody(TokenChangeParam.class, remoteAction);
+                        res = saveConfig(tokenChangeParam, e -> e.setTokenRateConfig(tokenChangeParam.toConfig())).getTokenRateConfig();
+                        break;
+                    case CHANGE_IP_RULE:
+                        ChangeIpRuleParam changeIpRuleParam = RemoteAction.getBody(ChangeIpRuleParam.class, remoteAction);
+                        LimitGroupConfig limitGroupConfig = saveConfig(changeIpRuleParam, e -> {
+                            if (changeIpRuleParam.getWhite()) {
+                                e.setWhiteRule(changeIpRuleParam.getRule());
+                                e.setEnableWhiteList(changeIpRuleParam.getEnable());
+                            } else {
+                                e.setBlackRule(changeIpRuleParam.getRule());
+                                e.setEnableBlackList(changeIpRuleParam.getEnable());
+                            }
+                            return true;
+                        });
+                        res = changeIpRuleParam.getWhite() ? limitGroupConfig.getWhiteRule() : limitGroupConfig.getBlackRule();
+                        break;
+                    case CHANGE_LIMIT_MODE:
+                        ChangeLimitModeParam changeLimitModeParam = RemoteAction.getBody(ChangeLimitModeParam.class, remoteAction);
+                        res = saveConfig(changeLimitModeParam, e -> {
+                            Integer mode = changeLimitModeParam.getMode();
+                            return mode < 4 && mode > 0 && e.setCurrentMode(mode);
+                        }).getCurrentMode();
+                        break;
+                    case CHANGE_URL_RULE:
+                        ChangeUrlRuleParam param = RemoteAction.getBody(ChangeUrlRuleParam.class, remoteAction);
+                        LimitGroupConfig config = saveConfig(param, e -> {
+                            boolean change = false;
+                            if (param.getEnableUrl() != null) {
+                                change = true;
+                                e.setEnableURLPrefix(param.getEnableUrl());
+                            }
+                            if (param.getUnableUrl() != null) {
+                                change = true;
+                                e.setUnableURLPrefix(param.getUnableUrl());
+                            }
+                            return change;
+                        });
+                        res = config.getEnableURLPrefix() + "@@" + config.getUnableURLPrefix();
+                        break;
+                    default:
+                        return RemoteAction.request(SupportAction.ERROR, "code not found");
+                }
+                return RemoteAction.response(action, res, remoteAction.getRequestId());
+            } finally {
+                log.trace("请求处理耗时：{},编码:{},requestId:{}", System.currentTimeMillis() - start, remoteAction.getActionCode(), remoteAction.getRequestId());
             }
-            if(action.equals(SupportAction.GET_GROUPS)){
-                Set<String> groupIds = limiterGroupService.getGroupIds();
-                return RemoteAction.response(action,groupIds,remoteAction.getRequestId());
-            }
-            if (action.equals(SupportAction.GET_RECORD_COUNT)) {
-                String body = RemoteAction.getBody(String.class, remoteAction);
-                Map<String, Object> count = limiterGroupService.getCount(body);
-                return RemoteAction.response(action, count, remoteAction.getRequestId());
-            }
-            if (action.equals(SupportAction.GET_CONFIG_BY_GROUP)) {
-                String body = RemoteAction.getBody(String.class, remoteAction);
-                return RemoteAction.response(action, limiterGroupService.getLimiterConfig(body), remoteAction.getRequestId());
-            }
-            if (action.equals(SupportAction.GET_CONFIGS_BY_GROUPS)) {
-                Set<String> groupIds = RemoteAction.getBody(Set.class, remoteAction);
-                return RemoteAction.response(action, limiterGroupService.getConfigByGroupIds(groupIds), remoteAction.getRequestId());
-            }
-            LimitGroupConfig config = null;
-            switch (action) {
-                case FUNNEL_CHANGE:
-                    FunnelChangeParam body = RemoteAction.getBody(FunnelChangeParam.class, remoteAction);
-                    config = saveConfig(body, e -> e.setFunnelRateConfig(body.toConfig()));
-                    break;
-                case WINDOW_CHANGE:
-                    WindowChangeParam windowChangeParam = RemoteAction.getBody(WindowChangeParam.class, remoteAction);
-                    config = saveConfig(windowChangeParam, e -> e.setWindowRateConfig(windowChangeParam.toConfig()));
-                    break;
-                case TOKEN_CHANGE:
-                    TokenChangeParam tokenChangeParam = RemoteAction.getBody(TokenChangeParam.class, remoteAction);
-                    config = saveConfig(tokenChangeParam, e -> e.setTokenRateConfig(tokenChangeParam.toConfig()));
-                    break;
-                case CHANGE_IP_RULE:
-                    ChangeIpRuleParam changeIpRuleParam = RemoteAction.getBody(ChangeIpRuleParam.class, remoteAction);
-                    config = saveConfig(changeIpRuleParam, e -> {
-                        if (changeIpRuleParam.getWhite()) {
-                            e.setWhiteRule(changeIpRuleParam.getRule());
-                            e.setEnableWhiteList(changeIpRuleParam.getEnable());
-                        } else {
-                            e.setBlackRule(changeIpRuleParam.getRule());
-                            e.setEnableBlackList(changeIpRuleParam.getEnable());
-                        }
-                        return true;
-                    });
-                    break;
-                case CHANGE_LIMIT_MODE:
-                    ChangeLimitModeParam changeLimitModeParam = RemoteAction.getBody(ChangeLimitModeParam.class, remoteAction);
-                    config = saveConfig(changeLimitModeParam, e -> {
-                        Integer mode = changeLimitModeParam.getMode();
-                        return mode < 4 && mode > 0 && e.setCurrentMode(mode);
-                    });
-                    break;
-                case CHANGE_URL_RULE:
-                    ChangeUrlRuleParam param = RemoteAction.getBody(ChangeUrlRuleParam.class, remoteAction);
-                    config = saveConfig(param, e -> {
-                        boolean change = false;
-                        if (param.getEnableUrl() != null) {
-                            change = true;
-                            e.setEnableURLPrefix(param.getEnableUrl());
-                        }
-                        if (param.getUnableUrl() != null) {
-                            change = true;
-                            e.setUnableURLPrefix(param.getUnableUrl());
-                        }
-                        return change;
-                    });
-                    break;
-                default:
-                    return RemoteAction.request(SupportAction.ERROR, "code not found");
-            }
-            return RemoteAction.response(action, config, remoteAction.getRequestId());
+
         }
 
         private LimitGroupConfig saveConfig(BaseParam param, Predicate<LimitGroupConfig> setFunction) {
             LimitGroupConfig limiterConfig = limiterGroupService.getLimiterConfig(param.getGroupId());
-            boolean test = setFunction.test(limiterConfig);
-            if (test) {
+            boolean pass = setFunction.test(limiterConfig);
+            if (pass) {
                 limiterGroupService.save(limiterConfig, true, false);
             }
             return limiterConfig;
         }
     }
 }
+

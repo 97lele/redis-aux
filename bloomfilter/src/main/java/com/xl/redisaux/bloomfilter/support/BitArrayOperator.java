@@ -38,6 +38,13 @@ public class BitArrayOperator {
         this.checkTask = checkTask;
     }
 
+    /**
+     * 创建字节数组
+     * @param key
+     * @param bitSize
+     * @param local
+     * @return
+     */
     public BitArray createBitArray(String key, long bitSize, boolean local) {
         if(local){
             return new LocalBitArray(key,bitSize);
@@ -46,7 +53,13 @@ public class BitArrayOperator {
         }
     }
 
-    //过期之后删除
+    /**
+     * 过期之后删除
+     * @param key
+     * @param timeout
+     * @param timeUnit
+     * @param local
+     */
     public void expire(String key, long timeout, TimeUnit timeUnit,boolean local) {
         checkTask.addExpireKey(new WatiForDeleteKey(key, timeUnit.toMillis(timeout), System.currentTimeMillis(),local));
         if(!local){
