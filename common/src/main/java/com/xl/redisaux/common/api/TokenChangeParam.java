@@ -1,7 +1,9 @@
 package com.xl.redisaux.common.api;
 
 import com.xl.redisaux.common.enums.TimeUnitEnum;
+import lombok.Data;
 
+@Data
 public class TokenChangeParam extends BaseParam {
     private Double capacity;
     private Double initToken;

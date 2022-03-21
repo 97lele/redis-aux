@@ -114,7 +114,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                     res = doHandleAction(remoteAction);
                 } catch (Exception e) {
                     log.error("error:", e);
-                    res = RemoteAction.request(SupportAction.ERROR, e.getMessage());
+                    res = RemoteAction.response(SupportAction.ERROR, e.getMessage(), remoteAction.getRequestId());
                 }
                 ctx.writeAndFlush(res);
             } else {
@@ -122,6 +122,7 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                 ReferenceCountUtil.release(msg);
             }
         }
+
 
         private RemoteAction doHandleAction(RemoteAction remoteAction) {
             SupportAction action = SupportAction.getAction(remoteAction);
@@ -132,16 +133,20 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                     case SEND_SERVER_INFO:
                         InstanceInfo instanceInfo = new InstanceInfo(HostNameUtil.getIp(), port, HostNameUtil.getHostName());
                         instanceInfo.setGroupIds(limiterGroupService.getGroupIds());
-                        return RemoteAction.response(action, instanceInfo, remoteAction.getRequestId());
+                        res = instanceInfo;
+                        break;
                     case GET_GROUPS:
-                        Set<String> groupIds = limiterGroupService.getGroupIds();
-                        return RemoteAction.response(action, groupIds, remoteAction.getRequestId());
+                        res = limiterGroupService.getGroupIds();
+                        break;
                     case GET_RECORD_COUNT:
-                        return RemoteAction.response(action, limiterGroupService.getCount(RemoteAction.getBody(String.class, remoteAction)), remoteAction.getRequestId());
+                        res = limiterGroupService.getCount(RemoteAction.getBody(String.class, remoteAction));
+                        break;
                     case GET_CONFIG_BY_GROUP:
-                        return RemoteAction.response(action, limiterGroupService.getLimiterConfig(RemoteAction.getBody(String.class, remoteAction)), remoteAction.getRequestId());
+                        res = limiterGroupService.getLimiterConfig(RemoteAction.getBody(String.class, remoteAction));
+                        break;
                     case GET_CONFIGS_BY_GROUPS:
-                        return RemoteAction.response(action, limiterGroupService.getConfigByGroupIds(RemoteAction.getBody(Set.class, remoteAction)), remoteAction.getRequestId());
+                        res = limiterGroupService.getConfigByGroupIds(RemoteAction.getBody(Set.class, remoteAction));
+                        break;
                     case FUNNEL_CHANGE:
                         FunnelChangeParam body = RemoteAction.getBody(FunnelChangeParam.class, remoteAction);
                         res = saveConfig(body, e -> e.setFunnelRateConfig(body.toConfig())).getFunnelRateConfig();
@@ -192,9 +197,12 @@ public class DashBoardRequestHandler implements SmartLifecycle {
                         res = config.getEnableURLPrefix() + "@@" + config.getUnableURLPrefix();
                         break;
                     default:
-                        return RemoteAction.request(SupportAction.ERROR, "code not found");
+                        return RemoteAction.response(SupportAction.ERROR, "code not found", remoteAction.getRequestId());
                 }
                 return RemoteAction.response(action, res, remoteAction.getRequestId());
+            } catch (Exception e) {
+                log.error("请求处理失败",e);
+                return RemoteAction.response(SupportAction.ERROR, e.getMessage(), remoteAction.getRequestId());
             } finally {
                 log.trace("请求处理耗时：{},编码:{},requestId:{}", System.currentTimeMillis() - start, remoteAction.getActionCode(), remoteAction.getRequestId());
             }

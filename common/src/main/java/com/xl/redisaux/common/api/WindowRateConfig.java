@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  * @Date 2020/2/16 15:48
  */
 public class WindowRateConfig {
-    public  int type= LimiterConstants.WINDOW_LIMITER;
+    public int type = LimiterConstants.WINDOW_LIMITER;
 
     private Long passCount;
 
@@ -50,15 +50,17 @@ public class WindowRateConfig {
     public Long getPassCount() {
         return passCount;
     }
+
     public Integer getType() {
         return type;
     }
+
     public void setPassCount(Long passCount) {
         this.passCount = passCount;
     }
 
     public TimeUnit getDuringUnit() {
-        if(duringUnit==null){
+        if (duringUnit == null) {
             return TimeUnitEnum.getTimeUnit(unitMode);
         }
         return duringUnit;
@@ -81,8 +83,8 @@ public class WindowRateConfig {
     }
 
     public void setUnitMode(int unitMode) {
-        if(duringUnit==null){
-            duringUnit=TimeUnitEnum.getTimeUnit(unitMode);
+        if (duringUnit == null) {
+            duringUnit = TimeUnitEnum.getTimeUnit(unitMode);
         }
         this.unitMode = unitMode;
     }

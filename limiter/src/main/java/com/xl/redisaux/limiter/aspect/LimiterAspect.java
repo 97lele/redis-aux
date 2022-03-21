@@ -2,6 +2,7 @@ package com.xl.redisaux.limiter.aspect;
 
 import com.xl.redisaux.common.exceptions.RedisAuxException;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.springframework.core.Ordered;
 
 import java.lang.reflect.Method;
 
@@ -9,7 +10,7 @@ import java.lang.reflect.Method;
  * @author lulu
  * @Date 2020/7/18 9:38
  */
-public interface LimiterAspect {
+public interface LimiterAspect extends Ordered {
 
 
 

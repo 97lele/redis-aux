@@ -67,7 +67,7 @@ public class InstanceRemoteService {
                 } catch (InterruptedException tmp) {
 
                 }
-                log.error("connect fail,ip:{},port:{}", ip, port, e);
+                log.error("连接控制台失败,ip:{},port:{}", ip, port, e);
             }
         }
         channel = sync.channel();

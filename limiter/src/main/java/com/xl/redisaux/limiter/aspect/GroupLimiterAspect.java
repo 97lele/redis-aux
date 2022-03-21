@@ -110,4 +110,9 @@ public class GroupLimiterAspect implements LimiterAspect {
         }
         return Pair.of("", "");
     }
+
+    @Override
+    public int getOrder() {
+        return 2;
+    }
 }

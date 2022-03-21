@@ -74,12 +74,12 @@ public class InstanceManagerService {
     }
 
     /**
-     * 变更ip规则
+     * 变更黑白名单ip规则
      * * @param param
      *
      * @return
      */
-    public String changeIpRule(ChangeIpRuleParam param) {
+    public String changeBWRule(ChangeIpRuleParam param) {
         String res = InstanceInfoPuller.performRequest(param.getUniqueKey(), String.class, SupportAction.CHANGE_IP_RULE, param);
         LimitGroupConfig config = getByParam(param);
         String rule = param.getRule();
